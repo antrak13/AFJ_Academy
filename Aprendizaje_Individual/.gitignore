@@ -1,0 +1,4 @@
+ia/cache/
+ia/registro.jsonl
+node_modules/
+_*.html
