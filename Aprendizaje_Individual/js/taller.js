@@ -5,6 +5,8 @@ import { PIEZAS, NOMBRES_SLOT } from './piezas.js';
 import { PALETA, color, tonos } from './color.js';
 import { MUNDOS, NOMBRES } from './mundos.js';
 import { fasesDesdeLook, crearLocal, preguntasLocales, ZONAS } from './creador.js';
+import { svgHuevo, huevoLocal, GRIETA_CENTRO } from './huevo.js';
+import { guardarAprendin } from './guardado.js';
 
 const $ = s => document.querySelector(s);
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -123,7 +125,15 @@ async function estadoIA() {
 
 // Flujo: 1) gustos y tema → aparece el huevo y la IA hace 2 o 3 preguntas · 2) respuestas → la IA crea · 3) el huevo se rompe.
 const PASOS = ['Leyendo lo que te gusta…', 'Eligiendo su disfraz y sus colores…', 'Probándole el peinado…', 'Dividiendo el tema en pasos…', 'Pensando por qué lo necesita…', 'Ya casi sale del huevo…'];
-const pedido = { gustos: '', tema: '', preguntas: [] };
+const pedido = { gustos: '', tema: '', preguntas: [], huevo: null };
+// El huevo se dibuja con los gustos: primero el que se deduce sin IA y, cuando la IA responde, el suyo.
+function pintarHuevo(h, cambio = false) {
+  pedido.huevo = h;
+  const foco = $('#huevoFoco'); foco.innerHTML = svgHuevo(h);
+  $('#nacHuevo').innerHTML = svgHuevo(h, { grieta: 'nac-grieta', grietaD: GRIETA_CENTRO });
+  $('#huevoInfo').textContent = h.nombre ? `Apareció tu huevo: ${h.nombre}.` : '';
+  if (cambio && !RM) { foco.classList.remove('cambia'); void foco.offsetWidth; foco.classList.add('cambia'); }
+}
 let pasos = 0;
 const pedirIA = async (ruta, cuerpo) => {
   const r = await fetch(ruta, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) });
@@ -147,6 +157,7 @@ $('#formCrear').addEventListener('submit', async e => {
   pedido.gustos = $('#gustos').value.trim(); pedido.tema = $('#tema').value.trim();
   if (!pedido.gustos || !pedido.tema) return;
   E.creando = true; $('#ficha').hidden = true;
+  pintarHuevo(huevoLocal(pedido.gustos));
   verPaso('preguntas'); mostrarHuevo(true);
   decir('¡Apareció tu huevo! Mientras se forma, cuéntame un poco más.');
   $('#entendi').textContent = '';
@@ -156,6 +167,7 @@ $('#formCrear').addEventListener('submit', async e => {
   try { if (!E.ia?.ia) throw new Error('sin IA'); r = await pedirIA('/api/preguntas', { gustos: pedido.gustos, tema: pedido.tema }); if (!r.preguntas?.length) throw new Error('sin preguntas'); }
   catch { r = preguntasLocales(pedido.gustos, pedido.tema); }
   pedido.preguntas = r.preguntas;
+  if (r.huevo) pintarHuevo(r.huevo, true);
   $('#entendi').textContent = r.entendi || '';
   pintarPreguntas();
   $('#btnNacer').disabled = false;
@@ -184,16 +196,19 @@ async function crear(detalles) {
   const nacer = $('#btnNacer'); nacer.disabled = true; $('#btnSaltar').disabled = true;
   abrirNacimiento();
   let a, info;
+  const nombre = $('#nombrePropio').value.trim();
   const t0 = performance.now();
   try {
     if (!E.ia?.ia) throw new Error('sin IA');
-    const j = await pedirIA('/api/aprendin', { gustos: pedido.gustos, tema: pedido.tema, detalles });
+    const j = await pedirIA('/api/aprendin', { gustos: pedido.gustos, tema: pedido.tema, detalles, nombre });
     a = j.aprendin; info = j.ia ? { ...j.ia, ensayo: j.ensayo } : null;
   } catch (err) {
     const falta = 2500 - (performance.now() - t0);
     if (falta > 0) await espera(falta);
-    a = crearLocal(pedido.gustos, pedido.tema, detalles); info = { sinIA: true, motivo: err.message };
+    a = crearLocal(pedido.gustos, pedido.tema, detalles, nombre); info = { sinIA: true, motivo: err.message };
   }
+  a.huevo = pedido.huevo;
+  guardarAprendin(a);
   E.ficha = a; E.mundo = null; E.fases = a.fases; E.nivel = 0;
   await nacimientoListo(a);           // espera a que el estudiante rompa el huevo y toque «Conocer»
   mostrarHuevo(false); E.creando = false;
@@ -212,8 +227,8 @@ function abrirNacimiento() {
   const n = NAC; clearInterval(n.pasos);
   n.listo = false; n.golpes = 0; n.mini?.destruir(); n.mini = null;
   n.el.className = 'nacimiento'; n.el.dataset.golpes = '0'; n.el.hidden = false;
-  $('#nacTitulo').textContent = 'Tu aprendín se está formando…';
-  $('#nacListo').hidden = true; $('#nacAprendin').replaceChildren();
+  $('#nacTitulo').textContent = pedido.huevo?.nombre ? `Tu ${pedido.huevo.nombre.charAt(0).toLowerCase() + pedido.huevo.nombre.slice(1)} se está formando…` : 'Tu aprendín se está formando…';
+  $('#nacListo').hidden = true; $('#nacClase').hidden = true; $('#nacAprendin').replaceChildren();
   let i = 0; $('#nacSub').textContent = PASOS[0];
   n.pasos = setInterval(() => { i = Math.min(i + 1, PASOS.length - 1); $('#nacSub').textContent = PASOS[i]; }, 2600);
   pintarGolpes(); $('#nacHuevo').focus();
@@ -244,7 +259,8 @@ async function romperHuevo() {
   $('#nacTitulo').textContent = `¡Nació ${a.nombre}!`;
   $('#nacSub').textContent = a.saludo;
   await espera(RM ? 0 : 650); n.mini.entender();
-  const btn = $('#nacListo'); btn.textContent = `Conocer a ${a.nombre}`; btn.hidden = false; btn.focus();
+  $('#nacListo').textContent = `Conocer a ${a.nombre}`; $('#nacListo').hidden = false;
+  const btn = $('#nacClase'); btn.textContent = `Enseñarle ${a.tema}`; btn.hidden = false; btn.focus();
 }
 function cerrarNacimiento() {
   const n = NAC; if (!n.el.classList.contains('abierto')) return;
@@ -252,6 +268,7 @@ function cerrarNacimiento() {
   n.fin?.(); n.fin = null;
 }
 $('#nacListo').addEventListener('click', cerrarNacimiento);
+$('#nacClase').addEventListener('click', () => { location.href = 'clase.html'; });
 NAC.el.addEventListener('keydown', e => {
   if (e.key === 'Escape') cerrarNacimiento();
   if (e.key === 'Tab') { // el foco no sale del diálogo
@@ -275,6 +292,7 @@ function pintarFicha(info) {
       h('dt', {}, `Lo que le vas a enseñar: ${a.tema}`),
       h('dd', {}, h('ol', { class: 'pasos' }, a.fases.slice(1).map((f, i) => h('li', {}, h('button', { class: 'paso', type: 'button', onclick: () => cambiarFase(i + 1) }, h('span', { class: 'paso-fase' }, f.titulo), f.concepto)))))
     ),
+    h('a', { class: 'btn btn-crear btn-clase', href: 'clase.html' }, `Enseñarle ${a.tema}`),
     h('p', { class: 'nota' }, origen)
   );
   caja.hidden = false;

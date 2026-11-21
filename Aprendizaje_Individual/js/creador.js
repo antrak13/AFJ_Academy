@@ -8,6 +8,8 @@ import { FORMAS, OJOS, BOCAS, MARCAS, normalizarLook } from './aprendin.js';
 import { PIEZAS, NIVELES, NOMBRES_NIVEL, CUELLOS, ESTAMPADOS, EMBLEMAS } from './piezas.js';
 import { PALETA } from './color.js';
 import { NOMBRES } from './mundos.js';
+import { limpiarDibujo } from './dibujo.js';
+import { esquemaHuevo, limpiarHuevo, huevoLocal } from './huevo.js';
 
 export const FASES = 5;
 export const ZONAS = ['cabeza', 'pelo', 'cara', 'cuello', 'cuerpo', 'brazos', 'espalda', 'mano', 'aura'];
@@ -35,9 +37,18 @@ const esquemaPeinado = desc => ({
   required: ['mechones', 'flequillo', 'tapa']
 });
 
-export function esquemaAprendin() {
-  const colorPieza = { type: 'string', enum: [...COLORES, 'cuerpo'] };
-  const pieza = z => ({ type: 'object', properties: { id: { type: 'string', enum: Object.keys(PIEZAS[z]) }, color1: colorPieza, color2: colorPieza }, required: ['id'] });
+// Dos modos de diseño:
+//   piezas → la IA elige piezas del catálogo y describe un peinado y un traje que el código dibuja
+//   dibujo → la IA dibuja el pelo, la ropa y los accesorios con trazos SVG propios (más parecido al personaje)
+export const MODOS = ['dibujo', 'piezas'];
+const SOLO_PIEZAS = ['peinado', 'peinado_final', 'traje'], SOLO_DIBUJO = ['dibujo', 'dibujo_final'];
+export const piezasDelModo = (z, modo) => Object.keys(PIEZAS[z]).filter(id => !(modo === 'dibujo' ? SOLO_PIEZAS : SOLO_DIBUJO).includes(id));
+
+export function esquemaAprendin(modo = 'piezas') {
+  const dibujo = modo === 'dibujo';
+  const hex = d => ({ type: 'string', description: `${d} (#RRGGBB o un color de la paleta)` });
+  const colorPieza = dibujo ? hex('Color') : { type: 'string', enum: [...COLORES, 'cuerpo'] };
+  const pieza = z => ({ type: 'object', properties: { id: { type: 'string', enum: piezasDelModo(z, modo) }, color1: colorPieza, color2: colorPieza }, required: ['id'] });
   const fase = {
     type: 'object',
     properties: {
@@ -48,15 +59,43 @@ export function esquemaAprendin() {
     },
     required: ['titulo', 'concepto', 'agrega']
   };
+  const comunes = {
+    inspiracion: { type: 'string', description: 'En qué se inspira su look (un estilo, un personaje o un equipo que nombró el estudiante), máximo 6 palabras' },
+    nombre: { type: 'string' }, mundo: { type: 'string' }, de: { type: 'string' },
+    personalidad: { type: 'string' }, mision: { type: 'string' }, saludo: { type: 'string' },
+    forma: { type: 'string', enum: dibujo ? ['bollo'] : Object.keys(FORMAS) }, color: { type: 'string', enum: COLORES }, numero: { type: 'integer' },
+    ojos: { type: 'string', enum: Object.keys(OJOS) }, boca: { type: 'string', enum: Object.keys(BOCAS) },
+    marcas: { type: 'string', enum: Object.keys(MARCAS) }, panza: { type: 'boolean' },
+    pies: dibujo ? hex('Color de los pies (zapatos o botas de su disfraz)') : { type: 'string', enum: COLORES, description: 'Color de los pies (zapatos o botas de su disfraz)' }
+  };
+  const requeridos = ['inspiracion', 'nombre', 'mundo', 'de', 'personalidad', 'mision', 'saludo', 'forma', 'color', 'ojos', 'boca', 'marcas', 'panza', 'pies'];
+  if (dibujo) {
+    const capa = d => ({ type: 'string', description: d });
+    return {
+      type: 'object',
+      properties: {
+        ...comunes,
+        dibujo: {
+          type: 'object', description: 'Tu dibujo del disfraz: figuras SVG en las coordenadas del lienzo',
+          properties: {
+            pelo_atras: capa('Silueta del pelo (o casco, capucha, orejas) detrás de la cabeza'),
+            pelo_frente: capa('Pelo sobre la frente, con el flequillo'),
+            ropa: capa('Ropa sobre el cuerpo, desde y≈184 hacia abajo'),
+            extra: capa('Accesorios delante: banda, gorra, bufanda, marcas en la cara (puede ir vacío)'),
+            final_atras: capa('Pelo de la transformación, detrás (vacío si no tiene)'),
+            final_frente: capa('Pelo de la transformación, sobre la frente (vacío si no tiene)')
+          },
+          required: ['pelo_atras', 'pelo_frente', 'ropa', 'extra']
+        },
+        fases: { type: 'array', minItems: FASES, maxItems: FASES, items: fase }
+      },
+      required: [...requeridos, 'dibujo', 'fases']
+    };
+  }
   return {
     type: 'object',
     properties: {
-      inspiracion: { type: 'string', description: 'En qué se inspira su look (un estilo, un personaje o un equipo que nombró el estudiante), máximo 6 palabras' },
-      nombre: { type: 'string' }, mundo: { type: 'string' }, de: { type: 'string' },
-      personalidad: { type: 'string' }, mision: { type: 'string' }, saludo: { type: 'string' },
-      forma: { type: 'string', enum: Object.keys(FORMAS) }, color: { type: 'string', enum: COLORES }, numero: { type: 'integer' },
-      ojos: { type: 'string', enum: Object.keys(OJOS) }, boca: { type: 'string', enum: Object.keys(BOCAS) },
-      marcas: { type: 'string', enum: Object.keys(MARCAS) }, panza: { type: 'boolean' }, pies: { type: 'string', enum: COLORES, description: 'Color de los pies (zapatos o botas de su disfraz)' },
+      ...comunes,
       peinado: esquemaPeinado('Peinado a medida que copia la silueta del pelo del personaje (se usa con la pieza de pelo «peinado»)'),
       traje: {
         type: 'object', description: 'Ropa a medida que copia la del personaje (se usa con la pieza de cuerpo «traje»)',
@@ -75,15 +114,27 @@ export function esquemaAprendin() {
       peinado_final: esquemaPeinado('Peinado de su transformación, si cambia de forma (se usa con la pieza «peinado_final»)'),
       fases: { type: 'array', minItems: FASES, maxItems: FASES, items: fase }
     },
-    required: ['inspiracion', 'nombre', 'mundo', 'de', 'personalidad', 'mision', 'saludo', 'forma', 'color', 'ojos', 'boca', 'marcas', 'panza', 'pies', 'peinado', 'fases']
+    required: [...requeridos, 'peinado', 'fases']
   };
 }
 
 // Respuesta de la IA (ya con la forma del esquema, pero sin confiar en ella) → aprendín listo para dibujar.
-export function armarAprendin(r = {}, { gustos = '', tema = '', detalles = [] } = {}) {
-  const nombre = txt(r.nombre, 14) || 'Aprendín';
-  const base = { nombre, forma: r.forma, color: r.color, numero: r.numero, rasgos: { ojos: r.ojos, boca: r.boca, marcas: r.marcas, panza: r.panza, pies: r.pies }, peinado: r.peinado, peinado_final: r.peinado_final, traje: r.traje };
+export function armarAprendin(r = {}, { gustos = '', tema = '', detalles = [], nombrePropio = '' } = {}) {
+  // el nombre no puede copiar al personaje («Naru» por Naruto); si el estudiante lo eligió, se respeta
+  let nombre = txt(nombrePropio, 14) || txt(r.nombre, 14) || 'Aprendín';
+  if (!nombrePropio && pareceA(nombre, `${gustos} ${limpiarDetalles(detalles).map(d => d.respuesta).join(' ')}`)) {
+    const viejo = nombre; nombre = otroNombre(nombre);
+    for (const k of ['saludo', 'mision', 'personalidad']) if (typeof r[k] === 'string') r[k] = r[k].split(viejo).join(nombre);
+  }
+  const base = { nombre, forma: r.forma, color: r.color, numero: r.numero, rasgos: { ojos: r.ojos, boca: r.boca, marcas: r.marcas, panza: r.panza, pies: r.pies }, peinado: r.peinado, peinado_final: r.peinado_final, traje: r.traje, dibujo: limpiarDibujo(r.dibujo) };
   const entrada = Array.isArray(r.fases) ? r.fases.slice(0, FASES) : [];
+  // si la IA dibujó pero olvidó usar su dibujo en las fases, se agrega solo
+  const usadas = new Set(entrada.flatMap(f => Object.entries(f?.agrega || {}).map(([z, a]) => `${z}:${a?.id}`)));
+  const dj = base.dibujo || {}, auto = [{}, {}, {}, {}, {}];
+  if ((dj.pelo_atras || dj.pelo_frente) && !usadas.has('pelo:dibujo')) auto[0].pelo = { id: 'dibujo' };
+  if (dj.ropa && !usadas.has('cuerpo:dibujo')) auto[0].cuerpo = { id: 'dibujo' };
+  if (dj.extra && !usadas.has('cabeza:dibujo')) auto[2].cabeza = { id: 'dibujo' };
+  if ((dj.final_atras || dj.final_frente) && !usadas.has('pelo:dibujo_final')) auto[4].pelo = { id: 'dibujo_final' };
   const piezas = {}, fases = [];
   let colorCuerpo = base.color;
   for (let i = 0; i < FASES; i++) {
@@ -92,6 +143,7 @@ export function armarAprendin(r = {}, { gustos = '', tema = '', detalles = [] } 
       const a = f.agrega?.[z];
       if (a && PIEZAS[z][a.id]) piezas[z] = { id: a.id, colores: [a.color1 || undefined, a.color2 || undefined] };
     }
+    for (const [z, a] of Object.entries(auto[i])) if (!(z === 'cabeza' && piezas.cabeza)) piezas[z] = a;
     if (i === FASES - 1 && f.color && PALETA[f.color]) colorCuerpo = f.color;
     fases.push({ titulo: txt(f.titulo, 32) || NOMBRES_NIVEL[i], concepto: i ? txt(f.concepto, 70) : '', look: normalizarLook({ ...base, color: colorCuerpo, piezas: { ...piezas } }) });
   }
@@ -100,6 +152,17 @@ export function armarAprendin(r = {}, { gustos = '', tema = '', detalles = [] } 
     personalidad: txt(r.personalidad, 160), mision: txt(r.mision, 240), saludo: txt(r.saludo, 200) || `¡Hola! Soy ${nombre}. ¿Me enseñas?`,
     gustos: txt(gustos, 160), tema: txt(tema, 80), detalles: limpiarDetalles(detalles), fases
   };
+}
+
+// ¿El nombre suena como un personaje que nombró el estudiante? (comparte las 3 primeras letras de una palabra o está dentro de ella)
+export function pareceA(nombre, texto) {
+  const a = norm(nombre).replace(/[^a-z]/g, '');
+  if (a.length < 3) return false;
+  return norm(texto).split(/[^a-z]+/).filter(w => w.length >= 4).some(w => w.startsWith(a.slice(0, 3)) || w.includes(a.slice(0, 4)) || (a.length >= 4 && a.includes(w.slice(0, 4))) || w.slice(-4) === a.slice(-4));
+}
+function otroNombre(semilla) {
+  let h = 0; for (const c of semilla) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return NOMBRES[h % NOMBRES.length];
 }
 
 // Respuestas a las preguntas previas: [{ pregunta, respuesta }] (cortas y sin vacíos)
@@ -115,16 +178,17 @@ export function esquemaPreguntas() {
       entendi: { type: 'string', description: 'Una oración corta que resume lo que entendiste de sus gustos y del tema' },
       preguntas: { type: 'array', minItems: 2, maxItems: 3, items: { type: 'object', properties: {
         pregunta: { type: 'string' }, opciones: { type: 'array', minItems: 3, maxItems: 5, items: { type: 'string' } }
-      }, required: ['pregunta', 'opciones'] } }
+      }, required: ['pregunta', 'opciones'] } },
+      huevo: esquemaHuevo()
     },
-    required: ['entendi', 'preguntas']
+    required: ['entendi', 'preguntas', 'huevo']
   };
 }
 export function limpiarPreguntas(r = {}) {
   const preguntas = (Array.isArray(r.preguntas) ? r.preguntas : []).slice(0, 3)
     .map(q => ({ pregunta: txt(q?.pregunta, 120), opciones: (Array.isArray(q?.opciones) ? q.opciones : []).map(o => txt(o, 40)).filter(Boolean).slice(0, 5) }))
     .filter(q => q.pregunta && q.opciones.length >= 2);
-  return { entendi: txt(r.entendi, 200), preguntas };
+  return { entendi: txt(r.entendi, 200), preguntas, huevo: r.huevo ? limpiarHuevo(r.huevo) : null };
 }
 // Preguntas sin IA: algo concreto de sus gustos, qué parte del tema y cómo quiere que sea.
 export function preguntasLocales(gustos = '', tema = '') {
@@ -145,8 +209,9 @@ export function preguntasLocales(gustos = '', tema = '') {
     preguntas: [
       { pregunta: '¿Hay algún personaje, equipo o estilo que te guste mucho?', opciones: op },
       { pregunta: `¿Qué parte de ${t} te cuesta más?`, opciones: ['Entender qué es', 'Hacer los ejercicios', 'Usarlo en problemas', 'Todo un poco'] },
-      { pregunta: '¿Cómo quieres que sea tu aprendín?', opciones: ['Travieso', 'Tímido', 'Competitivo', 'Muy curioso', 'Dormilón'] }
-    ]
+      { pregunta: '¿Cómo quieres que sea tu aprendín?', opciones: ['Pura energía', 'Mucha curiosidad', 'Le encanta competir', 'Algo de timidez', 'Siempre hace bromas'] }
+    ],
+    huevo: huevoLocal(gustos)
   };
 }
 
@@ -165,7 +230,7 @@ function azarCon(semilla) {
   return () => { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; return ((h >>> 0) % 10000) / 10000; };
 }
 
-export function crearLocal(gustos = '', tema = '', detalles = []) {
+export function crearLocal(gustos = '', tema = '', detalles = [], nombrePropio = '') {
   const extra = limpiarDetalles(detalles).map(d => d.respuesta).join(' ');
   const pal = palabrasDe(`${gustos} ${extra}`), azar = azarCon(norm(gustos) + '|' + norm(tema));
   const elegir = xs => xs[Math.floor(azar() * xs.length)];
@@ -189,12 +254,12 @@ export function crearLocal(gustos = '', tema = '', detalles = []) {
   const conceptos = ['', `Qué es ${t}`, 'Cómo se hace, paso a paso', 'Un ejemplo de su mundo', 'Resolverlo sin ayuda'];
   const r = {
     nombre, mundo: gusto, de: `del mundo de ${gusto.toLowerCase()}`,
-    personalidad: 'Curioso, distraído y con muchas ganas de aprender.',
+    personalidad: 'Tiene mucha curiosidad, se distrae fácil y tiene muchas ganas de aprender.',
     mision: `${nombre} quiere entender ${t} para usarlo en el mundo de ${gusto.toLowerCase()}, pero todavía no sabe nada.`,
     saludo: `¡Hola! Soy ${nombre}. Me encanta ${gusto.toLowerCase()}… pero de ${t} no sé nada. ¿Me enseñas?`,
     forma: elegir(Object.keys(FORMAS)), color: elegir(COLORES.filter(c => c !== 'carbon' && c !== 'nieve')), numero: 1 + Math.floor(azar() * 30),
     ojos: elegir(Object.keys(OJOS)), boca: elegir(Object.keys(BOCAS)), marcas: elegir(Object.keys(MARCAS)), panza: azar() < .5,
     fases: orden.map((zs, i) => ({ titulo: NOMBRES_NIVEL[i], concepto: conceptos[i], agrega: Object.fromEntries(zs.filter(z => mejor[z]).map(z => [z, { id: mejor[z] }])) }))
   };
-  return armarAprendin(r, { gustos, tema, detalles });
+  return armarAprendin(r, { gustos, tema, detalles, nombrePropio });
 }
