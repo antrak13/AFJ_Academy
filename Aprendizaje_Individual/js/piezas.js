@@ -6,12 +6,13 @@
 //   atras (detrás del cuerpo) · dentro (sobre el cuerpo, recortado a su forma) · fuera (delante) · cara · cuello · espalda · aura · mano
 import { tonos } from './color.js';
 import { n, P, lim, curvaCerrada, curvaAbierta, estrella, poligono, ruido } from './trazos.js';
+import { encajar } from './dibujo.js';
 
 export const SLOTS = ['aura', 'espalda', 'cuerpo', 'cuello', 'pelo', 'cara', 'cabeza', 'brazos', 'mano'];
 export const NOMBRES_SLOT = { cabeza: 'Cabeza', pelo: 'Pelo', cara: 'Cara', cuello: 'Cuello', cuerpo: 'Cuerpo', brazos: 'Brazos', espalda: 'Espalda', mano: 'En la mano', aura: 'Aura' };
 // Qué zonas se ven en cada nivel de aprendizaje: cuanto más le enseñas, más se transforma.
 export const NIVELES = [[], ['cabeza', 'pelo'], ['cabeza', 'pelo', 'mano'], ['cabeza', 'pelo', 'mano', 'cara', 'cuello', 'cuerpo', 'brazos'], ['cabeza', 'pelo', 'mano', 'cara', 'cuello', 'cuerpo', 'brazos', 'espalda', 'aura']];
-export const NOMBRES_NIVEL = ['Recién llegado', 'Aprendiz', 'Practicante', 'Experto', 'Maestro'];
+export const NOMBRES_NIVEL = ['Bebé', 'Aprendiz', 'Practicante', 'Estrella', 'Leyenda'];
 
 const CAPA = { cabeza: 'fuera', pelo: 'fuera', cara: 'cara', cuello: 'cuello', cuerpo: 'dentro', brazos: 'brazo', espalda: 'espalda', mano: 'mano', aura: 'aura' };
 const SW = 2.4;
@@ -863,6 +864,22 @@ function pintarTraje(g, A, B, o) {
   return s;
 }
 cuerpo.traje = { nombre: 'Traje a medida', c: ['#FF8A1E', '#2E5BD9'], desc: 'la ropa que diseñaste en el campo traje (copia la ropa del personaje)', pinta: (g, A, B, o) => pintarTraje(g, A, B, o) };
+
+// Dibujo libre: piezas que muestran lo que la IA dibujó con trazos propios (look.dibujo, ver dibujo.js).
+const capaDibujo = (g, o, k) => encajar(g, o.look?.dibujo?.[k]);
+Object.assign(pelo, {
+  dibujo: { nombre: 'Pelo dibujado', c: ['#1E1B3A', '#1E1B3A'], desc: 'el pelo que dibujaste en dibujo.pelo_atras y dibujo.pelo_frente', pinta: (g, A, B, o) => ({ atras: capaDibujo(g, o, 'pelo_atras'), fuera: capaDibujo(g, o, 'pelo_frente') }) },
+  dibujo_final: { nombre: 'Pelo transformado (dibujado)', c: ['#FFD83D', '#FFF3A0'], desc: 'el pelo de transformación que dibujaste en dibujo.final_atras y dibujo.final_frente', pinta: (g, A, B, o) => {
+    const d = o.look?.dibujo || {}, hay = d.final_atras || d.final_frente;
+    return { atras: capaDibujo(g, o, hay ? 'final_atras' : 'pelo_atras'), fuera: capaDibujo(g, o, hay ? 'final_frente' : 'pelo_frente') };
+  } }
+});
+cuerpo.dibujo = { nombre: 'Ropa dibujada', c: ['#FF8A1E', '#2E5BD9'], desc: 'la ropa que dibujaste en dibujo.ropa', pinta: (g, A, B, o) => {
+  const y0 = g.cuello.y - 2, alto = g.piso - y0;
+  const num = o.numero ? `<text x="${n(g.cx)}" y="${n(y0 + alto * .7)}" font-size="${n(lim(alto * .4, 16, 28))}" font-weight="800" font-family="'Bricolage Grotesque', 'Nunito', sans-serif" text-anchor="middle" fill="#1E1B3A" stroke="#fff" stroke-width="3.5" paint-order="stroke">${o.numero}</text>` : '';
+  return { dentro: capaDibujo(g, o, 'ropa') + num };
+} };
+cabeza.dibujo = { nombre: 'Accesorios dibujados', c: ['#FF8A1E', '#2E5BD9'], desc: 'los accesorios que dibujaste en dibujo.extra', pinta: (g, A, B, o) => ({ fuera: capaDibujo(g, o, 'extra') }) };
 
 aura.super = { nombre: 'Aura dorada', c: ['#FFD83D', '#FFF7C2'], desc: 'transformación, poder máximo, anime de peleas', pinta(g, A, B) { return aura.fuego.pinta(g, A, B) + aura.rayos.pinta(g, tonos('#FFFFFF'), tonos('#FFB000')); } };
 
