@@ -14,7 +14,8 @@
 <body>
 <header class="barra">
   <a class="marca" href="taller.html" aria-label="Aprendines: taller"><span class="marca-av" id="marcaAv"></span><span>Aprendines</span></a>
-  <p class="lema">Tú le enseñas. Él aprende. Y mientras aprende, <b>se transforma</b>.</p>
+  <nav class="nav" aria-label="Secciones"><a href="taller.html" aria-current="page">Taller</a><a href="clase.html">Clase</a><a href="fichas.html">Fichas</a></nav>
+  <p class="lema">Tú le enseñas, tu aprendín aprende y, mientras aprende, <b>se transforma</b>.</p>
 </header>
 
 <main class="taller">
@@ -23,22 +24,7 @@
       <div class="globo" id="globo" aria-hidden="true"></div>
       <p class="solo-lector" id="dicho" aria-live="polite"></p>
       <div class="estrella" id="estrella"></div>
-      <div class="huevo" aria-hidden="true">
-        <svg viewBox="0 0 120 150" overflow="visible">
-          <defs>
-            <radialGradient id="huevoLuz" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#F4F0FF"/><stop offset="1" stop-color="#D9D1FA"/></radialGradient>
-            <g id="huevoForma">
-              <path d="M60 6C88 6 112 52 112 88C112 122 90 144 60 144C30 144 8 122 8 88C8 52 32 6 60 6Z" fill="url(#huevoLuz)" stroke="#BDB2EE" stroke-width="3"/>
-              <g fill="#C9BFFF"><circle cx="38" cy="58" r="9"/><circle cx="80" cy="40" r="6"/><circle cx="86" cy="104" r="11"/><circle cx="42" cy="116" r="6"/><circle cx="64" cy="94" r="4"/></g>
-            </g>
-            <clipPath id="huevoArriba"><path d="M-10 -10H130V82L108 74L96 84L84 72L72 84L60 72L48 84L36 72L24 84L12 74L-10 82Z"/></clipPath>
-            <clipPath id="huevoAbajo"><path d="M-10 82L12 74L24 84L36 72L48 84L60 72L72 84L84 72L96 84L108 74L130 82V160H-10Z"/></clipPath>
-          </defs>
-          <g class="huevo-abajo" clip-path="url(#huevoAbajo)"><use href="#huevoForma"/></g>
-          <g class="huevo-arriba" clip-path="url(#huevoArriba)"><use href="#huevoForma"/></g>
-          <path class="huevo-grieta" d="M9 80L12 74L24 84L36 72L48 84L60 72L72 84L84 72L96 84L108 74L111 80" fill="none" stroke="#8F82D6" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" pathLength="100"/>
-        </svg>
-      </div>
+      <div class="huevo" id="huevoFoco" aria-hidden="true"></div>
       <div class="piso" aria-hidden="true"></div>
     </div>
 
@@ -82,8 +68,18 @@
         <button class="btn btn-crear" id="btnCrear" type="submit">Crear mi aprendín</button>
       </form>
       <div class="preguntas" id="preguntas" hidden>
+        <p class="huevo-info" id="huevoInfo" aria-live="polite"></p>
         <p class="entendi" id="entendi"></p>
         <div class="lista-preguntas" id="listaPreguntas" aria-live="polite"></div>
+        <div class="pregunta-ia nombre-propio">
+          <label class="pregunta-txt" for="nombrePropio">¿Quieres ponerle nombre?</label>
+          <input class="otra" id="nombrePropio" maxlength="14" autocomplete="off" placeholder="Si lo dejas vacío, la IA elige uno">
+        </div>
+        <div class="calidad" role="radiogroup" aria-labelledby="tCalidad">
+          <span class="campo-nombre" id="tCalidad">Diseño</span>
+          <label><input type="radio" name="calidad" value="rapido" checked> <b>Rápido</b> <small>en unos segundos</small></label>
+          <label><input type="radio" name="calidad" value="maxima"> <b>Máxima calidad</b> <small>piensa más el dibujo, tarda 1 a 3 minutos</small></label>
+        </div>
         <div class="preguntas-acciones">
           <button class="btn btn-crear" type="button" id="btnNacer">¡Que nazca!</button>
           <button class="btn" type="button" id="btnSaltar">Saltar preguntas</button>
@@ -122,18 +118,15 @@
   <div class="nac-caja" role="dialog" aria-modal="true" aria-labelledby="nacTitulo" aria-describedby="nacSub">
     <p class="nac-titulo" id="nacTitulo">Tu aprendín se está formando…</p>
     <div class="nac-escena">
-      <button class="nac-huevo" id="nacHuevo" type="button" aria-label="Golpear el huevo">
-        <svg viewBox="0 0 120 150" overflow="visible" aria-hidden="true">
-          <g class="huevo-abajo" clip-path="url(#huevoAbajo)"><use href="#huevoForma"/></g>
-          <g class="huevo-arriba" clip-path="url(#huevoArriba)"><use href="#huevoForma"/></g>
-          <path class="nac-grieta" d="M60 72L48 84L36 72L24 84L12 74L9 80M60 72L72 84L84 72L96 84L108 74L111 80" fill="none" stroke="#8F82D6" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" pathLength="100"/>
-        </svg>
-      </button>
+      <button class="nac-huevo" id="nacHuevo" type="button" aria-label="Golpear el huevo"></button>
       <div class="nac-aprendin" id="nacAprendin"></div>
     </div>
     <div class="nac-golpes" id="nacGolpes" aria-hidden="true"><i></i><i></i><i></i></div>
     <p class="nac-sub" id="nacSub" aria-live="polite"></p>
-    <button class="btn btn-crear nac-listo" id="nacListo" type="button" hidden>Conocerlo</button>
+    <div class="nac-acciones">
+      <button class="btn btn-crear nac-listo" id="nacClase" type="button" hidden>Empezar a enseñarle</button>
+      <button class="btn nac-listo" id="nacListo" type="button" hidden>Conocer a tu aprendín</button>
+    </div>
   </div>
 </div>
 

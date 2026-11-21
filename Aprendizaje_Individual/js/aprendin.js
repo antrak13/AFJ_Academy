@@ -7,6 +7,7 @@
 import { PALETA, color, tonos, mover } from './color.js';
 import { PIEZAS, SLOTS, NIVELES, pintarPieza, CUELLOS, ESTAMPADOS, EMBLEMAS } from './piezas.js';
 import { n, lim, curvaCerrada, curvaAbierta, estrella } from './trazos.js';
+import { limpiarDibujo } from './dibujo.js';
 
 const TINTA = '#1E1B3A', BOCA = '#5B1A32', LENGUA = '#FF8A9A', RUBOR = '#FF6F8E';
 const RM = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -178,22 +179,22 @@ function caminoBrazo(g, pose, lado) {
 // Cada emoción: parámetros de la cara, pose de los brazos [izquierdo, derecho], un sticker y una frase de ejemplo.
 // mirar:false = la mirada es parte de la emoción y no sigue al puntero.
 export const EMOCIONES = {
-  neutral: { nombre: 'Tranquilo', p: {}, brazos: ['abajo', 'abajo'], frase: 'Aquí estoy. ¿Qué me vas a enseñar hoy?' },
-  feliz: { nombre: 'Feliz', p: { ojoS: .15, cejaY: .2, bocaW: 1, bocaC: .9, bocaA: .35, rubor: .55 }, brazos: ['abajo', 'abajo'], frase: '¡Qué bueno! Me gusta cómo lo explicas.' },
-  emocionado: { nombre: 'Emocionado', p: { ojoS: 1, cejaY: .4, bocaW: 1.1, bocaC: 1, bocaA: .7, rubor: .75, rebote: 1 }, brazos: ['celebrar', 'celebrar'], sticker: 'brillos', frase: '¡Sííí! ¡Quiero aprender más!' },
-  curioso: { nombre: 'Curioso', p: { ojoA: 1.12, cejaY: .3, cejaAsim: .8, bocaW: .42, bocaC: .1, bocaA: .3, incl: 6 }, brazos: ['abajo', 'abajo'], sticker: 'duda', frase: 'Mmm… ¿y eso por qué pasa?' },
+  neutral: { nombre: 'Calma', p: {}, brazos: ['abajo', 'abajo'], frase: 'Aquí estoy. ¿Qué me vas a enseñar hoy?' },
+  feliz: { nombre: 'Alegría', p: { ojoS: .15, cejaY: .2, bocaW: 1, bocaC: .9, bocaA: .35, rubor: .55 }, brazos: ['abajo', 'abajo'], frase: '¡Qué bueno! Me gusta cómo lo explicas.' },
+  emocionado: { nombre: 'Emoción', p: { ojoS: 1, cejaY: .4, bocaW: 1.1, bocaC: 1, bocaA: .7, rubor: .75, rebote: 1 }, brazos: ['celebrar', 'celebrar'], sticker: 'brillos', frase: '¡Sííí! ¡Quiero aprender más!' },
+  curioso: { nombre: 'Curiosidad', p: { ojoA: 1.12, cejaY: .3, cejaAsim: .8, bocaW: .42, bocaC: .1, bocaA: .3, incl: 6 }, brazos: ['abajo', 'abajo'], sticker: 'duda', frase: 'Mmm… ¿y eso por qué pasa?' },
   pensando: { nombre: 'Pensando', p: { ojoA: .9, mirX: .6, mirY: -.75, cejaAsim: .5, bocaW: .5, bocaC: -.1, bocaX: .6, incl: -3 }, brazos: ['abajo', 'menton'], sticker: 'puntos', mirar: false, frase: 'Déjame pensarlo un momento…' },
-  confundido: { nombre: 'Confundido', p: { ojoT: .2, cejaAsim: -.9, cejaA: .3, bocaW: .7, bocaC: -.2, bocaOnda: .9, incl: -7 }, brazos: ['encoger', 'encoger'], sticker: 'duda', frase: 'Espera, me perdí. ¿Me lo dices de otra forma?' },
-  sorprendido: { nombre: 'Sorprendido', p: { ojoA: 1.3, cejaY: 1, bocaW: .45, bocaC: 0, bocaA: 1, rubor: .3 }, brazos: ['arriba', 'arriba'], sticker: 'exclama', frase: '¡¿En serio?! ¡No lo sabía!' },
-  triste: { nombre: 'Triste', p: { ojoA: .82, ojoT: .5, cejaA: .9, cejaY: .1, bocaW: .7, bocaC: -.75, mirY: .5, rubor: .1 }, brazos: ['abajo', 'abajo'], sticker: 'lagrima', mirar: false, frase: 'No me salió… creo que lo entendí mal.' },
-  nervioso: { nombre: 'Nervioso', p: { ojoA: 1.05, cejaA: .7, cejaY: .3, bocaW: .9, bocaC: .1, bocaOnda: 1, rubor: .4, temblor: 1 }, brazos: ['adelante', 'adelante'], sticker: 'sudor', frase: 'Uy… ¿y si me toca la prueba ahora?' },
-  avergonzado: { nombre: 'Avergonzado', p: { ojoS: .6, mirX: -.6, mirY: .45, cejaA: .6, bocaW: .55, bocaC: .3, bocaX: -.4, rubor: 1 }, brazos: ['abajo', 'tapar'], sticker: 'sudor', mirar: false, frase: 'Ups… me equivoqué, ¿verdad?' },
-  orgulloso: { nombre: 'Orgulloso', p: { ojoS: 1, ojoA: .9, cejaY: .2, bocaW: 1, bocaC: .9, bocaA: .1, mirY: -.3, incl: -4, rubor: .5 }, brazos: ['cadera', 'cadera'], sticker: 'brillos', frase: '¡Lo logré! Y fue gracias a ti.' },
+  confundido: { nombre: 'Confusión', p: { ojoT: .2, cejaAsim: -.9, cejaA: .3, bocaW: .7, bocaC: -.2, bocaOnda: .9, incl: -7 }, brazos: ['encoger', 'encoger'], sticker: 'duda', frase: 'Espera, me perdí. ¿Me lo dices de otra forma?' },
+  sorprendido: { nombre: 'Sorpresa', p: { ojoA: 1.3, cejaY: 1, bocaW: .45, bocaC: 0, bocaA: 1, rubor: .3 }, brazos: ['arriba', 'arriba'], sticker: 'exclama', frase: '¡¿En serio?! ¡No lo sabía!' },
+  triste: { nombre: 'Tristeza', p: { ojoA: .82, ojoT: .5, cejaA: .9, cejaY: .1, bocaW: .7, bocaC: -.75, mirY: .5, rubor: .1 }, brazos: ['abajo', 'abajo'], sticker: 'lagrima', mirar: false, frase: 'No me salió… creo que lo entendí mal.' },
+  nervioso: { nombre: 'Nervios', p: { ojoA: 1.05, cejaA: .7, cejaY: .3, bocaW: .9, bocaC: .1, bocaOnda: 1, rubor: .4, temblor: 1 }, brazos: ['adelante', 'adelante'], sticker: 'sudor', frase: 'Uy… ¿y si me toca la prueba ahora?' },
+  avergonzado: { nombre: 'Vergüenza', p: { ojoS: .6, mirX: -.6, mirY: .45, cejaA: .6, bocaW: .55, bocaC: .3, bocaX: -.4, rubor: 1 }, brazos: ['abajo', 'tapar'], sticker: 'sudor', mirar: false, frase: 'Ups… me equivoqué, ¿verdad?' },
+  orgulloso: { nombre: 'Orgullo', p: { ojoS: 1, ojoA: .9, cejaY: .2, bocaW: 1, bocaC: .9, bocaA: .1, mirY: -.3, incl: -4, rubor: .5 }, brazos: ['cadera', 'cadera'], sticker: 'brillos', frase: '¡Lo logré! Y fue gracias a ti.' },
   eureka: { nombre: '¡Entendió!', p: { ojoA: 1.25, cejaY: .9, bocaW: 1.2, bocaC: 1, bocaA: .8, rubor: .6, rebote: .5 }, brazos: ['abajo', 'arriba'], sticker: 'idea', frase: '¡Ahhh, ya entendí! ¡Tiene sentido!' },
-  aburrido: { nombre: 'Aburrido', p: { ojoA: .45, cejaY: -.3, bocaW: .6, bocaC: -.1, mirX: -.3, incl: 5 }, brazos: ['abajo', 'abajo'], sticker: 'zzz', mirar: false, frase: 'Mmm… ¿y si me lo cuentas con un ejemplo?' },
-  decidido: { nombre: 'Decidido', p: { ojoA: .92, ojoT: -.25, cejaA: -.7, cejaY: -.2, bocaW: .8, bocaC: .5, bocaX: .35 }, brazos: ['cadera', 'arriba'], frase: '¡Listo! Ahora sí voy a la prueba.' },
-  frustrado: { nombre: 'Frustrado', p: { ojoT: -.3, ojoA: .9, cejaA: -1, bocaW: .7, bocaC: -.6, bocaOnda: .4, rubor: .35 }, brazos: ['abajo', 'abajo'], sticker: 'garabato', frase: '¡Argh! No me sale. Explícamelo otra vez.' },
-  agradecido: { nombre: 'Agradecido', p: { ojoS: 1, cejaA: .3, cejaY: .2, bocaW: .9, bocaC: .8, bocaA: .2, rubor: .9, incl: 4 }, brazos: ['tapar', 'abajo'], sticker: 'corazon', frase: 'Gracias por tenerme paciencia.' }
+  aburrido: { nombre: 'Aburrimiento', p: { ojoA: .45, cejaY: -.3, bocaW: .6, bocaC: -.1, mirX: -.3, incl: 5 }, brazos: ['abajo', 'abajo'], sticker: 'zzz', mirar: false, frase: 'Mmm… ¿y si me lo cuentas con un ejemplo?' },
+  decidido: { nombre: 'Decisión', p: { ojoA: .92, ojoT: -.25, cejaA: -.7, cejaY: -.2, bocaW: .8, bocaC: .5, bocaX: .35 }, brazos: ['cadera', 'arriba'], frase: '¡Listo! Ahora sí voy a la prueba.' },
+  frustrado: { nombre: 'Frustración', p: { ojoT: -.3, ojoA: .9, cejaA: -1, bocaW: .7, bocaC: -.6, bocaOnda: .4, rubor: .35 }, brazos: ['abajo', 'abajo'], sticker: 'garabato', frase: '¡Argh! No me sale. Explícamelo otra vez.' },
+  agradecido: { nombre: 'Gratitud', p: { ojoS: 1, cejaA: .3, cejaY: .2, bocaW: .9, bocaC: .8, bocaA: .2, rubor: .9, incl: 4 }, brazos: ['tapar', 'abajo'], sticker: 'corazon', frase: 'Gracias por tenerme paciencia.' }
 };
 export const EMO_IDS = Object.keys(EMOCIONES);
 
@@ -258,6 +259,8 @@ export function normalizarLook(l = {}) {
   if (pf) out.peinado_final = pf;
   const tj = limpiarTraje(l.traje);
   if (tj) out.traje = tj;
+  const dj = limpiarDibujo(l.dibujo);
+  if (dj) out.dibujo = dj;
   for (const slot of SLOTS) {
     const x = l.piezas?.[slot];
     const id = typeof x === 'string' ? x : x?.id;
@@ -300,7 +303,7 @@ export function svgAprendin(lookIn, opciones = {}) {
   const R = g.ojo.r, tr = n(p.incl);
   const B = g.brazo, PI = g.pies, pies = look.rasgos.pies ? tonos(look.rasgos.pies) : { base: mover(t.oscuro, -.04), oscuro: t.tinta };
   const bracito = (cls, b) => `<g class="${cls}" transform="${b.t}"><ellipse cx="0" cy="${n(B.L * .42)}" rx="${n(B.w / 2)}" ry="${n(B.L / 2)}" fill="url(#${id}-g)" stroke="${t.oscuro}" stroke-width="3"/>${capas.brazo}</g>`;
-  const etiqueta = opciones.etiqueta || `${look.nombre || 'Aprendín'}, ${emo.nombre.toLowerCase()}`;
+  const etiqueta = opciones.etiqueta || `${look.nombre || 'Aprendín'} (${emo.nombre.toLowerCase()})`;
   return `<svg class="apr-svg" viewBox="-20 -14 300 272" role="img" aria-label="${esc(etiqueta)}" xmlns="http://www.w3.org/2000/svg">
 <defs>
   <linearGradient id="${id}-g" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="${t.claro}"/><stop offset=".75" stop-color="${t.base}"/></linearGradient>
@@ -395,7 +398,7 @@ export function crearAprendin(opciones = {}) {
       a.emocion = emo;
       const s = a.dom.sticker; s.innerHTML = pintarSticker(geometria(a.look.forma), EMOCIONES[emo].sticker);
       s.classList.remove('apr-pop'); requestAnimationFrame(() => s.classList.add('apr-pop'));
-      a.el.querySelector('svg').setAttribute('aria-label', `${a.look.nombre || 'Aprendín'}, ${EMOCIONES[emo].nombre.toLowerCase()}`);
+      a.el.querySelector('svg').setAttribute('aria-label', `${a.look.nombre || 'Aprendín'} (${EMOCIONES[emo].nombre.toLowerCase()})`);
       if (!vivos.has(a)) { a.cur = paramsDe(emo); a.brazos = null; montar(a); }
       return api;
     },
