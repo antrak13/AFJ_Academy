@@ -25,9 +25,10 @@ En el estudio individual, el estudiante no recibe una explicación: **le enseña
 
 Al terminar los 4 pasos llega la prueba de su misión: 5 preguntas de opción múltiple, dentro de su mundo, que el estudiante y el aprendín **responden juntos**. En cada pregunta el aprendín dice qué respuesta cree y cómo lo pensó; el estudiante decide la respuesta del equipo. El aprendín cae en la trampa (el error típico) justo en los pasos que le enseñaste con menos claridad según lo que midió la IA, así que a veces tienes que **salvarlo**. Al final se ve cuántas respondieron bien, cuántas veces lo salvaste y en qué paso se confundió. Con 3 de 5 aprueban y se cumple la misión; si no, repasan las fichas y piden otra prueba. La IA arma el examen mientras le enseñas el último paso; sin IA, se arma con sus fichas.
 
-**4. Fichas** (`fichas.html` muestra una de cada tipo)
+**4. Fichas adaptativas y galería** (`fichas.html`)
 
-Cada paso aprendido deja una **ficha**: la idea clave, un **visual animado** que la IA elige entre 13 tipos y llena con datos de su mundo, un ejemplo resuelto, el «¡Ojo!» con el error en que cayó y la mejor frase que dijiste. Los tipos: pasos, ciclo, partes (mapa de conceptos), comparar, barras, torta, fracciones (pizzas o barras, con suma, resta o equivalencia; la cuenta la verifica el código), recta numérica con saltos, línea de tiempo, ecuación paso a paso, tabla, gráfico x-y e íconos. El código los dibuja y anima; el botón ↻ repite la animación.
+- **Fichas de inicio y estudio adaptativo**: escribes un tema y tus gustos (o usas tu aprendín), la IA genera una ficha visual animada eligiendo el mejor diseño entre los 13 tipos cuando aplica, y cada reacción («Lo entendí», «No entendí / más simple», «Otro ejemplo de mi mundo», «Dame un reto») adapta el nivel, el ejemplo y el tipo visual de la siguiente ficha. Sin IA, usa fichas adaptativas locales.
+- **Fichas de la clase y galería de los 13 tipos**: cada paso aprendido en `clase.html` deja una **ficha**: la idea clave, un **visual animado** que la IA elige entre 13 tipos y llena con datos de su mundo, un ejemplo resuelto, el «¡Ojo!» con el error en que cayó y la mejor frase que dijiste. Los tipos: pasos, ciclo, partes (mapa de conceptos), comparar, barras, torta, fracciones (pizzas o barras, con suma, resta o equivalencia; la cuenta la verifica el código), recta numérica con saltos, línea de tiempo, ecuación paso a paso, tabla, gráfico x-y e íconos. El código los dibuja y anima; el botón ↻ repite la animación.
 
 ## Cómo verlo
 
@@ -55,7 +56,7 @@ Sin IA, con cualquier servidor estático: `python3 -m http.server 8080` y abre h
 | `js/creador.js` | Los esquemas que se le piden a la IA, el armado de las fases y el creador sin IA |
 | `js/turno.js` | Un turno de la clase: esquema, evaluación y modo sin IA |
 | `js/examen.js`, `js/prueba.js`, `css/prueba.css` | La prueba en equipo: el examen que arma la IA, en qué preguntas cae el aprendín y la pantalla de la prueba |
-| `js/fichas.js`, `js/fichas-dom.js` | Las fichas: esquema, validación, los 13 visuales y su animación |
+| `js/fichas.js`, `js/fichas-dom.js`, `js/fichas-estudio.js`, `fichas.html`, `css/fichas.css` | Las fichas: esquema, validación, los 13 visuales animados, la galería y el estudio adaptativo desde el inicio |
 | `js/clase.js`, `clase.html`, `css/clase.css` | La página de la clase |
 | `js/taller.js`, `taller.html`, `css/taller.css` | La página del taller |
 | `servidor.mjs`, `ia/*.md` | El servidor que conecta con `agy2` y las instrucciones para la IA (preguntas y huevo, creación por dibujo o por piezas, turnos de la clase y fichas) |
