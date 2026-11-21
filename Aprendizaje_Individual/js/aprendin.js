@@ -4,7 +4,7 @@
 //   · la cara tiene parámetros continuos (apertura de ojos, curva de la boca, ángulo de cejas…);
 //   · cada emoción es una mezcla de esos parámetros, y el personaje pasa de una a otra sin saltos.
 // El vestuario (piezas.js) se dibuja encima con las mismas medidas.
-import { PALETA, color, tonos } from './color.js';
+import { PALETA, color, tonos, mover } from './color.js';
 import { PIEZAS, SLOTS, NIVELES, pintarPieza } from './piezas.js';
 import { n, lim, curvaCerrada, curvaAbierta, estrella } from './trazos.js';
 
@@ -117,22 +117,42 @@ function resolverPose(g, nombre, lado) {
   return { x: (tx - sx) * lado, y: ty - sy, b: 13, obj: P.obj };
 }
 
-function caminoOjo(g, p, lado, parp) {
+/* ================= Rasgos ================= */
+// Rasgos fijos de cada aprendín (además de la forma y el color): tipo de ojos, boca, panza y marcas.
+export const OJOS = {
+  redondos: { nombre: 'Redondos', rx: .78, ry: 1.05, br: 1, iris: .62 },
+  grandes: { nombre: 'Grandes', rx: .96, ry: 1.26, br: 1.25, iris: .34 },
+  puntitos: { nombre: 'Puntitos', rx: .44, ry: .54, br: .6, iris: 1 },
+  ovalados: { nombre: 'Ovalados', rx: .6, ry: 1.3, br: .9, iris: .5 },
+  pestanas: { nombre: 'Con pestañas', rx: .8, ry: 1.06, br: 1, iris: .55, pestanas: true }
+};
+export const BOCAS = { normal: 'Normal', colmillo: 'Colmillo', dientes: 'Dientes' };
+export const MARCAS = { ninguna: 'Ninguna', manchas: 'Manchas', rayas: 'Rayas', punta: 'Punta', estrella: 'Estrella' };
+const EST0 = OJOS.redondos;
+
+function caminoOjo(g, p, lado, parp, est = EST0) {
   const R = g.ojo.r, a = Math.max(0, p.ojoA * parp), s = lim(p.ojoS, 0, 1);
   const ex = g.cx + lado * g.ojo.dx, ey = g.ojo.y;
-  const rx = R * .78, ry = R * 1.05 * a, ryb = ry * (1 - 1.5 * s), k = R * .18 * s;
+  const rx = R * est.rx, ry = R * est.ry * a, ryb = ry * (1 - 1.5 * s), k = R * .18 * s;
   const ang = p.ojoT * 14 * lado * Math.PI / 180, co = Math.cos(ang), si = Math.sin(ang);
   const P = (x, y) => `${n(ex + x * co - y * si)} ${n(ey + x * si + y * co)}`;
   return `M${P(-rx, k)}C${P(-rx, k - ry * 1.33)} ${P(rx, k - ry * 1.33)} ${P(rx, k)}C${P(rx, k + ryb * 1.33)} ${P(-rx, k + ryb * 1.33)} ${P(-rx, k)}Z`;
 }
-function brillosOjo(g, p, lado, parp) {
+function brillosOjo(g, p, lado, parp, est = EST0) {
   const R = g.ojo.r, a = Math.max(0, p.ojoA * parp), s = lim(p.ojoS, 0, 1);
-  const ex = g.cx + lado * g.ojo.dx, ey = g.ojo.y, ry = R * 1.05 * a;
+  const ex = g.cx + lado * g.ojo.dx, ey = g.ojo.y, ry = R * est.ry * a, rx = R * est.rx;
   return {
-    x1: ex - R * .24 + p.mirX * R * .16, y1: ey - ry * .4 + p.mirY * R * .1, r1: R * .3,
-    x2: ex + R * .26 + p.mirX * R * .1, y2: ey + ry * .28, r2: R * .14,
+    x1: ex - rx * .3 + p.mirX * R * .16, y1: ey - ry * .4 + p.mirY * R * .1, r1: R * .3 * est.br,
+    x2: ex + rx * .33 + p.mirX * R * .1, y2: ey + ry * .28, r2: R * .14 * est.br,
     op: lim((a * (1 - s * 1.3) - .35) * 2.6, 0, 1)
   };
+}
+function caminoPestanas(g, p, lado, parp, est = EST0) {
+  if (!est.pestanas) return '';
+  const R = g.ojo.r, a = Math.max(0, p.ojoA * parp), s = lim(p.ojoS, 0, 1);
+  const ex = g.cx + lado * g.ojo.dx, ey = g.ojo.y, rx = R * est.rx, ry = R * est.ry * a, k = R * .18 * s;
+  const x0 = ex + lado * rx * .92, y0 = ey + k - ry * .35, x1 = ex + lado * rx * .55, y1 = ey + k - ry * .9;
+  return `M${n(x0)} ${n(y0)}l${n(lado * R * .55)} ${n(-R * .35)}M${n(x1)} ${n(y1)}l${n(lado * R * .4)} ${n(-R * .5)}`;
 }
 function caminoCeja(g, p, lado) {
   const R = g.ojo.r, ex = g.cx + lado * g.ojo.dx;
@@ -142,7 +162,7 @@ function caminoCeja(g, p, lado) {
   const P = (x, y) => `${n(ex + x * co - y * si)} ${n(yy + x * si + y * co)}`;
   return `M${P(-L, 0)}Q${P(0, -R * .32)} ${P(L, 0)}`;
 }
-function caminoBoca(g, p, fase = 0) {
+function caminoBoca(g, p, fase = 0, tipo = 'normal') {
   const R = g.ojo.r, w = R * 2.3 * p.bocaW, cx = g.cx + p.bocaX * R * .5, cy = g.boca.y;
   const c = p.bocaC, o = Math.max(0, p.bocaA);
   const esq = -c * R * .55, cSup = c * R * .25, cInf = cSup + o * R * 1.5 + Math.max(0, c) * o * R * .5;
@@ -154,7 +174,10 @@ function caminoBoca(g, p, fase = 0) {
     inf.push([x, cy + ye + (cInf - esq) * par + onda * (1 - lim(o, 0, 1))]);
   }
   const lengua = { cx, cy: cy + cInf - R * .2, rx: w * .3, ry: R * .55, op: lim((o - .25) * 3, 0, 1) };
-  return { d: curvaAbierta(sup) + curvaAbierta(inf.reverse(), false) + 'Z', lengua };
+  let diente = '';
+  if (tipo === 'colmillo') { const [x, y] = sup[7], d = R * .28; diente = `M${n(x - d)} ${n(y - .5)}L${n(x + d)} ${n(y - .5)}L${n(x)} ${n(y + R * .5)}Z`; }
+  if (tipo === 'dientes') { const [x, y] = sup[5], d = R * .25, hh = R * .45; diente = `M${n(x - d * 2)} ${n(y - .5)}h${n(d * 2 - .6)}v${n(hh)}h${n(-(d * 2 - .6))}zM${n(x + .6)} ${n(y - .5)}h${n(d * 2 - .6)}v${n(hh)}h${n(-(d * 2 - .6))}z`; }
+  return { d: curvaAbierta(sup) + curvaAbierta(inf.reverse(), false) + 'Z', lengua, diente };
 }
 function caminoBrazo(g, pose, lado) {
   const sx = g.cx + lado * g.hombro.dx, sy = g.hombro.y;
@@ -211,11 +234,24 @@ function pintarSticker(g, id) {
   }
 }
 
+function pintarMarcas(g, t, r) {
+  let s = '';
+  if (r.panza) s += `<ellipse cx="${g.cx}" cy="${n(g.y(.8))}" rx="${n(g.W * .3)}" ry="${n(g.H * .22)}" fill="${t.claro}" opacity=".9"/>`;
+  const W = g.W, H = g.H, cx = g.cx, top = g.top;
+  if (r.marcas === 'manchas') s += `<g fill="${t.oscuro}" opacity=".42">${[[-.36, .22, 9], [.3, .12, 6], [.38, .55, 10], [-.42, .62, 7], [-.1, .06, 5]].map(([x, y, rr]) => `<ellipse cx="${n(cx + x * W)}" cy="${n(top + y * H)}" rx="${rr}" ry="${n(rr * .8)}" transform="rotate(${n(x * 60)} ${n(cx + x * W)} ${n(top + y * H)})"/>`).join('')}</g>`;
+  if (r.marcas === 'rayas') s += `<g stroke="${t.oscuro}" stroke-width="5" stroke-linecap="round" fill="none" opacity=".45">${[.3, .45, .6].map(tt => { const yy = g.y(tt), xx = g.hw(tt); return `<path d="M${n(cx + xx + 3)} ${n(yy)}q-10 3 -18 0M${n(cx - xx - 3)} ${n(yy)}q10 3 18 0"/>`; }).join('')}</g>`;
+  if (r.marcas === 'punta') { const yf = g.y(.17); s += `<path d="M${n(cx - W)} ${n(top - 30)}H${n(cx + W)}V${n(yf)}Q${n(cx + W * .25)} ${n(yf + 9)} ${n(cx)} ${n(yf)}T${n(cx - W)} ${n(yf)}Z" fill="${t.tinta}" opacity=".35"/>`; }
+  if (r.marcas === 'estrella') s += `<path d="${estrella(cx, g.ojo.y - g.ojo.r * 2.6, g.ojo.r * .62, 4, .42)}" fill="#FFF3B0" opacity=".95"/>`;
+  return s;
+}
+
 /* ================= Look ================= */
 // Un look: { nombre, forma, color, numero, piezas: { slot: { id, colores: [c1, c2] } } }
 export function normalizarLook(l = {}) {
   const forma = FORMAS[l.forma] ? l.forma : 'bollo';
-  const out = { nombre: String(l.nombre || '').slice(0, 24), forma, color: color(l.color, PALETA.coral), numero: lim(parseInt(l.numero, 10) || 0, 0, 99), piezas: {} };
+  const r = l.rasgos || {};
+  const rasgos = { ojos: OJOS[r.ojos] ? r.ojos : 'redondos', boca: BOCAS[r.boca] ? r.boca : 'normal', panza: !!r.panza, marcas: MARCAS[r.marcas] ? r.marcas : 'ninguna' };
+  const out = { nombre: String(l.nombre || '').slice(0, 24), forma, color: color(l.color, PALETA.coral), numero: lim(parseInt(l.numero, 10) || 0, 0, 99), rasgos, piezas: {} };
   for (const slot of SLOTS) {
     const x = l.piezas?.[slot];
     const id = typeof x === 'string' ? x : x?.id;
@@ -252,14 +288,16 @@ export function svgAprendin(lookIn, opciones = {}) {
   }
   const [pl, pr] = brazosDe(g, emo.brazos, tieneObjeto);
   const bl = caminoBrazo(g, pl, -1), br = caminoBrazo(g, pr, 1);
-  const boca = caminoBoca(g, p);
-  const ojos = [-1, 1].map(lado => ({ d: caminoOjo(g, p, lado, 1), b: brillosOjo(g, p, lado, 1) }));
+  const est = OJOS[look.rasgos.ojos], boca = caminoBoca(g, p, 0, look.rasgos.boca);
+  const ojos = [-1, 1].map(lado => ({ d: caminoOjo(g, p, lado, 1, est), b: brillosOjo(g, p, lado, 1, est), pe: caminoPestanas(g, p, lado, 1, est) }));
+  const iris = mover(t.oscuro, -.08, .12);
   const R = g.ojo.r, tr = n(p.incl);
   const brazoColor = t.oscuro;
   const etiqueta = opciones.etiqueta || `${look.nombre || 'Aprendín'}, ${emo.nombre.toLowerCase()}`;
   return `<svg class="apr-svg" viewBox="-20 -14 300 272" role="img" aria-label="${esc(etiqueta)}" xmlns="http://www.w3.org/2000/svg">
 <defs>
   <linearGradient id="${id}-g" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="${t.claro}"/><stop offset=".75" stop-color="${t.base}"/></linearGradient>
+  <linearGradient id="${id}-i" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${TINTA}"/><stop offset="${est.iris}" stop-color="${TINTA}"/><stop offset="1" stop-color="${iris}"/></linearGradient>
   <clipPath id="${id}-c"><path d="${g.path}"/></clipPath>
   <clipPath id="${id}-b"><path class="apr-boca-clip" d="${boca.d}"/></clipPath>
 </defs>
@@ -272,6 +310,8 @@ export function svgAprendin(lookIn, opciones = {}) {
   <path class="apr-cuerpo" d="${g.path}" fill="url(#${id}-g)" stroke="${t.oscuro}" stroke-width="3" stroke-linejoin="round"/>
   <g clip-path="url(#${id}-c)">
     <ellipse cx="${n(g.cx + g.W * .12)}" cy="${n(g.piso + 8)}" rx="${n(g.W * .62)}" ry="${n(g.H * .3)}" fill="${t.oscuro}" opacity=".22"/>
+    ${pintarMarcas(g, t, look.rasgos)}
+    <path d="${g.path}" fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="7" transform="translate(3 3.5)"/>
     <ellipse cx="${n(g.cx - g.W * .2)}" cy="${n(g.top + g.H * .2)}" rx="${n(g.W * .16)}" ry="${n(g.H * .09)}" fill="#fff" opacity=".35" transform="rotate(-24 ${n(g.cx - g.W * .2)} ${n(g.top + g.H * .2)})"/>
     ${capas.dentro}
   </g>
@@ -279,9 +319,10 @@ export function svgAprendin(lookIn, opciones = {}) {
   <g class="apr-cara" transform="translate(${n(p.mirX * R * .45)} ${n(p.mirY * R * .35)})">
     <ellipse class="apr-rubor" cx="${n(g.cx - g.ojo.dx - R * .9)}" cy="${n(g.ojo.y + R * 1.55)}" rx="${n(R * 1.05)}" ry="${n(R * .58)}" fill="${RUBOR}" opacity="${n(p.rubor * .55)}"/>
     <ellipse class="apr-rubor" cx="${n(g.cx + g.ojo.dx + R * .9)}" cy="${n(g.ojo.y + R * 1.55)}" rx="${n(R * 1.05)}" ry="${n(R * .58)}" fill="${RUBOR}" opacity="${n(p.rubor * .55)}"/>
-    ${ojos.map(o => `<path class="apr-ojo" d="${o.d}" fill="${TINTA}" stroke="${TINTA}" stroke-width="2.4" stroke-linejoin="round"/><circle class="apr-brillo1" cx="${n(o.b.x1)}" cy="${n(o.b.y1)}" r="${n(o.b.r1)}" fill="#fff" opacity="${n(o.b.op)}"/><circle class="apr-brillo2" cx="${n(o.b.x2)}" cy="${n(o.b.y2)}" r="${n(o.b.r2)}" fill="#fff" opacity="${n(o.b.op)}"/>`).join('')}
+    ${ojos.map(o => `<path class="apr-ojo" d="${o.d}" fill="url(#${id}-i)" stroke="${TINTA}" stroke-width="2.4" stroke-linejoin="round"/><path class="apr-pestanas" d="${o.pe}" stroke="${TINTA}" stroke-width="${n(R * .22)}" stroke-linecap="round" fill="none"/><circle class="apr-brillo1" cx="${n(o.b.x1)}" cy="${n(o.b.y1)}" r="${n(o.b.r1)}" fill="#fff" opacity="${n(o.b.op)}"/><circle class="apr-brillo2" cx="${n(o.b.x2)}" cy="${n(o.b.y2)}" r="${n(o.b.r2)}" fill="#fff" opacity="${n(o.b.op)}"/>`).join('')}
     ${[-1, 1].map(lado => `<path class="apr-ceja" d="${caminoCeja(g, p, lado)}" fill="none" stroke="${TINTA}" stroke-width="${n(R * .3)}" stroke-linecap="round" opacity=".9"/>`).join('')}
     <path class="apr-boca" d="${boca.d}" fill="${BOCA}" stroke="${BOCA}" stroke-width="${n(R * .3)}" stroke-linejoin="round" stroke-linecap="round"/>
+    <path class="apr-diente" d="${boca.diente}" fill="#fff" stroke="${BOCA}" stroke-width="1" stroke-linejoin="round"/>
     <ellipse class="apr-lengua" clip-path="url(#${id}-b)" cx="${n(boca.lengua.cx)}" cy="${n(boca.lengua.cy)}" rx="${n(boca.lengua.rx)}" ry="${n(boca.lengua.ry)}" fill="${LENGUA}" opacity="${n(boca.lengua.op)}"/>
     ${capas.cara}
   </g>
@@ -376,10 +417,11 @@ function montar(a) {
   const q = s => a.el.querySelector(s), qa = s => [...a.el.querySelectorAll(s)];
   a.dom = {
     todo: q('.apr-todo'), sombra: q('.apr-sombra'), cara: q('.apr-cara'), ojos: qa('.apr-ojo'), b1: qa('.apr-brillo1'), b2: qa('.apr-brillo2'),
-    cejas: qa('.apr-ceja'), boca: q('.apr-boca'), bocaClip: q('.apr-boca-clip'), lengua: q('.apr-lengua'), rubor: qa('.apr-rubor'),
+    cejas: qa('.apr-ceja'), pestanas: qa('.apr-pestanas'), diente: q('.apr-diente'), boca: q('.apr-boca'), bocaClip: q('.apr-boca-clip'), lengua: q('.apr-lengua'), rubor: qa('.apr-rubor'),
     brazoI: q('.apr-brazo-i'), brazoD: q('.apr-brazo-d'), manoI: q('.apr-mano-i'), manoD: q('.apr-mano-d'), objeto: q('.apr-objeto'), sticker: q('.apr-sticker')
   };
   a.g = geometria(look.forma);
+  a.rasgos = normalizarLook(look).rasgos; a.est = OJOS[a.rasgos.ojos];
   a.tieneObjeto = !!look.piezas.mano;
   if (!a.brazos) a.brazos = brazosDe(a.g, (EMOCIONES[a.emocion] || EMOCIONES.neutral).brazos, a.tieneObjeto).map(p => ({ ...p }));
 }
@@ -459,15 +501,16 @@ function animar(a, t, dt) {
   // 6) cara
   a.dom.cara.setAttribute('transform', `translate(${n(p.mirX * R * .45)} ${n(p.mirY * R * .35)})`);
   [-1, 1].forEach((lado, i) => {
-    a.dom.ojos[i].setAttribute('d', caminoOjo(g, p, lado, parp));
-    const b = brillosOjo(g, p, lado, parp);
+    a.dom.ojos[i].setAttribute('d', caminoOjo(g, p, lado, parp, a.est));
+    if (a.est.pestanas) a.dom.pestanas[i].setAttribute('d', caminoPestanas(g, p, lado, parp, a.est));
+    const b = brillosOjo(g, p, lado, parp, a.est);
     a.dom.b1[i].setAttribute('cx', n(b.x1)); a.dom.b1[i].setAttribute('cy', n(b.y1)); a.dom.b1[i].setAttribute('opacity', n(b.op));
     a.dom.b2[i].setAttribute('cx', n(b.x2)); a.dom.b2[i].setAttribute('cy', n(b.y2)); a.dom.b2[i].setAttribute('opacity', n(b.op));
     a.dom.cejas[i].setAttribute('d', caminoCeja(g, p, lado));
     a.dom.rubor[i].setAttribute('opacity', n(p.rubor * .55));
   });
-  const boca = caminoBoca(g, p, fase);
-  a.dom.boca.setAttribute('d', boca.d); a.dom.bocaClip.setAttribute('d', boca.d);
+  const boca = caminoBoca(g, p, fase, a.rasgos.boca);
+  a.dom.boca.setAttribute('d', boca.d); if (boca.diente) a.dom.diente.setAttribute('d', boca.diente); a.dom.bocaClip.setAttribute('d', boca.d);
   const L = boca.lengua;
   a.dom.lengua.setAttribute('cx', n(L.cx)); a.dom.lengua.setAttribute('cy', n(L.cy)); a.dom.lengua.setAttribute('rx', n(L.rx)); a.dom.lengua.setAttribute('opacity', n(L.op));
 
