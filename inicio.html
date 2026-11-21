@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AFJ Academy — Plataforma de Aprendizaje & Estudio Colaborativo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-paper: #F4EFE6;
+      --bg-paper-dark: #E8DFD1;
+      --ink-navy: #2C364A;
+      --ink-muted: #6B645C;
+      --coral-accent: #E8835C;
+      --coral-dark: #D66D45;
+      --blue-accent: #5C95D6;
+      --blue-dark: #467EBF;
+      --purple-accent: #7D628C;
+      --purple-dark: #634A72;
+      --card-bg: #FCF9F4;
+      --border-soft: rgba(138, 121, 104, 0.22);
+      --gold-glow: rgba(244, 189, 108, 0.75);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-paper);
+      color: var(--ink-navy);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Textura de papel cálido + viñeta suave */
+    .paper-texture {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(circle at 50% 42%, rgba(255, 252, 245, 0.75) 0%, rgba(244, 239, 230, 0.35) 55%, rgba(226, 214, 198, 0.75) 100%);
+    }
+
+    .paper-noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.35;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.28'/%3E%3C/svg%3E");
+    }
+
+    /* Fondo ilustrado: Doodles académicos + Constelaciones */
+    .bg-illustrations {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    .doodle {
+      position: absolute;
+      color: #A68F7B;
+      opacity: 0.42;
+      animation: floatSlow 9s ease-in-out infinite;
+    }
+
+    .doodle.formula {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 1.25rem;
+      letter-spacing: 0.5px;
+    }
+
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-7px) rotate(1.5deg); }
+    }
+
+    /* Barra superior */
+    header {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 32px;
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    body.stage-hero header {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .brand-mini {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .brand-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      background: linear-gradient(135deg, #F09872, #E07048);
+      display: grid;
+      place-items: center;
+      color: white;
+      box-shadow: 0 3px 8px rgba(224, 112, 72, 0.25);
+    }
+
+    .brand-mini-text {
+      font-family: 'Playfair Display', serif;
+      font-weight: 800;
+      font-size: 1.15rem;
+      color: var(--ink-navy);
+    }
+
+    .brand-mini-text span {
+      color: var(--coral-accent);
+      font-style: italic;
+      margin-left: 2px;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pill-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 13px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      background: rgba(255, 253, 249, 0.85);
+      border: 1px solid var(--border-soft);
+      color: var(--ink-navy);
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 6px rgba(44, 54, 74, 0.04);
+    }
+
+    .pill-btn:hover {
+      background: #FFFFFF;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(44, 54, 74, 0.08);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: #34A853;
+      box-shadow: 0 0 0 2px rgba(52, 168, 83, 0.2);
+    }
+
+    /* Contenedor Principal */
+    main {
+      position: relative;
+      z-index: 5;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 24px 48px;
+      max-width: 1180px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* Sección Hero */
+    .hero-block {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+      transform: translateY(75px);
+    }
+
+    body.stage-cards .hero-block {
+      transform: translateY(0px);
+    }
+
+    .logo-wrapper {
+      position: relative;
+      display: inline-block;
+      padding: 6px 18px;
+      margin-bottom: 18px;
+    }
+
+    /* Efecto de destello dorado y revelado izquierda -> derecha */
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(3rem, 6vw, 4.75rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      color: var(--ink-navy);
+      clip-path: inset(0 100% 0 0);
+      opacity: 0;
+      transition: clip-path 1.15s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s ease;
+    }
+
+    body.stage-hero .hero-title {
+      clip-path: inset(0 0% 0 0);
+      opacity: 1;
+    }
+
+    .hero-title .academy {
+      color: var(--coral-accent);
+      font-style: italic;
+      font-weight: 700;
+      margin-left: 4px;
+    }
+
+    .light-sweep {
+      position: absolute;
+      top: 52%;
+      left: 0;
+      width: 160px;
+      height: 18px;
+      transform: translateY(-50%) translateX(-40px);
+      background: radial-gradient(ellipse at center, #FFFDF7 0%, var(--gold-glow) 45%, rgba(232, 131, 92, 0) 75%);
+      filter: blur(4px);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    body.stage-hero .light-sweep {
+      animation: sweepAcross 1.35s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
+
+    @keyframes sweepAcross {
+      0% { left: 2%; opacity: 0; }
+      20% { opacity: 1; }
+      80% { opacity: 0.9; }
+      100% { left: 82%; opacity: 0; }
+    }
+
+    .hero-underline {
+      height: 2px;
+      width: 0%;
+      max-width: 340px;
+      margin: 6px auto 0;
+      background: linear-gradient(90deg, transparent, rgba(232, 131, 92, 0.65), transparent);
+      transition: width 1s ease 0.4s;
+    }
+
+    body.stage-hero .hero-underline {
+      width: 75%;
+    }
+
+    /* Píldora "MÓDULOS DEL SISTEMA" */
+    .badge-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.6s ease 0.45s, transform 0.6s ease 0.45s;
+    }
+
+    body.stage-hero .badge-row {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .sparkle {
+      color: #C7B299;
+      font-size: 0.9rem;
+    }
+
+    .system-badge {
+      padding: 6px 18px;
+      border-radius: 999px;
+      background: rgba(255, 253, 249, 0.78);
+      border: 1px solid var(--border-soft);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--ink-navy);
+      text-transform: uppercase;
+      box-shadow: 0 2px 8px rgba(44, 54, 74, 0.04);
+    }
+
+    /* Subtítulo dinámico (cambia de título a lema en cursiva) */
+    .subtitle-container {
+      position: relative;
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      opacity: 0;
+      transition: opacity 0.6s ease 0.65s;
+    }
+
+    body.stage-hero .subtitle-container {
+      opacity: 1;
+    }
+
+    .subtitle-text {
+      position: absolute;
+      white-space: nowrap;
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+
+    .subtitle-primary {
+      font-size: clamp(1.05rem, 2vw, 1.35rem);
+      font-weight: 600;
+      color: var(--ink-navy);
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .subtitle-quote {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: clamp(1.05rem, 2vw, 1.32rem);
+      color: #5A534C;
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+    body.stage-quote .subtitle-primary {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+
+    body.stage-quote .subtitle-quote {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Grid de 3 Tarjetas de Módulos */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      width: 100%;
+      margin-top: 28px;
+      pointer-events: none;
+    }
+
+    body.stage-cards .cards-grid {
+      pointer-events: auto;
+    }
+
+    .module-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(182, 168, 152, 0.35);
+      border-radius: 22px;
+      padding: 22px 22px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      box-shadow: 0 14px 34px rgba(44, 54, 74, 0.06), 0 2px 6px rgba(44, 54, 74, 0.03);
+      opacity: 0;
+      transform: translateY(48px) scale(0.97);
+      transition:
+        opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.28s ease;
+    }
+
+    body.stage-cards .module-card:nth-child(1) {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      transition-delay: 0.05s;
+    }
+
+    body.stage-cards .module-card:nth-child(2) {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      transition-delay: 0.2s;
+    }
+
+    body.stage-cards .module-card:nth-child(3) {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      transition-delay: 0.35s;
+    }
+
+    body.stage-cards .module-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 42px rgba(44, 54, 74, 0.11);
+    }
+
+    /* Cabecera superior de la tarjeta (icono + tag) */
+    .card-top-meta {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .module-icon-box {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .card-blue .module-icon-box { background: #EBF3FC; color: var(--blue-accent); }
+    .card-purple .module-icon-box { background: #F2ECF5; color: var(--purple-accent); }
+    .card-coral .module-icon-box { background: #FDF0EA; color: var(--coral-accent); }
+
+    .module-tag {
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .card-blue .module-tag { background: #EBF3FC; color: #3D74B5; }
+    .card-purple .module-tag { background: #F2ECF5; color: #674E75; }
+    .card-coral .module-tag { background: #FDF0EA; color: #C85F38; }
+
+    .module-author {
+      font-size: 0.66rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+      margin-bottom: 4px;
+    }
+
+    .module-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.26rem;
+      font-weight: 800;
+      line-height: 1.22;
+      color: var(--ink-navy);
+      margin-bottom: 14px;
+    }
+
+    /* Mockup visual ilustrado dentro de cada tarjeta */
+    .mockup-box {
+      width: 100%;
+      height: 195px;
+      border-radius: 14px;
+      background: #F6F1E9;
+      border: 1px solid rgba(182, 168, 152, 0.25);
+      margin-bottom: 16px;
+      padding: 10px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Botón inferior de acción */
+    .card-cta {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: none;
+      color: #FFFFFF;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: filter 0.2s ease, transform 0.15s ease;
+    }
+
+    .card-cta:hover {
+      filter: brightness(1.06);
+      transform: scale(1.01);
+    }
+
+    .card-blue .card-cta { background: linear-gradient(180deg, #649EE0, #4E86C7); }
+    .card-purple .card-cta { background: linear-gradient(180deg, #876B96, #6C517A); }
+    .card-coral .card-cta { background: linear-gradient(180deg, #EE8C66, #D8724B); }
+
+    @media (max-width: 960px) {
+      .cards-grid {
+        grid-template-columns: 1fr;
+        max-width: 440px;
+      }
+      .subtitle-text {
+        white-space: normal;
+        padding: 0 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="paper-texture"></div>
+  <div class="paper-noise"></div>
+
+  <!-- Ilustraciones académicas y constelaciones del fondo -->
+  <div class="bg-illustrations">
+    <!-- Red geométrica superior derecha -->
+    <svg style="position:absolute; top:0; right:0; width:340px; height:280px; opacity:0.35;" viewBox="0 0 340 280" fill="none">
+      <line x1="180" y1="20" x2="290" y2="55" stroke="#B69F8A" stroke-width="1"/>
+      <line x1="290" y1="55" x2="325" y2="165" stroke="#B69F8A" stroke-width="1"/>
+      <line x1="290" y1="55" x2="225" y2="145" stroke="#B69F8A" stroke-width="1"/>
+      <line x1="225" y1="145" x2="325" y2="165" stroke="#B69F8A" stroke-width="1"/>
+      <line x1="225" y1="145" x2="270" y2="245" stroke="#B69F8A" stroke-width="1"/>
+      <circle cx="180" cy="20" r="3" fill="#D6A972"/>
+      <circle cx="290" cy="55" r="4" fill="#E8835C"/>
+      <circle cx="325" cy="165" r="3.5" fill="#D6A972"/>
+      <circle cx="225" cy="145" r="3" fill="#B69F8A"/>
+      <circle cx="270" cy="245" r="3" fill="#D6A972"/>
+    </svg>
+
+    <!-- Red geométrica inferior izquierda -->
+    <svg style="position:absolute; bottom:0; left:0; width:300px; height:240px; opacity:0.35;" viewBox="0 0 300 240" fill="none">
+      <line x1="25" y1="130" x2="115" y2="170" stroke="#B69F8A" stroke-width="1"/>
+      <line x1="115" y1="170" x2="85" y2="230" stroke="#B69F8A" stroke-width="1"/>
+      <line x1="115" y1="170" x2="205" y2="215" stroke="#B69F8A" stroke-width="1"/>
+      <circle cx="25" cy="130" r="3.5" fill="#E8835C"/>
+      <circle cx="115" cy="170" r="4" fill="#D6A972"/>
+      <circle cx="85" cy="230" r="3" fill="#B69F8A"/>
+      <circle cx="205" cy="215" r="3.5" fill="#D6A972"/>
+    </svg>
+
+    <!-- Fórmulas y doodles científicos -->
+    <span class="doodle formula" style="top:13%; left:13%;">f(x)</span>
+    <span class="doodle formula" style="top:38%; left:4%;">f(x)</span>
+    <span class="doodle formula" style="bottom:16%; left:37%;">f(x)</span>
+    <span class="doodle formula" style="top:18%; right:11%;">∑ eⁱ</span>
+    <span class="doodle formula" style="bottom:8%; right:4%;">x = √N / c</span>
+
+    <!-- Lápiz -->
+    <svg class="doodle" style="top:21%; left:7%; width:34px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+    </svg>
+
+    <!-- Bombilla -->
+    <svg class="doodle" style="top:17%; left:22%; width:32px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/>
+      <path d="M9 18h6"/><path d="M10 22h4"/>
+    </svg>
+
+    <!-- Átomo -->
+    <svg class="doodle" style="top:31%; left:13%; width:42px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+      <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+      <ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(30 12 12)"/>
+      <ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(-30 12 12)"/>
+      <ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(90 12 12)"/>
+    </svg>
+
+    <!-- Libro abierto derecha -->
+    <svg class="doodle" style="top:46%; right:9%; width:44px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+    </svg>
+
+    <!-- Escuadra superior derecha -->
+    <svg class="doodle" style="top:11%; right:2%; width:48px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+      <path d="M3 21h18L3 3v18z"/><path d="M7 17h6L7 11v6z"/>
+    </svg>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <a href="#" class="brand-mini">
+      <div class="brand-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+        </svg>
+      </div>
+      <div class="brand-mini-text">AFJ<span>Academy</span></div>
+    </a>
+
+    <div class="top-actions">
+      <button class="pill-btn" onclick="replayAnimation()" title="Volver a ver la animación inicial">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+          <path d="M3 3v5h5"/>
+        </svg>
+        Reiniciar
+      </button>
+      <div class="pill-btn">
+        <span class="status-dot"></span>
+        Computación lista
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenido Principal -->
+  <main>
+    <section class="hero-block">
+      <div class="logo-wrapper">
+        <h1 class="hero-title">AFJ<span class="academy">Academy</span></h1>
+        <div class="light-sweep"></div>
+        <div class="hero-underline"></div>
+      </div>
+
+      <div class="badge-row">
+        <span class="sparkle">✦</span>
+        <div class="system-badge">MÓDULOS DEL SISTEMA</div>
+        <span class="sparkle">✦</span>
+      </div>
+
+      <div class="subtitle-container">
+        <p class="subtitle-text subtitle-primary">Plataforma de Aprendizaje &amp; Estudio Colaborativo</p>
+        <p class="subtitle-text subtitle-quote">«Aprender a tu ritmo, debatir en equipo y enseñar para consolidar»</p>
+      </div>
+    </section>
+
+    <!-- 3 Tarjetas de Módulos -->
+    <section class="cards-grid">
+
+      <!-- TARJETA 1: FREDDY -->
+      <article class="module-card card-blue">
+        <div class="card-top-meta">
+          <div class="module-icon-box">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/>
+              <path d="M9 21h6"/>
+            </svg>
+          </div>
+          <span class="module-tag">Individual · IA &amp; Feed</span>
+        </div>
+
+        <span class="module-author">MÓDULO DE FREDDY</span>
+        <h2 class="module-title">Los Aprendices &amp; Feed<br>(Módulo de Freddy)</h2>
+
+        <!-- Ilustración SVG Dashboard Adaptativo -->
+        <div class="mockup-box">
+          <svg width="100%" height="100%" viewBox="0 0 280 175" fill="none">
+            <!-- Paneles blancos -->
+            <rect x="6" y="8" width="125" height="65" rx="8" fill="#FFFFFF" stroke="#E5DDD2"/>
+            <rect x="148" y="8" width="125" height="65" rx="8" fill="#FFFFFF" stroke="#E5DDD2"/>
+            <rect x="6" y="84" width="125" height="82" rx="8" fill="#FFFFFF" stroke="#E5DDD2"/>
+            <rect x="148" y="84" width="125" height="82" rx="8" fill="#FFFFFF" stroke="#E5DDD2"/>
+
+            <!-- Líneas de texto simuladas -->
+            <rect x="14" y="16" width="52" height="5" rx="2.5" fill="#9BBCE3"/>
+            <rect x="14" y="26" width="85" height="4" rx="2" fill="#E3DDD5"/>
+            <rect x="14" y="34" width="70" height="4" rx="2" fill="#E3DDD5"/>
+            <rect x="14" y="46" width="38" height="12" rx="4" fill="#EBF3FC"/>
+
+            <rect x="158" y="16" width="56" height="5" rx="2.5" fill="#9BBCE3"/>
+            <rect x="158" y="27" width="90" height="4" rx="2" fill="#E3DDD5"/>
+            <rect x="158" y="35" width="76" height="4" rx="2" fill="#E3DDD5"/>
+
+            <!-- Mini gráfico de líneas abajo derecha -->
+            <polyline points="158,150 180,132 204,138 228,112 260,104" stroke="#5C95D6" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <circle cx="180" cy="132" r="3" fill="#5C95D6"/>
+            <circle cx="228" cy="112" r="3" fill="#E8835C"/>
+
+            <!-- Bombilla central de IA -->
+            <circle cx="140" cy="86" r="24" fill="#FFF9EC" stroke="#F2C97D" stroke-width="1.5"/>
+            <path d="M140 73a9 9 0 0 1 6 15.7V92a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2v-3.3A9 9 0 0 1 140 73z" fill="#F6C85F" stroke="#D99B26" stroke-width="1.3"/>
+            <line x1="136" y1="97" x2="144" y2="97" stroke="#D99B26" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <button class="card-cta" onclick="alert('Abriendo Módulo de Freddy: Aprendizaje Individual Adaptativo')">
+          Comenzar a los Aprendices <span>→</span>
+        </button>
+      </article>
+
+      <!-- TARJETA 2: RUA -->
+      <article class="module-card card-purple">
+        <div class="card-top-meta">
+          <div class="module-icon-box">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+          <span class="module-tag">Grupal · 01 a 40</span>
+        </div>
+
+        <span class="module-author">MÓDULO DE RUA</span>
+        <h2 class="module-title">Estudio Grupal &amp; Sincronía<br>(Módulo de Rua)</h2>
+
+        <!-- Ilustración SVG Sala Grupal Dark -->
+        <div class="mockup-box" style="background:#262C3A; border-color:#384054;">
+          <svg width="100%" height="100%" viewBox="0 0 280 175" fill="none">
+            <!-- Nodos conectados -->
+            <line x1="140" y1="84" x2="72" y2="42" stroke="#586380" stroke-width="1.5" stroke-dasharray="3 3"/>
+            <line x1="140" y1="84" x2="210" y2="44" stroke="#586380" stroke-width="1.5" stroke-dasharray="3 3"/>
+            <line x1="140" y1="84" x2="78" y2="128" stroke="#586380" stroke-width="1.5" stroke-dasharray="3 3"/>
+            <line x1="140" y1="84" x2="206" y2="126" stroke="#586380" stroke-width="1.5" stroke-dasharray="3 3"/>
+
+            <!-- Avatar Central -->
+            <circle cx="140" cy="84" r="22" fill="#3B445B" stroke="#9B7EDE" stroke-width="2.5"/>
+            <circle cx="140" cy="79" r="6" fill="#E2D9F3"/>
+            <path d="M130 94c2-5 18-5 20 0" stroke="#E2D9F3" stroke-width="2.2" stroke-linecap="round"/>
+
+            <!-- Avatares periféricos -->
+            <circle cx="72" cy="42" r="14" fill="#3B445B" stroke="#649EE0" stroke-width="2"/>
+            <circle cx="72" cy="39" r="4" fill="#D6E6F9"/>
+            <circle cx="210" cy="44" r="14" fill="#3B445B" stroke="#E8835C" stroke-width="2"/>
+            <circle cx="210" cy="41" r="4" fill="#FADCD0"/>
+            <circle cx="78" cy="128" r="14" fill="#3B445B" stroke="#59C393" stroke-width="2"/>
+            <circle cx="78" cy="125" r="4" fill="#D2F3E4"/>
+            <circle cx="206" cy="126" r="14" fill="#3B445B" stroke="#F2C97D" stroke-width="2"/>
+            <circle cx="206" cy="123" r="4" fill="#FDF1D6"/>
+
+            <!-- Barra de progreso elástica inferior con zona de fricción -->
+            <rect x="20" y="156" width="240" height="6" rx="3" fill="#3E4659"/>
+            <rect x="20" y="156" width="135" height="6" rx="3" fill="#876B96"/>
+            <rect x="95" y="156" width="28" height="6" rx="2" fill="#E8835C"/>
+            <circle cx="155" cy="159" r="4.5" fill="#FFFFFF"/>
+            <circle cx="122" cy="159" r="4.5" fill="#E8835C" stroke="#262C3A" stroke-width="1.2"/>
+          </svg>
+        </div>
+
+        <button class="card-cta" onclick="alert('Abriendo Módulo de Rua: Salas de Estudio Grupal y Sincronía Elástica')">
+          Salas de Estudio Grupal <span>→</span>
+        </button>
+      </article>
+
+      <!-- TARJETA 3: ANDRÉ -->
+      <article class="module-card card-coral">
+        <div class="card-top-meta">
+          <div class="module-icon-box">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+              <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+            </svg>
+          </div>
+          <span class="module-tag">Social · 27 a 90</span>
+        </div>
+
+        <span class="module-author">MÓDULO DE ANDRÉ</span>
+        <h2 class="module-title">Efecto Protégé &amp; Cuaderno<br>(Módulo de André)</h2>
+
+        <!-- Ilustración SVG Pizarra y Notas -->
+        <div class="mockup-box">
+          <svg width="100%" height="100%" viewBox="0 0 280 175" fill="none">
+            <!-- Pizarra blanca inclinada -->
+            <g transform="rotate(-4 120 75)">
+              <rect x="24" y="12" width="175" height="108" rx="8" fill="#FFFFFF" stroke="#DFD5C7" stroke-width="1.5"/>
+              <text x="42" y="45" fill="#4A5568" font-family="Playfair Display, serif" font-style="italic" font-size="14">f(x) = ?</text>
+              <text x="42" y="70" fill="#718096" font-family="Inter, sans-serif" font-size="12">a + b = c</text>
+              <line x1="120" y1="35" x2="178" y2="35" stroke="#CBD5E0" stroke-width="2" stroke-linecap="round"/>
+              <line x1="120" y1="48" x2="165" y2="48" stroke="#CBD5E0" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="145" cy="80" r="14" stroke="#E8835C" stroke-width="1.8" fill="#FDF0EA"/>
+            </g>
+
+            <!-- Nota adhesiva naranja -->
+            <rect x="14" y="114" width="66" height="50" rx="6" fill="#FCE5D8" stroke="#F3B89B"/>
+            <line x1="22" y1="127" x2="68" y2="127" stroke="#D8724B" stroke-width="2" stroke-linecap="round"/>
+            <line x1="22" y1="137" x2="56" y2="137" stroke="#E89D7E" stroke-width="2" stroke-linecap="round"/>
+            <line x1="22" y1="147" x2="62" y2="147" stroke="#E89D7E" stroke-width="2" stroke-linecap="round"/>
+
+            <!-- Tarjeta flotante derecha -->
+            <rect x="150" y="96" width="116" height="68" rx="8" fill="#FFFFFF" stroke="#DFD5C7"/>
+            <rect x="160" y="106" width="52" height="5" rx="2.5" fill="#E8835C"/>
+            <circle cx="164" cy="122" r="2.5" fill="#5C95D6"/>
+            <rect x="172" y="120" width="76" height="4" rx="2" fill="#CBD5E0"/>
+            <circle cx="164" cy="134" r="2.5" fill="#59C393"/>
+            <rect x="172" y="132" width="64" height="4" rx="2" fill="#CBD5E0"/>
+            <rect x="160" y="146" width="94" height="10" rx="4" fill="#FDF0EA"/>
+          </svg>
+        </div>
+
+        <button class="card-cta" onclick="alert('Abriendo Módulo de André: Clases en Vivo por Pares, Cartelera y Cuaderno')">
+          Clases en Vivo &amp; Cuaderno <span>→</span>
+        </button>
+      </article>
+
+    </section>
+  </main>
+
+  <script>
+    let timers = [];
+
+    function clearTimers() {
+      timers.forEach(t => clearTimeout(t));
+      timers = [];
+    }
+
+    function startIntroSequence() {
+      clearTimers();
+      const body = document.body;
+
+      // Estado inicial limpio (solo fondo con doodles)
+      body.classList.remove('stage-hero', 'stage-quote', 'stage-cards');
+
+      // Forzar reflow para reiniciar animaciones CSS
+      void body.offsetWidth;
+
+      // 1. Aparece el título AFJ Academy con barrido dorado + header + badge
+      timers.push(setTimeout(() => {
+        body.classList.add('stage-hero');
+      }, 450));
+
+      // 2. El subtítulo cambia suavemente al lema en cursiva
+      timers.push(setTimeout(() => {
+        body.classList.add('stage-quote');
+      }, 2400));
+
+      // 3. El bloque hero sube y emergen las 3 tarjetas en cascada
+      timers.push(setTimeout(() => {
+        body.classList.add('stage-cards');
+      }, 3300));
+    }
+
+    function replayAnimation() {
+      startIntroSequence();
+    }
+
+    window.addEventListener('DOMContentLoaded', startIntroSequence);
+  </script>
+</body>
+</html>

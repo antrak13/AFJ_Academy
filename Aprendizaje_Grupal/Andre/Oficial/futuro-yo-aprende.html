@@ -1,0 +1,1487 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Futuro Yo Aprende · Aprendizaje Grupal</title>
+  <meta name="description" content="Feed de aprendizaje adaptativo personalizado con IA, clases colaborativas en vivo y tutorías.">
+  
+  <!-- Tipografías del Sistema (Fraunces + Atkinson Hyperlegible + Caveat) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Caveat:wght@500;700&family=Fraunces:ital,opsz,wght@0,9..144,500..800;1,9..144,500..700&family=JetBrains+Mono:wght@400;500&display=swap">
+  
+  <!-- Hoja de estilos del módulo -->
+  <link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+
+<!-- ==========================================================================
+     CABECERA PRINCIPAL
+     ========================================================================== -->
+<header class="wrap top">
+  <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
+    <span class="logo">Futuro Yo <em>Aprende</em></span>
+    <span class="ai" id="ai" data-state="pending"><span class="dot"></span><span id="ai-text">IA en vivo: conectando…</span></span>
+  </div>
+  <div style="display: flex; align-items: center; gap: 10px;">
+    <!-- Al presionar el badge o botón de perfil se abre la información del perfil con racha y estrellas -->
+    <div class="user-badge-header" onclick="abrirModalPerfilPropio()" title="Ver mi perfil y estadísticas">
+      <div class="user-avatar-circle" id="headerAvatar">👨‍💻</div>
+      <div class="user-info-text">
+        <b id="headerUserName">Andre</b>
+        <span id="headerUserSubtitle">🎓 UMSS • Cochabamba</span>
+      </div>
+    </div>
+    <button type="button" class="auth-btn-header" onclick="abrirModalPerfilPropio()" title="Ver perfil y rangos">
+      <span>👤 Mi Perfil</span>
+    </button>
+  </div>
+</header>
+
+<!-- ==========================================================================
+     BARRA DE NAVEGACIÓN GLOBAL ENTRE SECCIONES
+     ========================================================================== -->
+<div class="wrap">
+  <nav class="main-nav-bar" aria-label="Navegación principal">
+    <div class="main-tabs" style="overflow-x: auto; max-width: 100%;">
+      <button type="button" class="main-tab-btn active" id="tab-btn-feed" onclick="switchAppTab('feed')">
+        <span>🧠</span>
+        <span>Feed IA</span>
+      </button>
+      <button type="button" class="main-tab-btn" id="tab-btn-comunidad" onclick="switchAppTab('comunidad')">
+        <span>👥</span>
+        <span>Grupos & Clases</span>
+        <span class="main-tab-pill pulse-badge">● En vivo</span>
+      </button>
+      <button type="button" class="main-tab-btn" id="tab-btn-cuaderno" onclick="switchAppTab('cuaderno')">
+        <span>📝</span>
+        <span>Cuaderno</span>
+      </button>
+      <button type="button" class="main-tab-btn" id="tab-btn-focus" onclick="switchAppTab('focus')">
+        <span>⏱️</span>
+        <span>Modo Estudio</span>
+        <span class="main-tab-pill">Live</span>
+      </button>
+      <button type="button" class="main-tab-btn" id="tab-btn-amigos" onclick="switchAppTab('amigos')">
+        <span>🤝</span>
+        <span>Conectar Amigos</span>
+        <span class="main-tab-pill" id="badgeSolicitudesNav" style="display: none; background: #EF4444; color: white;">0</span>
+      </button>
+      <button type="button" class="main-tab-btn" id="tab-btn-mensajes" onclick="switchAppTab('mensajes')">
+        <span>💬</span>
+        <span>Mensajes</span>
+        <span class="main-tab-pill" id="badgeMensajesPrivados" style="background: var(--coral); color: white;">1</span>
+      </button>
+    </div>
+  </nav>
+</div>
+
+<!-- ==========================================================================
+     VISTA 1: FEED DE APRENDIZAJE ADAPTATIVO CON IA
+     ========================================================================== -->
+<main class="wrap layout" id="vista-feed-adaptativo">
+  <section class="feed-col" aria-label="Tu feed">
+    <form class="start" id="start">
+      <label class="q" for="topic"><span class="paso-num">1</span>¿Qué quieres aprender?</label>
+      <div class="topic-row">
+        <input id="topic" autocomplete="off" maxlength="120" value="Cómo proteger mis ahorros en Bolivia">
+        <button class="btn" type="submit">Empezar en vivo</button>
+      </div>
+      <div class="sugs" id="sugs"></div>
+      <label class="lbl" for="about"><span class="paso-num">2</span>Sobre ti <span>(la IA lo usa para que los ejemplos sean de tu vida)</span></label>
+      <textarea id="about" rows="2" maxlength="400">Tengo 21 años, estudio ingeniería en Cochabamba y vendo ropa por Instagram. Ahorro un poco en bolivianos.</textarea>
+      <fieldset class="lvls">
+        <legend><span class="paso-num">3</span>¿Cuánto sabes del tema?</legend>
+        <label><input type="radio" name="lvl" value="cero"><span>Empiezo de cero</span></label>
+        <label><input type="radio" name="lvl" value="algo" checked><span>Sé algo</span></label>
+        <label><input type="radio" name="lvl" value="bastante"><span>Sé bastante</span></label>
+      </fieldset>
+    </form>
+    <div class="topicbar" id="topicbar" hidden>
+      <span>Tema: <b id="tb-topic"></b></span>
+      <button class="btn ghost sm" type="button" id="tb-change">Cambiar tema</button>
+    </div>
+    <p class="preview-note" id="preview-note">Vista previa de tu feed. Toca «Empezar en vivo» y desde ahí cada tarjeta se escribe para ti mientras bajas.</p>
+    <div class="feed" id="feed"></div>
+    <div id="sentinel" aria-hidden="true"></div>
+  </section>
+
+  <aside class="panel" id="panel" aria-label="Lo que la IA sabe de ti">
+    <button class="panel-sum" id="panel-sum" type="button" aria-expanded="false" aria-controls="panel-body">
+      <span id="sum-text">Lo que la IA sabe de ti</span><span class="chev" id="sum-chev">ver</span>
+    </button>
+    <div class="panel-body" id="panel-body">
+      <h3>Lo que la IA sabe de ti</h3>
+      <div class="sec">
+        <p class="label">Nivel estimado</p>
+        <div class="lvl-row"><span class="big" id="m-level">2,2</span><span id="m-level-label" class="mini"></span><span class="trend" id="m-trend"></span></div>
+        <div class="track"><i id="m-level-bar"></i></div>
+      </div>
+      <div class="sec">
+        <p class="label">Cómo aprendes mejor</p>
+        <div class="rows" id="m-formats"></div>
+      </div>
+      <div class="sec">
+        <p class="label">Mapa del tema</p>
+        <div class="rows" id="m-map"></div>
+      </div>
+      <div class="sec">
+        <p class="mini" id="m-pace"></p>
+        <p class="mini" id="m-quiz"></p>
+      </div>
+      <div class="sec">
+        <p class="label" id="m-plan-label">Próxima tarjeta</p>
+        <div class="plan" id="m-plan"></div>
+      </div>
+      <div class="sec">
+        <p class="label">Señales recientes</p>
+        <ol class="log" id="m-log"></ol>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<!-- ==========================================================================
+     VISTA 2: GRUPOS DE ESTUDIO Y CLASES EN VIVO (EFECTO PROTÉGÉ)
+     ========================================================================== -->
+<section class="wrap layout-comunidad" id="vista-comunidad" style="display: none; padding-bottom: 60px;">
+  <!-- Hero Banner -->
+  <div class="cm-hero">
+    <div class="cm-hero-top">
+      <div>
+        <div class="cm-chip" style="margin-bottom: 8px; background: rgba(255, 107, 77, 0.12); color: var(--coral);">
+          <span>💡 El Efecto Protégé</span>
+          <span>• Enseñar para Aprender el Doble</span>
+        </div>
+        <h2 class="cm-hero-title">Grupos de Estudio & <em>Clases en Vivo</em></h2>
+        <p class="cm-hero-p">
+          Aprende explicando a otros. Propón una sesión del tema que estás repasando, coordina el horario con un grupo reducido de compañeros y organízate en salas interactivas con pizarra en vivo.
+        </p>
+      </div>
+      <div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button type="button" class="btn btn-coral" onclick="openProponerModal('clase')">
+            <span>✨</span>
+            <span>Proponer una Clase</span>
+          </button>
+          <button type="button" class="btn btn-menta" onclick="openProponerModal('grupo')">
+            <span>👥</span>
+            <span>Crear Grupo de Estudio</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cartelera Principal de Clases -->
+  <div id="comunidad-cartelera">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
+      <div class="cm-filter-tabs">
+        <button type="button" class="cm-filter-btn active" data-area="todos" onclick="filtrarGrupos('todos', this)">Todos</button>
+        <button type="button" class="cm-filter-btn" data-area="programacion" onclick="filtrarGrupos('programacion', this)">💻 Programación</button>
+        <button type="button" class="cm-filter-btn" data-area="finanzas" onclick="filtrarGrupos('finanzas', this)">💵 Finanzas</button>
+        <button type="button" class="cm-filter-btn" data-area="matematicas" onclick="filtrarGrupos('matematicas', this)">📐 Matemáticas</button>
+        <button type="button" class="cm-filter-btn" data-area="idiomas" onclick="filtrarGrupos('idiomas', this)">🗣️ Idiomas</button>
+      </div>
+      <button type="button" class="btn sm ghost" onclick="openProponerModal()">
+        ➕ Nueva Sesión
+      </button>
+    </div>
+
+    <div class="cm-grid" id="cmGruposGrid">
+      <!-- Clases renderizadas dinámicamente -->
+    </div>
+  </div>
+
+  <!-- Detalle del Grupo / Sala de Coordinación -->
+  <div id="comunidad-grupo-detalle" style="display: none;" class="cm-detail-layout">
+    <!-- Columna Izquierda: Chat y Coordinación -->
+    <div class="cm-chat-card">
+      <div class="cm-chat-header">
+        <button type="button" class="cm-back-btn" onclick="volverACartelera()">← Volver a cartelera</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+          <div>
+            <span class="cm-chip" id="cmDetalleAreaChip" style="background: var(--papel-2);">Área</span>
+            <h3 class="cm-chat-title" id="cmDetalleTema">Tema de la Sesión</h3>
+          </div>
+          <span class="cm-chip" id="cmDetalleCuposBadge" style="background: rgba(34, 184, 136, 0.12); color: var(--menta-2);">Cupos</span>
+        </div>
+      </div>
+
+      <div class="cm-chat-messages" id="cmChatMessagesList">
+        <!-- Mensajes del grupo -->
+      </div>
+
+      <form class="cm-chat-input-bar" onsubmit="enviarMensajeChat(event)">
+        <input type="text" id="cmChatInput" placeholder="Escribe al grupo de estudio..." required autocomplete="off">
+        <button type="submit" class="btn sm" style="background: var(--tinta); color: #fff;">Enviar</button>
+      </form>
+    </div>
+
+    <!-- Columna Derecha: Coordinación de Horarios, Facilitador y Sala Virtual -->
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      <!-- Tarjeta del Facilitador -->
+      <div class="cm-facilitador-card">
+        <div class="cm-facilitador-head">
+          <div class="cm-facilitador-avatar" id="cmDetalleFacilitadorAvatar">👨‍💻</div>
+          <div>
+            <b id="cmDetalleFacilitadorNombre" style="font-size: 15px; color: var(--tinta);">Facilitador</b>
+            <div style="font-size: 12px; color: var(--tinta-2);" id="cmDetalleFacilitadorRol">Estudiante Facilitador</div>
+          </div>
+          <span class="cm-rating-pill" id="cmDetalleRating">⭐ 4.9</span>
+        </div>
+        <p style="font-size: 12.5px; color: var(--tinta-2); margin: 10px 0 0 0;" id="cmDetalleDesc">
+          Explicación y resolución práctica paso a paso.
+        </p>
+
+        <!-- BOTÓN DIRECTO: CALIFICAR Y AGENDAR CLASE PRIVADA 1 A 1 CON EL FACILITADOR REAL -->
+        <button type="button" class="btn sm ghost" onclick="abrirModalCalificacionDesdeGrupo()" style="width: 100%; margin-top: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px;">
+          <span>⭐</span>
+          <span>Calificar / Agendar Clase 1 a 1</span>
+        </button>
+      </div>
+
+      <!-- Encuesta de Horario -->
+      <div class="cm-poll-card">
+        <h4 style="margin: 0 0 6px 0; font-size: 14px; color: var(--tinta);">📅 Votación de Horario Tentativo</h4>
+        <p style="font-size: 12px; color: var(--tinta-2); margin-bottom: 12px;">Vota la mejor opción para fijar la sesión oficial en vivo.</p>
+        <div id="cmPollOptionsList" style="display: flex; flex-direction: column; gap: 8px;">
+          <!-- Opciones de votación -->
+        </div>
+        <div id="cmFijarHorarioBox" style="margin-top: 12px; display: none;">
+          <button type="button" class="btn sm btn-menta" onclick="fijarReunionOficial()" style="width: 100%;">
+            📌 Fijar horario más votado
+          </button>
+        </div>
+      </div>
+
+      <!-- Acceso a Sala Virtual -->
+      <div class="cm-vr-link-box">
+        <div id="cmVrScheduledInfo">
+          <span class="cm-chip" style="background: rgba(255, 107, 77, 0.12); color: var(--coral); margin-bottom: 6px;">
+            🔴 Sesión Lista
+          </span>
+          <b style="display: block; font-size: 13.5px; color: var(--tinta);" id="cmFechaReunionOficial">Por coordinar</b>
+        </div>
+        <button type="button" class="btn btn-coral" style="width: 100%; padding: 12px; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="abrirSalaVirtual()">
+          <span style="font-size: 18px;">🎥</span>
+          <span style="font-weight: 800;">Entrar a la Sala Virtual en Vivo</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================================
+     VISTA 3: CUADERNO COMPARTIDO & SISTEMA MULTI-CUADERNO
+     Con apartado "Mis Cuadernos" y "Ver Otros Cuadernos (Comunidad)"
+     ========================================================================== -->
+<section class="wrap layout-comunidad" id="vista-cuaderno" style="display: none; padding-bottom: 60px;">
+  <div class="cm-hero">
+    <div class="cm-hero-top">
+      <div>
+        <div class="cm-chip" style="margin-bottom: 8px; background: rgba(34, 184, 136, 0.12); color: var(--menta-2);">
+          <span>📝 Cuaderno Compartido & Apuntes</span>
+          <span>• Gestión por Materia & Comunidad</span>
+        </div>
+        <h2 class="cm-hero-title">Cuadernos de Estudio & <em>Apuntes Colaborativos</em></h2>
+        <p class="cm-hero-p">
+          Crea cuadernos para cada materia o reunión, guarda notas en Markdown, añade capturas tomadas de la pizarra y compártelos públicamente con la comunidad o mantenlos privados.
+        </p>
+      </div>
+      <div>
+        <button type="button" class="btn btn-coral" onclick="abrirModalNuevoCuaderno()">
+          <span>➕</span>
+          <span>Nuevo Cuaderno</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pestañas internas del Cuaderno: Mis Cuadernos vs Otros Cuadernos -->
+  <div class="notebook-subtabs">
+    <button type="button" class="notebook-subtab-btn active" id="btnSubCuadernoMis" onclick="switchCuadernoSubTab('mis')">
+      <span>📓</span>
+      <span>Mis Cuadernos</span>
+    </button>
+    <button type="button" class="notebook-subtab-btn" id="btnSubCuadernoComunidad" onclick="switchCuadernoSubTab('comunidad')">
+      <span>🌐</span>
+      <span>Ver Otros Cuadernos (Comunidad)</span>
+    </button>
+  </div>
+
+  <!-- Subapartado 1: Mis Cuadernos -->
+  <div id="secCuadernosMis">
+    <div style="margin-bottom: 16px;">
+      <h3 style="font-family: var(--font-title); font-size: 16px; color: var(--tinta); margin: 0 0 10px 0;">Tus Cuadernos Creados</h3>
+      <div class="notebook-grid" id="misCuadernosList">
+        <!-- Tarjetas de cuadernos del usuario -->
+      </div>
+    </div>
+
+    <!-- Editor del Cuaderno Activo Seleccionado -->
+    <div class="notebook-container" style="margin-top: 24px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-bottom: 1.5px solid var(--linea); padding-bottom: 14px;">
+        <div>
+          <span class="cm-chip" id="cuadernoActivoMateria" style="background: var(--papel-2); margin-bottom: 4px;">Matemáticas</span>
+          <h3 id="cuadernoActivoTitulo" style="font-family: var(--font-title); font-size: 18px; margin: 0; color: var(--tinta);">Apuntes de Clase</h3>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <button type="button" class="btn sm ghost" id="btnTogglePublicoCuaderno" onclick="togglePublicoCuadernoActual()">
+            🌐 Público
+          </button>
+          <button type="button" class="btn sm btn-coral" onclick="exportarCuadernoMarkdown()">
+            📥 Exportar .MD
+          </button>
+        </div>
+      </div>
+
+      <div class="notebook-toolbar">
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+          <button type="button" class="btn sm ghost" onclick="aplicarFormatoCuaderno('h1')" title="Título 1"><b>H1</b></button>
+          <button type="button" class="btn sm ghost" onclick="aplicarFormatoCuaderno('h2')" title="Título 2"><b>H2</b></button>
+          <button type="button" class="btn sm ghost" onclick="aplicarFormatoCuaderno('bold')" title="Negrita"><b>B</b></button>
+          <button type="button" class="btn sm ghost" onclick="aplicarFormatoCuaderno('italic')" title="Cursiva"><i>I</i></button>
+          <button type="button" class="btn sm ghost" onclick="aplicarFormatoCuaderno('list')" title="Lista viñetas">• Lista</button>
+          <button type="button" class="btn sm ghost" onclick="aplicarFormatoCuaderno('code')" title="Bloque de código">&lt;/&gt; Código</button>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <span class="notebook-status" id="cuadernoSavedStatus">✓ Guardado localmente</span>
+          <button type="button" class="btn sm ghost" onclick="limpiarCuaderno()" style="color: #EF4444;">🗑️ Limpiar</button>
+        </div>
+      </div>
+
+      <textarea id="cuadernoTextarea" class="notebook-content" placeholder="Escribe aquí tus apuntes, resúmenes de clase, fórmulas o notas de estudio..." oninput="onInputCuaderno(this.value)"></textarea>
+
+      <!-- Galería de Capturas de Pizarra Guardadas -->
+      <div style="margin-top: 14px; border-top: 1.5px solid var(--linea); padding-top: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <b style="font-size: 14px; color: var(--tinta);">📸 Pizarras de la Sesión (<span id="cuadernoCapturasCount">0</span>)</b>
+          <span style="font-size: 11.5px; color: var(--tinta-2);">Las capturas desde la sala virtual aparecen aquí</span>
+        </div>
+        <div class="notebook-capturas-gallery" id="cuadernoCapturasGallery">
+          <!-- Miniaturas renderizadas limpiamente -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Subapartado 2: Ver Otros Cuadernos (Comunidad) -->
+  <div id="secCuadernosComunidad" style="display: none;">
+    <!-- Buscador de Cuadernos Públicos -->
+    <div style="background: var(--blanco); border: 1.5px solid var(--linea); border-radius: 18px; padding: 16px; margin-bottom: 20px;">
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <span style="font-size: 20px;">🔍</span>
+        <input type="text" id="inputBuscarCuadernos" placeholder="Buscar por título, contenido o autor del cuaderno..." oninput="filtrarCuadernosComunidad(this.value)" style="flex: 1; border: none; background: transparent; font-family: var(--texto); font-size: 14.5px; color: var(--tinta); outline: none;">
+      </div>
+    </div>
+
+    <div class="notebook-grid" id="gridCuadernosComunidad">
+      <!-- Cuadernos públicos de otros estudiantes -->
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================================
+     VISTA 4: MODO ESTUDIO (STUDY WITH ME LIVE + CHAT ESPECTADOR + RANKING)
+     ========================================================================== -->
+<section class="wrap layout-focus" id="vista-focus" style="display: none; padding-bottom: 60px;">
+  <!-- Switcher Superior de 2 Subpestañas: Ver en Vivo / Podio de Honor -->
+  <div class="focus-top-switcher">
+    <div class="focus-switcher-tabs">
+      <button type="button" class="focus-tab-btn active" id="btnFocusSubLive" onclick="switchFocusSubTab('live')">
+        <span>🔴</span>
+        <span>Study With Me (En Vivo)</span>
+        <span class="focus-tab-pill">5 en directo</span>
+      </button>
+      <button type="button" class="focus-tab-btn" id="btnFocusSubRanking" onclick="switchFocusSubTab('ranking')">
+        <span>🏆</span>
+        <span>Podio & Ranking Semanal</span>
+        <span class="focus-tab-pill" style="background: rgba(255, 203, 61, 0.25); color: #B45309;">Top Estudiantes</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Subvista 1: Study With Me Live -->
+  <div id="focusSubViewLive">
+    <div class="cm-hero" style="margin-bottom: 20px;">
+      <div class="cm-hero-top">
+        <div>
+          <div class="cm-chip" style="margin-bottom: 8px; background: rgba(255, 107, 77, 0.12); color: var(--coral);">
+            <span>⏱️ Pomodoro Colaborativo</span>
+            <span>• Modo Silencioso</span>
+          </div>
+          <h2 class="cm-hero-title">Espacio de <em>Estudio Silencioso</em></h2>
+          <p class="cm-hero-p">
+            Haz clic sobre cualquier compañero para ver su sesión en pantalla grande y enviarle mensajes de ánimo. También puedes encender tu cámara y recibir apoyo en directo.
+          </p>
+        </div>
+        <div>
+          <button type="button" class="btn btn-coral" id="btnIniciarTransmisionFocus" onclick="toggleIniciarTransmisionEstudio()">
+            📹 Activar Mi Cámara de Estudio
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Layout: Video en Grande + Chat de Espectadores / Ánimos -->
+    <div class="focus-study-layout">
+      <!-- Columna Izquierda: Reproductor Principal en Pantalla Grande -->
+      <div>
+        <div style="background: var(--papel-2); border: 1.5px solid var(--linea); border-radius: 18px 18px 0 0; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="font-size: 28px;" id="focusPlayerStreamAvatar">👩‍🎓</div>
+            <div>
+              <b style="font-size: 14.5px; color: var(--tinta); display: block;" id="focusPlayerStreamTitle">Estudiando con Sofía Gutiérrez</b>
+              <span style="font-size: 11.5px; color: var(--tinta-2);" id="focusPlayerStreamSub">Cálculo II · UMSA La Paz</span>
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span class="streak-pill" id="focusPlayerStreamRacha">🔥 12 días</span>
+            <span class="cm-chip" id="focusPlayerStreamViewers" style="background: rgba(34, 184, 136, 0.12); color: var(--menta-2);">● 6 espectadores</span>
+          </div>
+        </div>
+
+        <div class="focus-screen-frame" style="border-radius: 0 0 18px 18px; height: 360px;">
+          <video id="focusLiveVideo" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover; display: none;"></video>
+          <div id="focusLivePlaceholder" style="text-align: center; color: #FFFFFF; padding: 20px;">
+            <div style="font-size: 64px; margin-bottom: 10px;">📚</div>
+            <b style="font-size: 17px; display: block;">Sesión de Estudio Concentrado en Vivo</b>
+            <span style="font-size: 13px; opacity: 0.85; margin-top: 4px; display: block;">
+              Estudiante enfocado en silencio con el método Pomodoro.
+            </span>
+          </div>
+        </div>
+
+        <!-- Controles y Pomodoro debajo del video -->
+        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--papel); padding: 14px 18px; border-radius: 16px; margin-top: 14px; border: 1.5px solid var(--linea); flex-wrap: wrap; gap: 12px;">
+          <div>
+            <span style="font-size: 11.5px; font-weight: 700; color: var(--tinta-2); text-transform: uppercase;">Bloque Pomodoro Activo</span>
+            <div class="focus-timer-big" id="focusPomodoroDisplay" style="font-size: 26px;">25:00</div>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn sm ghost" onclick="iniciarTimerPomodoro()">▶ Iniciar</button>
+            <button type="button" class="btn sm ghost" onclick="pausarTimerPomodoro()">⏸ Pausar</button>
+            <button type="button" class="btn sm ghost" onclick="reiniciarTimerPomodoro()">↺ Reset</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Columna Derecha: Chat de Espectadores y Mensajes de Ánimo -->
+      <div class="focus-spectator-chat">
+        <div class="focus-spectator-chat-head">
+          <div>
+            <b style="font-size: 13.5px; color: var(--tinta);" id="focusSpectatorChatTitle">Chat de Espectadores · Ánimos</b>
+            <div style="font-size: 10.5px; color: var(--tinta-2);">Envía apoyo sin interrumpir la concentración</div>
+          </div>
+          <span style="font-size: 16px;">👏</span>
+        </div>
+
+        <div class="focus-spectator-messages" id="focusSpectatorMessages">
+          <!-- Mensajes de espectadores renderizados dinámicamente -->
+        </div>
+
+        <!-- Reacciones Rápidas -->
+        <div class="focus-quick-reactions">
+          <button type="button" class="btn sm ghost" style="font-size: 11px; white-space: nowrap;" onclick="enviarReaccionRapidaEspectador('👏 ¡Fuerza!')">👏 ¡Fuerza!</button>
+          <button type="button" class="btn sm ghost" style="font-size: 11px; white-space: nowrap;" onclick="enviarReaccionRapidaEspectador('🔥 ¡Gran racha!')">🔥 ¡Gran racha!</button>
+          <button type="button" class="btn sm ghost" style="font-size: 11px; white-space: nowrap;" onclick="enviarReaccionRapidaEspectador('☕ Ánimo')">☕ Ánimo</button>
+          <button type="button" class="btn sm ghost" style="font-size: 11px; white-space: nowrap;" onclick="enviarReaccionRapidaEspectador('💪 Dale con todo')">💪 Dale con todo</button>
+        </div>
+
+        <form class="focus-spectator-input-bar" onsubmit="enviarMensajeEspectador(event)">
+          <input type="text" id="inputSpectatorMsg" placeholder="Escribe un mensaje de ánimo..." required autocomplete="off" style="flex: 1; padding: 8px 12px; border-radius: 10px; border: 1.5px solid var(--linea); font-family: var(--texto); font-size: 13px; background: var(--papel);">
+          <button type="submit" class="btn sm" style="background: var(--tinta); color: #fff;">Enviar</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Grid de Miniaturas en Vivo -->
+    <div style="margin-top: 28px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div>
+          <h3 style="font-family: var(--font-title); font-size: 17px; margin: 0; color: var(--tinta);">Compañeros Estudiando Ahora</h3>
+          <span style="font-size: 12px; color: var(--tinta-2);">Haz clic sobre cualquier cámara para verla en grande y dejarle ánimos</span>
+        </div>
+        <span class="cm-chip" style="background: rgba(34, 184, 136, 0.12); color: var(--menta-2);">● 4 activos</span>
+      </div>
+      <div class="focus-streams-grid" id="focusStreamsGrid">
+        <!-- Miniaturas renderizadas dinámicamente -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Subvista 2: Podio de Honor & Ranking Semanal -->
+  <div id="focusSubViewRanking" style="display: none;">
+    <div class="cm-hero" style="margin-bottom: 20px;">
+      <div class="cm-hero-top">
+        <div>
+          <div class="cm-chip" style="margin-bottom: 8px; background: rgba(255, 203, 61, 0.25); color: #B45309;">
+            <span>🏆 Reconocimiento a la Constancia</span>
+            <span>• Rachas de Estudio</span>
+          </div>
+          <h2 class="cm-hero-title">Podio de Honor & <em>Ranking Semanal</em></h2>
+          <p class="cm-hero-p">
+            Premio a quienes mantienen su hábito de estudio activo todos los días. Mantén tu racha para subir de posición y motivar a tu comunidad estudiantil.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Podio Top 3 -->
+    <div class="ranking-podium-box">
+      <!-- 2do Lugar -->
+      <div class="podium-step p2">
+        <div class="podium-avatar">
+          👨‍💻
+          <span class="podium-medal">🥈</span>
+        </div>
+        <b style="font-size: 14.5px; color: var(--tinta);">Andre</b>
+        <span style="font-size: 11px; color: var(--tinta-2);">UMSS • Cochabamba</span>
+        <span class="streak-pill" style="margin: 6px 0;">🔥 9 días</span>
+        <div class="podium-pillar pillar-2">
+          <span style="font-size: 13px; font-weight: 800; color: #fff;">2º Lugar</span>
+          <span style="font-size: 11px; color: rgba(255,255,255,0.85);">32 hrs</span>
+        </div>
+      </div>
+
+      <!-- 1er Lugar -->
+      <div class="podium-step p1">
+        <div class="podium-avatar">
+          👩‍🎓
+          <span class="podium-medal">🥇</span>
+        </div>
+        <b style="font-size: 15.5px; color: var(--tinta);">Sofía Gutiérrez</b>
+        <span style="font-size: 11px; color: var(--tinta-2);">UMSA • La Paz</span>
+        <span class="streak-pill" style="margin: 6px 0;">🔥 14 días</span>
+        <div class="podium-pillar pillar-1">
+          <span style="font-size: 14px; font-weight: 800; color: #fff;">1er Lugar</span>
+          <span style="font-size: 11.5px; color: rgba(255,255,255,0.9);">41 hrs</span>
+        </div>
+      </div>
+
+      <!-- 3er Lugar -->
+      <div class="podium-step p3">
+        <div class="podium-avatar">
+          👨‍🎓
+          <span class="podium-medal">🥉</span>
+        </div>
+        <b style="font-size: 14px; color: var(--tinta);">Mateo Justiniano</b>
+        <span style="font-size: 11px; color: var(--tinta-2);">UMSS • Cochabamba</span>
+        <span class="streak-pill" style="margin: 6px 0;">🔥 7 días</span>
+        <div class="podium-pillar pillar-3">
+          <span style="font-size: 13px; font-weight: 800; color: #fff;">3er Lugar</span>
+          <span style="font-size: 11px; color: rgba(255,255,255,0.85);">26 hrs</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla Completa de Ranking -->
+    <div class="ranking-table-box">
+      <div style="padding: 14px 18px; border-bottom: 1.5px solid var(--linea); font-family: var(--font-title); font-size: 15px; color: var(--tinta);">
+        Tabla General de Rendimiento Estudiantil
+      </div>
+      <div id="rankingTableRows">
+        <!-- Renderizado dinámicamente -->
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================================
+     VISTA 5: CONECTAR AMIGOS (RED SOCIAL & SOLICITUDES BIDIRECCIONALES)
+     Con buscador de compañeros y clic en perfil
+     ========================================================================== -->
+<section class="wrap layout-amigos" id="vista-amigos" style="display: none; padding-bottom: 60px;">
+  <div class="cm-hero">
+    <div class="cm-hero-top">
+      <div>
+        <div class="cm-chip" style="margin-bottom: 8px; background: rgba(34, 184, 136, 0.12); color: var(--menta-2);">
+          <span>🤝 Red Social Universitaria & Escolar</span>
+          <span>• Conexión Local</span>
+        </div>
+        <h2 class="cm-hero-title">Conectar con <em>Compañeros & Amigos</em></h2>
+        <p class="cm-hero-p">
+          Encuentra personas de tu misma universidad, colegio, carrera o ciudad en Bolivia. Haz clic en su foto para conocer su nivel docente, racha y agendar tutorías.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buscador y Filtros Rápidos -->
+  <div style="background: var(--blanco); border: 1.5px solid var(--linea); border-radius: 18px; padding: 16px; margin-bottom: 18px; display: flex; flex-direction: column; gap: 12px;">
+    <div style="display: flex; gap: 10px; align-items: center; border-bottom: 1.5px solid var(--linea); padding-bottom: 10px;">
+      <span style="font-size: 20px;">🔍</span>
+      <input type="text" id="searchAmigosInput" placeholder="Buscar compañeros por nombre, carrera, universidad o ciudad en Bolivia..." oninput="filtrarDirectorioAmigosTexto(this.value)" style="flex: 1; border: none; background: transparent; font-family: var(--texto); font-size: 14.5px; color: var(--tinta); outline: none;">
+    </div>
+    <div class="cm-filter-tabs">
+      <button type="button" class="cm-filter-btn active" onclick="filtrarDirectorioAmigos('todos', this)">Todos</button>
+      <button type="button" class="cm-filter-btn" onclick="filtrarDirectorioAmigos('univ', this)">🎓 Mi Universidad</button>
+      <button type="button" class="cm-filter-btn" onclick="filtrarDirectorioAmigos('ciudad', this)">📍 Mi Ciudad</button>
+      <button type="button" class="cm-filter-btn" onclick="filtrarDirectorioAmigos('mis_amigos', this)">⭐ Mis Amigos</button>
+    </div>
+  </div>
+
+  <div class="cm-grid" id="directorioAmigosGrid">
+    <!-- Directorio renderizado dinámicamente -->
+  </div>
+</section>
+
+<!-- ==========================================================================
+     VISTA 6: MENSAJES PRIVADOS & TUTORÍAS 1 A 1 (F13)
+     Con buscador de conversaciones
+     ========================================================================== -->
+<section class="wrap layout-mensajes" id="vista-mensajes" style="display: none; padding-bottom: 60px;">
+  <div class="cm-hero">
+    <div class="cm-hero-top">
+      <div>
+        <div class="cm-chip" style="margin-bottom: 8px; background: rgba(255, 107, 77, 0.12); color: var(--coral);">
+          <span>💬 Mensajería & Tutorías 1 a 1</span>
+          <span>• Monetización Estudiantil</span>
+        </div>
+        <h2 class="cm-hero-title">Mensajes Privados & <em>Tutorías</em></h2>
+        <p class="cm-hero-p">
+          Chatea con tus amigos o coordina clases privadas personalizadas directamente con facilitadores y compañeros calificados.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Banner de Solicitudes de Tutoría Pendientes / Recibidas -->
+  <div style="margin-bottom: 20px;">
+    <h3 style="font-family: var(--font-title); font-size: 16px; margin-bottom: 10px; color: var(--tinta);">
+      💎 Solicitudes de Tutoría 1 a 1 Recibidas & Enviadas
+    </h3>
+    <div id="listaSolicitudesClasesCards" style="display: grid; gap: 10px;">
+      <!-- Tarjetas de tutoría renderizadas dinámicamente -->
+    </div>
+  </div>
+
+  <!-- Interfaz de Chat Privado Dividido -->
+  <div class="pchat-layout">
+    <!-- Lista de Conversaciones (Inbox) con Buscador -->
+    <div style="background: var(--blanco); border-right: 1.5px solid var(--linea); padding: 14px;">
+      <div style="padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1.5px solid var(--linea);">
+        <b style="font-size: 14px; color: var(--tinta); display: block; margin-bottom: 8px;">Conversaciones</b>
+        <div style="background: var(--papel); border: 1.5px solid var(--linea); border-radius: 10px; padding: 6px 10px; display: flex; align-items: center; gap: 6px;">
+          <span style="font-size: 13px;">🔍</span>
+          <input type="text" id="searchMensajesInput" placeholder="Buscar chat por nombre..." oninput="filtrarConversacionesMensajes(this.value)" style="border: none; background: transparent; font-family: var(--texto); font-size: 12.5px; color: var(--tinta); outline: none; width: 100%;">
+        </div>
+      </div>
+      <div id="pchatInboxList" style="display: flex; flex-direction: column; gap: 6px;">
+        <!-- Renderizado dinámicamente -->
+      </div>
+    </div>
+
+    <!-- Área de Chat Activo -->
+    <div style="display: flex; flex-direction: column; height: 100%; background: var(--blanco);">
+      <div style="display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1.5px solid var(--linea); background: var(--papel);">
+        <div style="font-size: 28px;" id="pchatActiveAvatar">👩‍🎓</div>
+        <div>
+          <b style="font-size: 14.5px; color: var(--tinta); display: block;" id="pchatActiveName">Sofía Gutiérrez</b>
+          <span style="font-size: 11.5px; color: var(--tinta-2);" id="pchatActiveRole">UMSA • La Paz</span>
+        </div>
+      </div>
+      <div style="flex: 1; padding: 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; min-height: 320px;" id="pchatMessagesList">
+        <!-- Mensajes del chat privado -->
+      </div>
+      <form style="display: flex; gap: 8px; padding: 12px 16px; border-top: 1.5px solid var(--linea); background: var(--blanco);" onsubmit="enviarMensajePrivado(event)">
+        <input type="text" id="inputPchat" placeholder="Escribe un mensaje privado..." required autocomplete="off" style="flex: 1; padding: 10px 14px; border-radius: 12px; border: 1.5px solid var(--linea); font-family: var(--texto); font-size: 14px; background: var(--papel);">
+        <button type="submit" class="btn sm" style="background: var(--tinta); color: #fff;">Enviar</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ==========================================================================
+     MODAL: PERFIL DE USUARIO PROPIO (CON RACHA Y RANGOS DOCENTES)
+     0 estrellas: Estudiante | <3: Aprendiz | 3-4: Profesor | >4: Maestro
+     ========================================================================== -->
+<!-- ==========================================================================
+     MODAL: PERFIL DE USUARIO PROPIO (CON RACHA, RANGOS DOCENTES Y EDICIÓN DE TARIFA)
+     0 estrellas: Estudiante | <3: Aprendiz | 3-4: Profesor | >4: Maestro
+     ========================================================================== -->
+<div class="cm-modal-backdrop" id="modalPerfilUsuario" hidden onclick="if(event.target===this) cerrarModalPerfilPropio()">
+  <div class="cm-modal" style="max-width: 490px;">
+    <div class="cm-modal-head">
+      <div>
+        <span class="cm-chip" style="margin-bottom: 4px; background: rgba(34, 184, 136, 0.12); color: var(--menta-2);">
+          👤 Perfil del Estudiante
+        </span>
+        <h3 class="cm-modal-title">Tu Información & Rango</h3>
+      </div>
+      <button type="button" class="cm-modal-close" onclick="cerrarModalPerfilPropio()">✕</button>
+    </div>
+
+    <!-- VISTA 1: VISUALIZACIÓN DE PERFIL -->
+    <div id="perfilPropioViewVer">
+      <!-- Tarjeta Principal de Perfil -->
+      <div style="text-align: center; padding: 10px 0 16px 0; border-bottom: 1.5px solid var(--linea);">
+        <div style="font-size: 58px; margin-bottom: 6px;" id="perfilPropioAvatar">👨‍💻</div>
+        <h3 style="font-family: var(--font-title); font-size: 20px; color: var(--tinta); margin: 0 0 2px 0;" id="perfilPropioNombre">Andre</h3>
+        <span style="font-size: 13px; color: var(--tinta-2); display: block;" id="perfilPropioUniv">🎓 UMSS • Cochabamba</span>
+        <span style="font-size: 12px; color: var(--tinta-2);" id="perfilPropioEmail">andre@gmail.com</span>
+
+        <div style="margin-top: 12px;">
+          <span id="perfilPropioRangoDocente" class="profile-rank-badge profile-rank-maestro">
+            🧙‍♂️✨ Maestro
+          </span>
+        </div>
+      </div>
+
+      <!-- Estadísticas de Hábitos y Rendimiento -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0;">
+        <div style="background: var(--papel-2); border: 1.5px solid var(--linea); border-radius: 14px; padding: 12px; text-align: center;">
+          <span style="font-size: 11px; font-weight: 700; color: var(--tinta-2); text-transform: uppercase;">Racha de Estudio</span>
+          <div style="font-size: 16px; font-weight: 800; color: var(--coral); margin-top: 4px;" id="perfilPropioRacha">🔥 6 días seguidos</div>
+        </div>
+        <div style="background: var(--papel-2); border: 1.5px solid var(--linea); border-radius: 14px; padding: 12px; text-align: center;">
+          <span style="font-size: 11px; font-weight: 700; color: var(--tinta-2); text-transform: uppercase;">Horas Acumuladas</span>
+          <div style="font-size: 16px; font-weight: 800; color: var(--tinta); margin-top: 4px;" id="perfilPropioHoras">⏱️ 24.2 hrs</div>
+        </div>
+      </div>
+
+      <!-- Calificación Docente y Reseñas -->
+      <div style="background: var(--papel); border: 1.5px solid var(--linea); border-radius: 14px; padding: 14px; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <b style="font-size: 13.5px; color: var(--tinta); display: block;">Reputación Docente (Pares)</b>
+            <span style="font-size: 11.5px; color: var(--tinta-2);">0⭐: Estudiante | &lt;3⭐: Aprendiz | 3-4⭐: Profesor | &gt;4⭐: Maestro</span>
+          </div>
+          <div style="font-size: 16px; font-weight: 800; color: #F59E0B;" id="perfilPropioStars">⭐ 4.9 (18)</div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+        <button type="button" class="btn sm" onclick="iniciarEdicionPerfil()" style="background: var(--papel-2); border: 1.5px solid var(--linea); color: var(--tinta); font-weight: 700;">
+          ✏️ Editar Mi Perfil
+        </button>
+        <button type="button" class="btn sm ghost" onclick="cerrarModalPerfilPropio(); abrirModalAuth();" style="border: 1.5px solid var(--linea);">
+          🔄 Cambiar Cuenta
+        </button>
+      </div>
+      <button type="button" class="btn sm btn-coral" onclick="cerrarModalPerfilPropio()" style="width: 100%;">
+        Cerrar
+      </button>
+    </div>
+
+    <!-- VISTA 2: FORMULARIO DE EDICIÓN DE PERFIL & TARIFA DE ENSEÑANZA -->
+    <div id="perfilPropioViewEdit" style="display: none;">
+      <form onsubmit="guardarEdicionPerfil(event)" style="display: grid; gap: 12px;">
+        <div class="cm-form-group">
+          <label>Nombre Completo:</label>
+          <input type="text" id="editPerfilNombre" required>
+        </div>
+
+        <div class="cm-form-group">
+          <label>Universidad o Colegio:</label>
+          <input type="text" id="editPerfilUniv" required placeholder="ej: UMSS, UMSA, UCB...">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="cm-form-group">
+            <label>Carrera:</label>
+            <input type="text" id="editPerfilCarrera" placeholder="ej: Ing. de Sistemas">
+          </div>
+          <div class="cm-form-group">
+            <label>Ciudad:</label>
+            <input type="text" id="editPerfilCiudad" placeholder="ej: Cochabamba, La Paz">
+          </div>
+        </div>
+
+        <!-- SECCIÓN CONDICIONAL DE TARIFA DOCENTE -->
+        <!-- Caso A: Rango Profesor o Maestro (>= 3.0 ⭐) -> Campo habilitado -->
+        <div id="editTarifaHabilitadaBox" style="background: rgba(34, 184, 136, 0.08); border: 1.5px solid var(--menta); border-radius: 12px; padding: 12px;">
+          <label style="display: block; font-weight: 700; font-size: 13px; color: var(--menta-2); margin-bottom: 6px;">
+            🎓 Tarifa de Enseñanza (Cobro por Hora):
+          </label>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-weight: 800; color: var(--tinta); font-size: 15px;">Bs</span>
+            <input type="number" id="editPerfilTarifaValor" min="10" max="250" step="5" value="35" style="width: 100px; padding: 6px 10px; border-radius: 8px; border: 1.5px solid var(--linea); font-weight: 800; font-size: 15px;">
+            <span style="font-size: 13px; color: var(--tinta-2);">/ hora de tutoría 1 a 1</span>
+          </div>
+          <small style="color: var(--tinta-2); font-size: 11.5px; display: block; margin-top: 6px;">
+            ¡Felicidades! Al ser Profesor/Maestro calificado por tus compañeros, tu tarifa aparece en tus grupos y solicitudes de tutoría privada.
+          </small>
+        </div>
+
+        <!-- Caso B: Rango Estudiante o Aprendiz (< 3.0 ⭐) -> Tarifa bloqueada -->
+        <div id="editTarifaBloqueadaBox" style="display: none; background: rgba(255, 107, 77, 0.08); border: 1.5px dashed var(--coral); border-radius: 12px; padding: 12px;">
+          <b style="font-size: 12.5px; color: var(--coral); display: block; margin-bottom: 4px;">
+            ⚠️ Tarifa de Cobro Bloqueada
+          </b>
+          <span style="font-size: 12px; color: var(--tinta-2); line-height: 1.4; display: block;">
+            Aún no has alcanzado el rango de <strong>Profesor</strong> (mínimo 3.0 ⭐ con reseñas de compañeros). Hasta alcanzar este rango, el precio de cualquier tutoría o ayuda <strong>se coordina por privado mediante mensajes</strong>.
+          </span>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 8px;">
+          <button type="button" class="btn sm ghost" onclick="cancelarEdicionPerfil()" style="flex: 1; border: 1.5px solid var(--linea);">
+            Cancelar
+          </button>
+          <button type="submit" class="btn sm btn-menta" style="flex: 1.5;">
+            💾 Guardar Perfil
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     MODAL: PERFIL DE UN COMPAÑERO (AL HACER CLIC EN SU AVATAR/NOMBRE)
+     ========================================================================== -->
+<div class="cm-modal-backdrop" id="modalPerfilCompanero" hidden onclick="if(event.target===this) cerrarModalPerfilCompanero()">
+  <div class="cm-modal" style="max-width: 480px;">
+    <div class="cm-modal-head">
+      <div>
+        <span class="cm-chip" style="margin-bottom: 4px; background: rgba(78, 157, 255, 0.15); color: #2563EB;">
+          🎓 Perfil Académico
+        </span>
+        <h3 class="cm-modal-title">Información del Compañero</h3>
+      </div>
+      <button type="button" class="cm-modal-close" onclick="cerrarModalPerfilCompanero()">✕</button>
+    </div>
+
+    <div style="text-align: center; padding: 10px 0 16px 0; border-bottom: 1.5px solid var(--linea);">
+      <div style="font-size: 58px; margin-bottom: 6px;" id="perfilCompaneroAvatar">👩‍🎓</div>
+      <h3 style="font-family: var(--font-title); font-size: 20px; color: var(--tinta); margin: 0 0 2px 0;" id="perfilCompaneroNombre">Sofía Gutiérrez</h3>
+      <span style="font-size: 13px; color: var(--tinta-2); display: block;" id="perfilCompaneroUniv">🎓 UMSA • La Paz</span>
+
+      <div style="margin-top: 12px;">
+        <span id="perfilCompaneroRango" class="profile-rank-badge profile-rank-maestro">
+          🧙‍♂️✨ Maestro
+        </span>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0;">
+      <div style="background: var(--papel-2); border: 1.5px solid var(--linea); border-radius: 14px; padding: 12px; text-align: center;">
+        <span style="font-size: 11px; font-weight: 700; color: var(--tinta-2); text-transform: uppercase;">Racha de Estudio</span>
+        <div style="font-size: 16px; font-weight: 800; color: var(--coral); margin-top: 4px;" id="perfilCompaneroRacha">🔥 12 días</div>
+      </div>
+      <div style="background: var(--papel-2); border: 1.5px solid var(--linea); border-radius: 14px; padding: 12px; text-align: center;">
+        <span style="font-size: 11px; font-weight: 700; color: var(--tinta-2); text-transform: uppercase;">Tiempo Dedicado</span>
+        <div style="font-size: 16px; font-weight: 800; color: var(--tinta); margin-top: 4px;" id="perfilCompaneroHoras">⏱️ 28.5 hrs</div>
+      </div>
+    </div>
+
+    <div style="background: var(--papel); border: 1.5px solid var(--linea); border-radius: 14px; padding: 14px; margin-bottom: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <b style="font-size: 13.5px; color: var(--tinta); display: block;">Calificación Docente</b>
+          <span style="font-size: 11.5px; color: var(--tinta-2);">Evaluación de otros alumnos</span>
+        </div>
+        <div style="font-size: 16px; font-weight: 800; color: #F59E0B;" id="perfilCompaneroStars">⭐ 5.0 (32)</div>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <button type="button" class="btn sm btn-menta" id="btnPerfilPedirTutoria">
+        💎 Solicitar Tutoría 1 a 1
+      </button>
+      <button type="button" class="btn sm ghost" id="btnPerfilChatear" style="border: 1.5px solid var(--linea);">
+        💬 Chatear
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     MODAL: CREAR NUEVO CUADERNO POR MATERIA / REUNIÓN
+     ========================================================================== -->
+<div class="cm-modal-backdrop" id="modalCrearCuaderno" hidden onclick="if(event.target===this) cerrarModalNuevoCuaderno()">
+  <div class="cm-modal" style="max-width: 480px;">
+    <div class="cm-modal-head">
+      <div>
+        <span class="cm-chip" style="margin-bottom: 4px; background: rgba(34, 184, 136, 0.12); color: var(--menta-2);">
+          📝 Nuevo Cuaderno
+        </span>
+        <h3 class="cm-modal-title">Crear Cuaderno de Estudio</h3>
+      </div>
+      <button type="button" class="cm-modal-close" onclick="cerrarModalNuevoCuaderno()">✕</button>
+    </div>
+
+    <form onsubmit="guardarNuevoCuaderno(event)" style="display: grid; gap: 14px;">
+      <div class="cm-form-group">
+        <label>Título del Cuaderno:</label>
+        <input type="text" id="inputNuevoCuadernoTitulo" required placeholder="ej: Apuntes de Cálculo II · Integrales Dobles">
+      </div>
+
+      <div class="cm-form-group">
+        <label>Materia o Área de Estudio:</label>
+        <input type="text" id="inputNuevoCuadernoMateria" required placeholder="ej: Matemáticas, Programación, Finanzas...">
+      </div>
+
+      <div style="background: var(--papel-2); border: 1.5px solid var(--linea); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <b style="font-size: 13.5px; color: var(--tinta); display: block;">¿Dejar Cuaderno Público?</b>
+          <span style="font-size: 11.5px; color: var(--tinta-2);">Si está público, otros estudiantes podrán ver tus apuntes</span>
+        </div>
+        <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+          <input type="checkbox" id="inputNuevoCuadernoPublico" checked style="width: 18px; height: 18px; accent-color: var(--coral);">
+          <span style="font-size: 13px; font-weight: 700; color: var(--tinta);">Público</span>
+        </label>
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-top: 6px;">
+        <button type="button" class="btn sm ghost" onclick="cerrarModalNuevoCuaderno()" style="flex: 1;">
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-coral" style="flex: 2;">
+          ✨ Crear Cuaderno
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     MODAL: VER CUADERNO PÚBLICO DE LA COMUNIDAD (LECTURA)
+     ========================================================================== -->
+<div class="cm-modal-backdrop" id="modalVerCuadernoComunidad" hidden onclick="if(event.target===this) cerrarModalVerCuaderno()">
+  <div class="cm-modal" style="max-width: 620px;">
+    <div class="cm-modal-head">
+      <div>
+        <span class="cm-chip" id="viewCuadernoMateria" style="margin-bottom: 4px; background: var(--papel-2);">Matemáticas</span>
+        <h3 class="cm-modal-title" id="viewCuadernoTitulo">Título del Cuaderno</h3>
+        <span style="font-size: 12px; color: var(--tinta-2); margin-top: 2px; display: block;" id="viewCuadernoAutor">Autor</span>
+      </div>
+      <button type="button" class="cm-modal-close" onclick="cerrarModalVerCuaderno()">✕</button>
+    </div>
+
+    <div style="max-height: 380px; overflow-y: auto; background: var(--papel); border: 1.5px solid var(--linea); border-radius: 14px; padding: 16px; font-family: var(--texto); font-size: 14.5px; line-height: 1.6; color: var(--tinta); white-space: pre-wrap;" id="viewCuadernoContenido">
+      <!-- Contenido en texto/markdown -->
+    </div>
+
+    <!-- Pizarras adjuntas -->
+    <div style="margin-top: 14px;">
+      <b style="font-size: 13px; color: var(--tinta); display: block; margin-bottom: 6px;">Capturas de Pizarra de la Sesión:</b>
+      <div class="notebook-capturas-gallery" id="viewCuadernoCapturasGal">
+        <!-- Imágenes de pizarra -->
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
+      <button type="button" class="btn sm btn-coral" onclick="cerrarModalVerCuaderno()">
+        Entendido / Cerrar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     MODAL 1: PROPONER UNA CLASE (EFECTO PROTÉGÉ)
+     ========================================================================== -->
+<!-- ==========================================================================
+     MODAL: PROPONER CLASE (EFECTO PROTÉGÉ) O CREAR GRUPO DE ESTUDIO
+     ========================================================================== -->
+<div class="cm-modal-backdrop" id="modalProponerClase" hidden onclick="if(event.target===this) closeProponerModal()">
+  <div class="cm-modal" style="max-width: 560px;">
+    <div class="cm-modal-head">
+      <div>
+        <span class="cm-chip" style="margin-bottom: 4px; background: rgba(255, 107, 77, 0.12); color: var(--coral);">
+          ✨ Aprendizaje Social & Efecto Protégé
+        </span>
+        <h3 class="cm-modal-title" id="proponerModalTitulo">Proponer Sesión de Estudio</h3>
+        <p style="font-size: 13px; color: var(--tinta-2); margin-top: 4px;" id="proponerModalDesc">
+          Elige si deseas impartir una clase guiada o crear un grupo de estudio colaborativo.
+        </p>
+      </div>
+      <button type="button" class="cm-modal-close" onclick="closeProponerModal()">✕</button>
+    </div>
+
+    <form id="formProponerClase" onsubmit="guardarNuevaClase(event)" style="display: grid; gap: 14px; margin-top: 10px;">
+      <!-- Selector de Tipo de Sesión -->
+      <div class="cm-form-group" style="background: var(--papel-2); border: 1.5px solid var(--linea); border-radius: 12px; padding: 12px 14px;">
+        <label style="font-weight: 700; font-size: 13px; margin-bottom: 8px; display: block; color: var(--tinta);">Modalidad de la Sesión:</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 12.5px; line-height: 1.3; background: var(--blanco); border: 1.5px solid var(--linea); border-radius: 10px; padding: 8px 10px;">
+            <input type="radio" name="radioTipoSesion" id="radioTipoClase" value="clase" checked onchange="cambiarTipoSesionEnForm('clase')" style="margin-top: 2px;">
+            <span>
+              <strong style="color: var(--coral); display: block;">🎓 Clase con Facilitador</strong>
+              <small style="color: var(--tinta-2);">Solo tú enciendes cámara para enseñar (Efecto Protégé); alumnos por chat y micrófono.</small>
+            </span>
+          </label>
+          <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 12.5px; line-height: 1.3; background: var(--blanco); border: 1.5px solid var(--linea); border-radius: 10px; padding: 8px 10px;">
+            <input type="radio" name="radioTipoSesion" id="radioTipoGrupo" value="grupo" onchange="cambiarTipoSesionEnForm('grupo')" style="margin-top: 2px;">
+            <span>
+              <strong style="color: var(--menta-2); display: block;">👥 Grupo de Estudio</strong>
+              <small style="color: var(--tinta-2);">Todos los miembros pueden encender sus cámaras y debatir activamente.</small>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="cm-form-group">
+        <label>Área o Materia:</label>
+        <select id="inputArea" required>
+          <option value="matematicas">📐 Matemáticas & Cálculo</option>
+          <option value="programacion">💻 Programación & Algoritmos</option>
+          <option value="finanzas">💵 Finanzas & Contabilidad</option>
+          <option value="idiomas">🗣️ Idiomas (Inglés/Francés)</option>
+        </select>
+      </div>
+
+      <div class="cm-form-group">
+        <label>Tema específico que quieres repasar o estudiar:</label>
+        <input type="text" id="inputTema" required placeholder="ej: Integrales triples, Grafos en Python, Finanzas personales...">
+      </div>
+
+      <div class="cm-form-group">
+        <label>Enfoque o metodología:</label>
+        <input type="text" id="inputMetodologia" required placeholder="ej: Explicación de 20 min y 3 ejercicios prácticos resueltos">
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="cm-form-group">
+          <label>Cupos máximos:</label>
+          <select id="inputCupos">
+            <option value="4">4 estudiantes</option>
+            <option value="5" selected>5 estudiantes</option>
+            <option value="6">6 estudiantes</option>
+            <option value="8">8 estudiantes</option>
+          </select>
+        </div>
+        <div class="cm-form-group">
+          <label>Nivel de la sesión:</label>
+          <select id="inputNivel">
+            <option value="universidad" selected>Universidad</option>
+            <option value="colegio">Secundaria / Colegio</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="cm-form-group">
+        <label>Propuesta de Horario Inicial:</label>
+        <input type="text" id="inputHorarioTentativo" required value="Hoy 20:00 BOT" placeholder="ej: Hoy 20:00 BOT">
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <button type="button" class="btn sm ghost" onclick="closeProponerModal()" style="flex: 1; border: 1.5px solid var(--linea);">Cancelar</button>
+        <button type="submit" class="btn btn-coral" style="flex: 2;">🚀 Publicar en Cartelera</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     MODAL 2: SALA VIRTUAL EN VIVO (CÁMARA SOLO PARA EL FACILITADOR)
+     ========================================================================== -->
+<!-- ==========================================================================
+     MODAL: SALA VIRTUAL EN VIVO (CON DOCK LATERAL DE APUNTES EN TIEMPO REAL)
+     ========================================================================== -->
+<div class="cm-vr-overlay" id="modalSalaVirtual" hidden>
+  <div class="cm-vr-layout-wrapper">
+    <!-- Contenedor Principal de la Sala (Izquierda) -->
+    <div class="cm-vr-container">
+    <!-- Encabezado de la Sala -->
+    <div class="cm-vr-head">
+      <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <span class="cm-vr-live-dot">● EN VIVO</span>
+        <b style="font-size: 15px; color: var(--tinta);" id="cmVrTitulo">Sala: Cálculo II</b>
+        <span class="cm-vr-timer-pill" id="vrTimer">00:00</span>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button type="button" class="btn sm btn-menta" onclick="finalizarReunionYCalificar()">
+          ⭐ Calificar Facilitador & Agendar
+        </button>
+        <button type="button" class="btn sm ghost" onclick="finalizarReunionYCalificar()">
+          ✕ Finalizar Reunión
+        </button>
+      </div>
+    </div>
+
+    <!-- Cuerpo: Área Principal y Barra Lateral -->
+    <div class="cm-vr-body">
+      <!-- Área Dinámica Principal -->
+      <div class="cm-vr-stage">
+        <!-- Modo 1: Cuadrícula de Cámaras (CÁMARA SOLO PARA FACILITADOR) -->
+        <div id="vrModoCamaras" style="height: 100%;">
+          <div class="cm-video-grid">
+            <!-- Box Facilitador (ÚNICO CON CÁMARA TRANSMITIENDO) -->
+            <div class="cm-video-box is-speaking" id="boxFacilitadorContainer">
+              <span class="cm-speaking-tag" id="vrFacilitadorTag">👨‍🏫 Facilitador Explicando</span>
+              <video id="vrFacilitadorVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; display: none;"></video>
+              <div class="cm-video-avatar" id="vrFacilitadorAvatar">👨‍🏫</div>
+              <div class="cm-video-name">
+                <span id="vrFacilitadorNombre">Facilitador</span>
+                <span style="color: var(--menta-2);">🎙️ En vivo</span>
+              </div>
+            </div>
+
+            <!-- Box Tú (Alumno: NO activa cámara, solo mic y avatar) -->
+            <div class="cm-video-box">
+              <span class="cm-speaking-tag" style="background: rgba(35,38,74,0.85);">Tú</span>
+              <video id="vrMiVideo" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover; display: none;"></video>
+              <div class="cm-video-avatar" id="vrMiAvatar">👨‍💻</div>
+              <div class="cm-video-name">
+                <span id="vrMiNombre">Tú</span>
+                <span id="vrMiMicStatus">🎙️ Mic Activo</span>
+              </div>
+            </div>
+
+            <!-- Box Compañero 1 -->
+            <div class="cm-video-box">
+              <div class="cm-video-avatar">👩‍🎓</div>
+              <div class="cm-video-name">
+                <span>Sofía Gutiérrez</span>
+                <span>🎙️ Escuchando</span>
+              </div>
+            </div>
+
+            <!-- Box Compañero 2 -->
+            <div class="cm-video-box">
+              <div class="cm-video-avatar">👨‍🎓</div>
+              <div class="cm-video-name">
+                <span>Mateo Justiniano</span>
+                <span>🎙️ Escuchando</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modo 2: Pizarra Digital Interactiva (HTML5 Canvas) -->
+        <div id="vrModoPizarra" style="display: none; height: 100%; flex-direction: column; gap: 10px;">
+          <div class="cm-pizarra-toolbar">
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <button type="button" class="btn sm" onclick="setCanvasTool('pen')" id="btnToolPen" style="background: var(--tinta); color: #fff;">✏️ Lápiz</button>
+              <button type="button" class="btn sm ghost" onclick="setCanvasTool('eraser')" id="btnToolEraser">🧹 Borrador</button>
+              <button type="button" class="btn sm ghost" onclick="limpiarPizarra()">🗑️ Limpiar</button>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <span style="font-size: 12px; color: var(--tinta-2); font-weight: 700;">Color:</span>
+              <button type="button" class="color-dot active" style="background: #FF6B4D;" onclick="setCanvasColor('#FF6B4D')" title="Coral"></button>
+              <button type="button" class="color-dot" style="background: #4E9DFF;" onclick="setCanvasColor('#4E9DFF')" title="Azul"></button>
+              <button type="button" class="color-dot" style="background: #22B888;" onclick="setCanvasColor('#22B888')" title="Verde"></button>
+              <button type="button" class="color-dot" style="background: #FFCB3D;" onclick="setCanvasColor('#FFCB3D')" title="Sol"></button>
+              <button type="button" class="color-dot" style="background: #23264A;" onclick="setCanvasColor('#23264A')" title="Tinta"></button>
+            </div>
+            <div>
+              <button type="button" class="btn sm btn-coral" onclick="capturarPizarraParaCuaderno()">
+                📸 Guardar en Cuaderno
+              </button>
+            </div>
+          </div>
+          <canvas id="cmWhiteboardCanvas" width="800" height="420"></canvas>
+        </div>
+
+        <!-- Modo 3: Hoja de Apuntes en la Sala -->
+        <div id="vrModoApuntes" style="display: none; height: 100%; flex-direction: column; gap: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; background: var(--blanco); padding: 8px 14px; border-radius: 12px; border: 1.5px solid var(--linea);">
+            <div style="display: flex; gap: 6px;">
+              <button type="button" class="btn sm ghost" onclick="aplicarFormatoCuaderno('h2')"><b>H2</b></button>
+              <button type="button" class="btn sm ghost" onclick="aplicarFormatoCuaderno('bold')"><b>B</b></button>
+              <button type="button" class="btn sm ghost" onclick="aplicarFormatoCuaderno('list')">• Lista</button>
+              <button type="button" class="btn sm ghost" onclick="aplicarFormatoCuaderno('code')">&lt;/&gt;</button>
+            </div>
+            <span id="cuadernoSavedStatusRoom" style="font-size: 11px; font-weight: 700; color: var(--menta-2);">✓ Auto-guardado</span>
+          </div>
+          <textarea id="cuadernoTextareaRoom" class="notebook-content" style="flex: 1; height: 100%;" oninput="onInputCuaderno(this.value)" placeholder="Anotaciones de la clase en vivo..."></textarea>
+        </div>
+      </div>
+
+      <!-- Barra lateral: Chat & Cuaderno -->
+      <div class="cm-vr-chat">
+        <div class="cm-vr-chat-tabs">
+          <button type="button" class="cm-vr-tab-btn active" onclick="setVrModo('camaras')">📹 Cámaras</button>
+          <button type="button" class="cm-vr-tab-btn" onclick="setVrModo('pizarra')">🎨 Pizarra</button>
+          <button type="button" class="cm-vr-tab-btn" onclick="setVrModo('apuntes')">📝 Apuntes</button>
+        </div>
+        <div class="cm-vr-chat-list" id="vrChatList">
+          <div class="cm-msg">
+            <div class="cm-msg-avatar">🔔</div>
+            <div class="cm-msg-content">
+              <div class="cm-msg-bubble">¡Bienvenidos a la sesión! Puedes hacer preguntas aquí o levantar la mano.</div>
+            </div>
+          </div>
+        </div>
+        <form class="cm-vr-input-bar" onsubmit="enviarMensajeVr(event)">
+          <input type="text" id="vrInputMsg" placeholder="Escribe en la sala..." required autocomplete="off">
+          <button type="submit" class="btn sm" style="background: var(--tinta); color: #FFFFFF;">Enviar</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Pie de Controles -->
+    <div class="cm-vr-controls-footer">
+      <button type="button" class="cm-vr-ctrl-btn active" id="btnVrMic" onclick="toggleVrMic()">🎙️ Micrófono Activo</button>
+      <button type="button" class="cm-vr-ctrl-btn" id="btnVrCam" onclick="toggleVrCam()">📹 Cámara</button>
+      <button type="button" class="cm-vr-ctrl-btn" id="btnVrHand" onclick="toggleVrHand()">✋ Levantar Mano</button>
+      <button type="button" class="btn sm btn-coral" style="margin-left: auto;" onclick="finalizarReunionYCalificar()">
+        ⭐ Salir y Calificar Facilitador
+      </button>
+    </div>
+  </div>
+
+    <!-- Dock Lateral: Cuaderno de Apuntes en Tiempo Real (Derecha) -->
+    <aside class="cm-vr-notebook-dock">
+      <div class="cm-vr-notebook-head">
+        <div>
+          <span class="cm-chip" style="margin-bottom: 2px; font-size: 11px; padding: 2px 8px; background: rgba(34, 184, 136, 0.12); color: var(--menta-2);">
+            📒 Cuaderno en Vivo
+          </span>
+          <h4 style="font-family: var(--font-title); font-size: 15px; margin: 0; color: var(--tinta);" id="vrDockCuadernoTitulo">Apuntes de la Sesión</h4>
+          <span style="font-size: 11.5px; color: var(--tinta-2);" id="vrDockCuadernoMateria">Cálculo II · En tiempo real</span>
+        </div>
+        <div style="text-align: right;">
+          <span style="font-size: 11px; color: var(--tinta-2);" id="vrDockSavedIndicator">💾 Guardado</span>
+        </div>
+      </div>
+
+      <!-- Barra de herramientas rápida del cuaderno -->
+      <div class="cm-vr-notebook-toolbar">
+        <button type="button" class="cm-tb-btn" onclick="aplicarFormatoCuadernoDock('bold')" title="Negrita"><b>B</b></button>
+        <button type="button" class="cm-tb-btn" onclick="aplicarFormatoCuadernoDock('italic')" title="Cursiva"><i>I</i></button>
+        <button type="button" class="cm-tb-btn" onclick="aplicarFormatoCuadernoDock('h2')" title="Subtítulo">H2</button>
+        <button type="button" class="cm-tb-btn" onclick="aplicarFormatoCuadernoDock('list')" title="Lista Viñetas">• Lista</button>
+        <button type="button" class="cm-tb-btn" onclick="aplicarFormatoCuadernoDock('check')" title="Tarea">☑ Tarea</button>
+        <button type="button" class="cm-tb-btn" onclick="aplicarFormatoCuadernoDock('formula')" title="Fórmula">∑ fx</button>
+        <button type="button" class="cm-tb-btn" onclick="capturarPizarraParaCuaderno()" title="Tomar captura de pizarra a mi cuaderno" style="margin-left: auto; background: var(--coral-pastel); color: var(--coral); border-color: var(--coral);">
+          📸 Capturar Pizarra
+        </button>
+      </div>
+
+      <!-- Área de apuntes en vivo -->
+      <div class="cm-vr-notebook-body">
+        <textarea id="vrDockNotebookTextarea" class="cm-vr-notebook-textarea" placeholder="Escribe tus apuntes personales de esta clase en tiempo real... Se guardan automáticamente en tu cuaderno de la materia." oninput="onInputCuadernoDock(this.value)"></textarea>
+      </div>
+
+      <!-- Galería de capturas de pizarra anexadas a este cuaderno -->
+      <div style="border-top: 1.5px solid var(--linea); padding: 10px 14px; background: var(--papel-2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <span style="font-size: 11.5px; font-weight: 700; color: var(--tinta);">Capturas de Pizarra:</span>
+          <span style="font-size: 10.5px; color: var(--tinta-2);">Click para ampliar</span>
+        </div>
+        <div id="vrDockCapturasGallery" class="cm-notebook-gallery">
+          <span style="font-size: 11px; color: var(--tinta-2); font-style: italic;">Sin capturas aún. Pulsa «📸 Capturar Pizarra» para guardar el dibujo actual.</span>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     MODAL 4: AGENDAR CLASE PRIVADA 1 A 1 CON EL FACILITADOR REAL
+     Fondo sólido, nítido y coordinado directamente con quien dio la clase
+     ========================================================================== -->
+<!-- ==========================================================================
+     MODAL: CALIFICACIÓN DEL FACILITADOR AL FINALIZAR REUNIÓN
+     ========================================================================== -->
+<div class="cm-modal-backdrop" id="modalCalificacionFinReunion" hidden onclick="if(event.target===this) cerrarModalCalificacion()">
+  <div class="cm-modal" style="max-width: 480px;">
+    <div class="cm-modal-head">
+      <div>
+        <span class="cm-chip" style="margin-bottom: 4px; background: rgba(34, 184, 136, 0.12); color: var(--menta-2);">
+          ⭐ Retroalimentación de la Sesión
+        </span>
+        <h3 class="cm-modal-title">¿Cómo estuvo la sesión?</h3>
+      </div>
+      <button type="button" class="cm-modal-close" onclick="cerrarModalCalificacion()">✕</button>
+    </div>
+
+    <div style="text-align: center; padding: 16px 0;">
+      <p style="font-size: 14px; color: var(--tinta); margin-bottom: 12px;">
+        Califica el desempeño y explicación de <strong id="ratingFacilitadorNombre">Facilitador</strong>:
+      </p>
+
+      <div style="display: flex; justify-content: center; gap: 8px; font-size: 28px; margin-bottom: 8px;">
+        <button type="button" class="star-btn active" onclick="setRatingStars(1)" style="background: none; border: none; cursor: pointer; font-size: 28px;">⭐</button>
+        <button type="button" class="star-btn active" onclick="setRatingStars(2)" style="background: none; border: none; cursor: pointer; font-size: 28px;">⭐</button>
+        <button type="button" class="star-btn active" onclick="setRatingStars(3)" style="background: none; border: none; cursor: pointer; font-size: 28px;">⭐</button>
+        <button type="button" class="star-btn active" onclick="setRatingStars(4)" style="background: none; border: none; cursor: pointer; font-size: 28px;">⭐</button>
+        <button type="button" class="star-btn active" onclick="setRatingStars(5)" style="background: none; border: none; cursor: pointer; font-size: 28px;">⭐</button>
+      </div>
+      <div id="ratingStarsText" style="font-weight: 700; color: var(--coral); font-size: 13.5px; margin-bottom: 16px;">
+        ⭐⭐⭐⭐⭐ ¡Facilitador de nivel magistral!
+      </div>
+
+      <div class="cm-form-group" style="text-align: left;">
+        <label>Comentario o agradecimiento para el facilitador:</label>
+        <input type="text" id="inputRatingComentario" placeholder="ej: Me quedó muy claro el método de cambio de variable...">
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+      <button type="button" class="btn sm ghost" onclick="cerrarModalCalificacion()" style="border: 1.5px solid var(--linea);">
+        Omitir
+      </button>
+      <button type="button" class="btn sm btn-menta" onclick="pasarAAgendarClasePrivada()">
+        ⭐ Enviar y Agendar 1 a 1
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="cm-modal-backdrop" id="modalAgendarClasePrivada" hidden onclick="if(event.target===this) cerrarModalAgendarClasePrivada()">
+  <div class="cm-modal" style="max-width: 520px;">
+    <div class="cm-modal-head">
+      <div>
+        <span class="cm-chip" style="margin-bottom: 4px; background: rgba(255, 107, 77, 0.12); color: var(--coral);">
+          💎 Tutoría Personalizada 1 a 1
+        </span>
+        <h3 class="cm-modal-title" id="tituloModalAgendar">Agendar Clase Privada</h3>
+      </div>
+      <button type="button" class="cm-modal-close" onclick="cerrarModalAgendarClasePrivada()">✕</button>
+    </div>
+
+    <!-- Tarjeta del Tutor Dinámico (el facilitador real de la reunión) -->
+    <div style="background: var(--papel-2); border: 1.5px solid var(--linea); border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; margin: 12px 0;">
+      <div style="font-size: 34px;" id="agendarTutorAvatar">👨‍🎓</div>
+      <div style="flex: 1;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+          <b style="font-size: 15px; color: var(--tinta);" id="agendarTutorNombre">Mateo Justiniano</b>
+          <span style="font-size: 13px; font-weight: 800; color: var(--menta-2);" id="agendarTutorTarifa">Bs 25 / hora</span>
+        </div>
+        <p style="font-size: 12px; color: var(--tinta-2); margin-top: 2px;" id="agendarTutorRol">
+          Facilitador de Cálculo II • ⭐ 4.8 (9 reseñas)
+        </p>
+      </div>
+    </div>
+
+    <form onsubmit="enviarSolicitudTutoriaPrivada(event)" style="display: grid; gap: 14px;">
+      <div class="cm-form-group">
+        <label>Tema que deseas preparar o repasar:</label>
+        <input type="text" id="inputAgendarTema" required placeholder="ej: Preparación para el examen de cálculo, dudas de integrales...">
+      </div>
+
+      <div class="cm-form-group">
+        <label>Propuesta de día y horario tentativo:</label>
+        <input type="text" id="inputAgendarHorario" required value="Sábado 15:00 BOT" placeholder="ej: Sábado 15:00 BOT o Jueves 19:30">
+      </div>
+
+      <div class="cm-form-group">
+        <label>Mensaje personal para el facilitador:</label>
+        <textarea id="inputAgendarMensaje" rows="2" style="font-size: 13px; resize: vertical;" placeholder="Explícale qué temas necesitas repasar a fondo..."></textarea>
+      </div>
+
+      <div style="background: rgba(245, 158, 11, 0.08); border-left: 3px solid #F59E0B; padding: 10px 14px; border-radius: 6px; font-size: 12px; color: var(--tinta-2); line-height: 1.4;">
+        ℹ️ Tu solicitud se enviará en estado <strong>⏳ Pendiente</strong> al facilitador. Podrá aceptarla y coordinar contigo en mensajes.
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-top: 6px;">
+        <button type="button" class="btn sm ghost" onclick="cerrarModalAgendarClasePrivada()" style="flex: 1;">
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-menta" style="flex: 2; padding: 12px; font-weight: 800; font-size: 13.5px;">
+          📨 Enviar Solicitud de Tutoría
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     MODAL 5: AUTENTICACIÓN, REGISTRO Y LOGIN (FONDO SÓLIDO Y OPACO)
+     ========================================================================== -->
+<div class="cm-modal-backdrop" id="modalAuth" hidden onclick="if(event.target===this) cerrarModalAuth()">
+  <div class="cm-modal" style="max-width: 520px;">
+    <div class="cm-modal-head">
+      <h3 class="cm-modal-title" id="authModalTitle">Iniciar Sesión</h3>
+      <button type="button" class="cm-modal-close" onclick="cerrarModalAuth()">✕</button>
+    </div>
+
+    <!-- Pestañas de Auth -->
+    <div style="display: flex; gap: 8px; margin-bottom: 16px; background: var(--papel-2); padding: 4px; border-radius: 12px; border: 1.5px solid var(--linea);">
+      <button type="button" class="btn sm" id="authTabLogin" onclick="switchAuthTab('login')" style="flex: 1; background: var(--tinta); color: #fff;">Iniciar Sesión</button>
+      <button type="button" class="btn sm ghost" id="authTabRegister" onclick="switchAuthTab('register')" style="flex: 1;">Crear Cuenta</button>
+    </div>
+
+    <!-- Formulario de Login -->
+    <form id="formLogin" onsubmit="ejecutarLogin(event)" style="display: grid; gap: 14px;">
+      <div class="cm-form-group">
+        <label>Correo Electrónico:</label>
+        <input type="email" id="loginEmail" required value="andre@gmail.com" placeholder="ej: tu_correo@gmail.com">
+      </div>
+      <div class="cm-form-group">
+        <label>Contraseña:</label>
+        <input type="password" id="loginPassword" required value="123" placeholder="••••••••">
+      </div>
+      <button type="submit" class="btn" style="background: var(--tinta); color: #fff; padding: 12px; margin-top: 6px; font-weight: 800;">
+        Entrar a Futuro Yo Aprende
+      </button>
+
+      <div style="font-size: 12px; color: var(--tinta-2); text-align: center; margin-top: 6px;">
+        Cambio rápido de cuenta para demostración del jurado:
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <button type="button" class="btn sm ghost" style="font-size: 12px;" onclick="cargarCuentaDemo('andre')">👨‍💻 Andre (UMSS)</button>
+        <button type="button" class="btn sm ghost" style="font-size: 12px;" onclick="cargarCuentaDemo('sofia')">👩‍🎓 Sofía (UMSA)</button>
+        <button type="button" class="btn sm ghost" style="font-size: 12px;" onclick="cargarCuentaDemo('mateo')">👨‍🎓 Mateo (UMSS)</button>
+        <button type="button" class="btn sm ghost" style="font-size: 12px;" onclick="cargarCuentaDemo('andrea')">👩‍💻 Andrea Claros (Santa Cruz)</button>
+      </div>
+    </form>
+
+    <!-- Formulario de Registro -->
+    <form id="formRegister" onsubmit="ejecutarRegistro(event)" style="display: none; gap: 14px;">
+      <div class="cm-form-group">
+        <label>Nombre Completo:</label>
+        <input type="text" id="regNombre" required placeholder="ej: Carlos Medina">
+      </div>
+
+      <div class="cm-form-group">
+        <label>Correo Electrónico:</label>
+        <input type="email" id="regEmail" required placeholder="ej: carlos@gmail.com">
+      </div>
+
+      <div class="cm-form-group">
+        <label>Contraseña para iniciar sesión:</label>
+        <input type="password" id="regPassword" required placeholder="Crea una contraseña segura">
+      </div>
+
+      <div class="cm-form-group">
+        <label>¿Dónde estudias actualmente?:</label>
+        <div style="display: flex; gap: 10px;">
+          <button type="button" class="btn sm" id="roleOptUniv" onclick="setNivelEstudio('univ')" style="flex: 1; background: var(--tinta); color: #fff;">🎓 Universidad</button>
+          <button type="button" class="btn sm ghost" id="roleOptColegio" onclick="setNivelEstudio('colegio')" style="flex: 1;">🏫 Colegio</button>
+        </div>
+      </div>
+
+      <div id="fieldsUniversidad" style="display: grid; gap: 12px;">
+        <div class="cm-form-group">
+          <label>Universidad (Opcional):</label>
+          <input type="text" id="regUniversidad" placeholder="ej: UMSS, UMSA, UCB, UPSA...">
+        </div>
+        <div class="cm-form-group">
+          <label>Carrera (Opcional):</label>
+          <input type="text" id="regCarrera" placeholder="ej: Ingeniería de Sistemas, Medicina...">
+        </div>
+      </div>
+
+      <div id="fieldsColegio" style="display: none; gap: 12px;">
+        <div class="cm-form-group">
+          <label>Colegio (Opcional):</label>
+          <input type="text" id="regColegio" placeholder="ej: Colegio Alemán, San Agustín...">
+        </div>
+        <div class="cm-form-group">
+          <label>Curso o Grado:</label>
+          <input type="text" id="regGrado" placeholder="ej: 6to de Secundaria, 5to...">
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="cm-form-group">
+          <label>País:</label>
+          <input type="text" id="regPais" value="Bolivia">
+        </div>
+        <div class="cm-form-group">
+          <label>Ciudad / Región:</label>
+          <input type="text" id="regRegion" value="Cochabamba" placeholder="ej: Cochabamba, La Paz...">
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-coral" style="padding: 12px; margin-top: 6px; font-weight: 800;">
+        🚀 Crear Mi Cuenta & Empezar
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Lógica desacoplada en módulos -->
+<script src="js/feed.js"></script>
+<script src="js/cuaderno.js"></script>
+<script src="js/comunidad.js"></script>
+<div id="globalToastApp" class="cm-toast" style="display: none;"></div>
+</body>
+</html>

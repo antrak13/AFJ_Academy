@@ -1,0 +1,782 @@
+(() => {
+  "use strict";
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const pct = (v) => Math.round(v * 100);
+  const fmt1 = (v) => v.toFixed(1).replace(".", ",");
+
+  /* ---------- content model ---------- */
+  const TYPES = {
+    concepto: { label: "Concepto", pl: "conceptos", hint: "una idea explicada simple, sin jerga" },
+    ejemplo: { label: "Ejemplo real", pl: "ejemplos reales", hint: "un caso concreto de la vida diaria de la persona" },
+    analogia: { label: "Analogía", pl: "analogías", hint: "una comparación con algo cotidiano que haga clic" },
+    dato: { label: "Dato curioso", pl: "datos curiosos", hint: "un dato sorprendente y útil, con su por qué" },
+    reto: { label: "Mini reto", pl: "mini retos", hint: "una acción concreta para hacer hoy en menos de 10 minutos" },
+    pregunta: { label: "Pregunta", pl: "preguntas", hint: "una pregunta de opción múltiple con 3 opciones para comprobar si entendió" },
+    mito: { label: "¿Mito o verdad?", pl: "mitos o verdades", hint: "una afirmación creíble que la persona debe clasificar como mito o verdad" },
+    perfil: { label: "Tu perfil", pl: "", hint: "" }
+  };
+  const CONTENT_TYPES = ["concepto", "ejemplo", "analogia", "dato", "reto"];
+  const QUIZ_TYPES = ["pregunta", "mito"];
+  const ALL_TYPES = CONTENT_TYPES.concat(QUIZ_TYPES);
+  const REACTIONS = [
+    { id: "sirvio", label: "Me sirvió" },
+    { id: "facil", label: "Muy fácil" },
+    { id: "noentendi", label: "No entendí" },
+    { id: "mas", label: "Más de esto" }
+  ];
+  const SUGGESTIONS = ["Cómo proteger mis ahorros en Bolivia", "Dólar digital sin estafas", "Interés compuesto", "Empezar un emprendimiento", "Python desde cero", "Historia de Bolivia"];
+  const DEFAULT_TOPIC = "Cómo proteger mis ahorros en Bolivia";
+  const GENERIC_SUBS = ["Fundamentos", "Conceptos clave", "Ejemplos cotidianos", "Errores comunes", "Herramientas", "Casos avanzados"];
+  const LEVEL_START = { cero: 1.3, algo: 2.2, bastante: 3.4 };
+  const LEVEL_TEXT = { cero: "empieza de cero", algo: "sabe algo", bastante: "sabe bastante" };
+  const FIN_RX = /ahorr|dinero|plata|finanz|d[oó]lar|inflaci|cripto|usdt|invers|jubil|deuda|cr[eé]dit|presupuest|econom|emprend/i;
+  const FACTS = [
+    "- El ajuste en el tipo de cambio puede elevar el costo real de divisas de Bs 6,96 a más de Bs 11.",
+    "- Ahorrar en moneda local sin cobertura reduce la capacidad real de compra frente a productos importados.",
+    "- La tasa de inflación acumulada reduce constantemente el poder adquisitivo del ahorro en efectivo.",
+    "- Cerca de 8 de cada 10 trabajadores en Bolivia son informales, sin aportes para la jubilación.",
+    "- La pirámide \"Bitcoin Cash\" de El Alto prometía 300% en 60 días.",
+    "- Pagar con QR es parte del día a día y muchas estafas llegan por WhatsApp."
+  ].join("\n");
+  const BANK_SUBS = ["Devaluación", "Inflación", "Ahorro en dólares", "Estafas y pirámides", "Dólar digital seguro", "Interés compuesto"];
+  const BANK = [
+    { type: "concepto", sub: "Devaluación", level: 1, title: "Qué es devaluación, en simple", text: "Cuando la moneda se devalúa, cada billete compra menos de lo que se paga en divisas. Si el tipo de cambio sube de Bs 6,96 a más de Bs 11, con los mismos bolivianos consigues casi la mitad de dólares.", why: "Para empezar, lo básico: este concepto explica casi todo lo demás." },
+    { type: "ejemplo", sub: "Devaluación", level: 2, title: "Tus Bs 1.000 en la caja", text: "Si guardas Bs 1.000 en efectivo durante un periodo de devaluación, los billetes siguen ahí, pero su poder de compra en moneda dura cae sensiblemente. No perdiste ningún billete físico, pero perdiste capacidad de compra real.", why: "Los ejemplos con tu propia plata se entienden más rápido que la teoría." },
+    { type: "pregunta", sub: "Inflación", level: 2, title: "¿Qué hace la inflación con tu plata?", text: "Si tu ingreso no cambia y hay inflación alta, ¿qué pasa?", options: ["Tu plata compra más cosas", "Con la misma plata compras menos", "No te afecta si ahorras en el banco"], correct: 1, expl: "La inflación incrementa los precios generales. Si tu ingreso no sube al mismo ritmo, compras menos con el mismo dinero.", why: "Toca comprobar cuánto entendiste antes de seguir." },
+    { type: "analogia", sub: "Inflación", level: 2, title: "Una mochila con un hueco", text: "Ahorrar en una moneda con inflación alta es como cargar arena en una mochila rota: sigues poniendo, pero se va saliendo sin que lo notes. Proteger tus ahorros es tapar ese hueco.", why: "Una comparación cotidiana para que la idea haga clic." },
+    { type: "mito", sub: "Dólar digital seguro", level: 3, title: "«El dólar digital no tiene ningún riesgo»", text: "¿Mito o verdad?", options: ["Mito", "Verdad"], correct: 0, expl: "Mito. Un dólar digital como USDC o USDT sigue al dólar, pero puedes perder tu frase de recuperación, caer en estafas o sufrir si el emisor falla. Úsalo sabiendo eso.", why: "Pruebo un formato distinto para conocerte mejor." },
+    { type: "dato", sub: "Estafas y pirámides", level: 2, title: "300% en 60 días: la promesa de El Alto", text: "La pirámide «Bitcoin Cash» de El Alto prometía triplicar la plata en dos meses. Ninguna inversión real garantiza algo así: cuando la ganancia es muy alta y segura, sale de los que entran después.", why: "Un dato real ayuda a reconocer el patrón cuando te llegue." },
+    { type: "reto", sub: "Ahorro en dólares", level: 1, title: "Reto de hoy: tu primer 10%", text: "Mira cuánto ganaste esta semana y separa el 10% antes de gastar. Si es Bs 200, son Bs 20. Guárdalos aparte o pásalos a dólares. Lo importante hoy no es el monto, es empezar.", why: "Una acción pequeña hoy vale más que diez lecturas." },
+    { type: "concepto", sub: "Interés compuesto", level: 2, title: "Interés compuesto, sin fórmulas", text: "Es ganar intereses sobre tus intereses. Al principio casi no se nota, pero con los años la curva se dispara. Por eso empezar a los 21 con poco suele rendir más que empezar a los 35 con el doble.", why: "Todavía no vimos este subtema y es clave para tu meta." },
+    { type: "pregunta", sub: "Estafas y pirámides", level: 3, title: "La señal más clara de una pirámide", text: "¿Cuál de estas señales delata una pirámide?", options: ["Que la app tenga muchos usuarios", "Que ganes sobre todo por meter a más gente", "Que acepte pagos con QR"], correct: 1, expl: "Si ganas sobre todo por reclutar, el dinero no viene de un negocio real sino de los nuevos que entran.", why: "Toca comprobar cuánto entendiste." }
+  ];
+  const PERMANENT = ["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed"];
+  const CARD_TAGS = ["TITULO", "TEXTO", "OPCIONES", "CORRECTA", "EXPLICACION", "PORQUE", "SUBTEMA_NUEVO"];
+  const PROFILE_TAGS = ["TITULO", "OBS1", "OBS2", "OBS3", "AHORA"];
+
+  /* ---------- state ---------- */
+  const S = {};
+  function freshState() {
+    Object.assign(S, {
+      active: false, topic: "", about: "", lvlChoice: "algo", subs: [], level: 2.2, levelStart: 2.2,
+      aff: Object.fromEntries(ALL_TYPES.map((t) => [t, 0])), typeStats: {}, ratios: [], quiz: { n: 0, ok: 0 },
+      cards: [], byId: new Map(), nextId: 1, busy: false, ctl: null, gen: S.gen || 0, pendingCard: null,
+      sentinelNear: S.sentinelNear || false, paused: false, failStreak: 0,
+      forceSub: null, review: null, confused: false, levelNote: null, lastPlan: null, events: [], cap: 60,
+      bankMode: false, bankUsed: new Set()
+    });
+  }
+  freshState();
+
+  const el = {
+    ai: $("#ai"), aiText: $("#ai-text"), start: $("#start"), topic: $("#topic"), about: $("#about"),
+    topicbar: $("#topicbar"), tbTopic: $("#tb-topic"), feed: $("#feed"), note: $("#preview-note"),
+    panel: $("#panel"), sum: $("#panel-sum"), sumText: $("#sum-text"), sumChev: $("#sum-chev")
+  };
+
+  /* ---------- capability ---------- */
+  let sampleFn = null, aiResolved = false, aiOff = false;
+  const samplePromise = (async () => {
+    try { sampleFn = (await window.ai?.sample) || null; } catch (e) { sampleFn = null; }
+    aiResolved = true;
+    if (!sampleFn) aiOff = true;
+    renderAi();
+    return sampleFn;
+  })();
+  async function getSample() { await samplePromise; return aiOff ? null : sampleFn; }
+  function renderAi() {
+    const st = !aiResolved ? "pending" : aiOff ? "off" : "ready";
+    el.ai.dataset.state = st;
+    el.aiText.textContent = st === "pending" ? "IA en vivo: conectando…" : st === "ready" ? "IA en vivo: lista" : "Modo offline (tarjetas precargadas)";
+  }
+  function markPermanent(e) { if (e && PERMANENT.includes(e.code)) { aiOff = true; renderAi(); return true; } return false; }
+
+  /* ---------- learner model ---------- */
+  const seenCount = (s) => S.cards.filter((c) => c.sub === s).length;
+  const aff = (t) => S.aff[t] || 0;
+  function sinceQuiz() { let n = 0; for (let i = S.cards.length - 1; i >= 0; i--) { const c = S.cards[i]; if (QUIZ_TYPES.includes(c.type)) break; if (c.type !== "perfil") n++; } return n; }
+  function sinceProfile() { let n = 0; for (let i = S.cards.length - 1; i >= 0; i--) { if (S.cards[i].type === "perfil") break; n++; } return n; }
+  function avgRatio() { const r = S.ratios; return r.length ? r.reduce((a, b) => a + b, 0) / r.length : null; }
+  function paceLabel() { const r = avgRatio(); if (r == null || S.ratios.length < 2) return "todavía midiendo"; return r < 0.6 ? "lees rápido" : r > 1.3 ? "lees con calma" : "lees a buen ritmo"; }
+  function paceWords() { const r = avgRatio(); if (r == null || S.ratios.length < 2) return 60; return r < 0.6 ? 45 : r > 1.3 ? 85 : 60; }
+  const levelLabel = (v) => (v < 1.8 ? "Principiante" : v < 3.2 ? "Intermedio" : "Avanzado");
+
+  function pickSub(reasons) {
+    const recent = S.cards.slice(-2).map((c) => c.sub);
+    let best = null;
+    S.subs.forEach((s, i) => {
+      const seen = seenCount(s);
+      let score = 0.55 * s.interest + 0.45 * (1 - s.mastery) + (seen === 0 ? 0.25 : 0) - recent.filter((r) => r === s).length * 0.35 + Math.random() * 0.08;
+      if (S.cards.length < 4) score -= i * 0.08;
+      if (!best || score > best.score) best = { s, score };
+    });
+    const s = best.s;
+    if (s.interest >= 0.6) reasons.push(`«${s.name}» te interesa`);
+    else if (seenCount(s) === 0) reasons.push(`todavía no vimos «${s.name}»`);
+    else if (s.mastery < 0.4) reasons.push(`en «${s.name}» todavía hay dudas`);
+    return s;
+  }
+  function planNext() {
+    const reasons = [];
+    const content = S.cards.filter((c) => c.type !== "perfil");
+    if (content.length > 0 && sinceProfile() >= 6) {
+      return { type: "perfil", sub: null, level: Math.round(S.level), reasons: ["ya viste 6 tarjetas y toca contarte lo que noto de ti"] };
+    }
+    let sub;
+    if (S.forceSub) { sub = S.forceSub; reasons.push(`pediste más sobre «${sub.name}»`); S.forceSub = null; }
+    else if (S.review) { sub = S.review; reasons.push(`fallaste o no entendiste «${sub.name}» y conviene repasarlo`); }
+    else sub = pickSub(reasons);
+    const lastContent = content[content.length - 1];
+    let type;
+    if (content.length === 0) { type = "concepto"; reasons.push("para empezar, lo básico"); }
+    else if (S.confused || S.review) {
+      type = aff("ejemplo") >= aff("analogia") ? "ejemplo" : "analogia";
+      if (S.confused) reasons.push("lo explico de otra forma");
+      S.confused = false; S.review = null;
+    }
+    else if (sinceQuiz() >= 3) { type = aff("mito") > aff("pregunta") || Math.random() < 0.4 ? "mito" : "pregunta"; reasons.push("toca comprobar cuánto entendiste"); }
+    else if (Math.random() < 0.22) {
+      const pool = CONTENT_TYPES.filter((t) => t !== lastContent?.type);
+      type = pool[Math.floor(Math.random() * pool.length)];
+      reasons.push("pruebo un formato distinto para conocerte mejor");
+    } else {
+      type = CONTENT_TYPES.filter((t) => t !== lastContent?.type).sort((a, b) => aff(b) - aff(a))[0];
+      const st = S.typeStats[type];
+      if (aff(type) > 0.3) reasons.push(st && st.n ? `te quedas más en los ${TYPES[type].pl} (${fmt1(st.dwell / st.n)} s en promedio)` : `los ${TYPES[type].pl} te funcionan mejor`);
+    }
+    if (S.levelNote) { reasons.push(S.levelNote); S.levelNote = null; }
+    if (!reasons.length) reasons.push("sigue el orden de tu mapa del tema");
+    return { type, sub, level: Math.round(clamp(S.level, 1, 5)), reasons };
+  }
+
+  function note(card, text) { card.notes.push(text); if (card.notes.length > 4) card.notes.shift(); }
+  function logEvent(kind, html) {
+    S.events.unshift({ kind, html });
+    if (S.events.length > 14) S.events.pop();
+    renderLog();
+  }
+
+  /* ---------- prompts ---------- */
+  function modelSummary() {
+    const fm = ALL_TYPES.map((t) => { const st = S.typeStats[t]; return `${TYPES[t].label}: afinidad ${aff(t).toFixed(1)}${st && st.n ? `, ${fmt1(st.dwell / st.n)} s en promedio (${st.n} vistas)` : ""}`; }).join("; ");
+    const recent = S.cards.filter((c) => c.notes.length).slice(-6).map((c) => `#${c.id} ${TYPES[c.type].label}${c.sub ? ` «${c.sub.name}»` : ""}: ${c.notes.join(", ")}`);
+    return [
+      `- Nivel estimado: ${fmt1(S.level)} de 5 (empezó en ${fmt1(S.levelStart)})`,
+      `- Formatos: ${fm}`,
+      `- Ritmo de lectura: ${paceLabel()}`,
+      `- Preguntas respondidas: ${S.quiz.ok} bien de ${S.quiz.n}`,
+      `- Mapa del tema: ${S.subs.map((s) => `${s.name} (dominio ${pct(s.mastery)}%, interés ${pct(s.interest)}%, tarjetas ${seenCount(s)})`).join("; ")}`,
+      `- Últimas interacciones: ${recent.join(" | ") || "todavía ninguna"}`
+    ].join("\n");
+  }
+  function mapPrompt() {
+    return [
+      "Vas a armar el mapa de un feed educativo adaptativo.",
+      `Tema: "${S.topic}"`,
+      `Sobre la persona: ${S.about || "no dio datos"}`,
+      `Nivel que declaró: ${LEVEL_TEXT[S.lvlChoice]}`,
+      'Devuelve SOLO JSON con esta forma: {"subtemas": ["...", "..."]}',
+      "Reglas: 6 subtemas cortos (de 1 a 4 palabras), en español, ordenados de lo más básico a lo más avanzado y pensados para esta persona."
+    ].join("\n");
+  }
+  function cardPrompt(plan) {
+    const t = TYPES[plan.type];
+    const titles = S.cards.slice(-12).map((c) => `«${c.title}»`).join(", ") || "ninguna";
+    const lines = [
+      "Eres el motor de un feed educativo adaptativo, como una red social pero para aprender. Español de Bolivia, tuteo, tono cercano y claro. Escribes UNA tarjeta.",
+      "",
+      `TEMA GENERAL: ${S.topic}`,
+      `SOBRE LA PERSONA: ${S.about || "no dio datos"}`,
+      "",
+      "LO QUE LA APP HA MEDIDO DE ESTA PERSONA:",
+      modelSummary(),
+      "",
+      "PLAN PARA ESTA TARJETA (lo decidió la app; síguelo):",
+      `- Tipo: ${t.label}: ${t.hint}`,
+      `- Subtema: ${plan.sub.name}`,
+      `- Nivel: ${plan.level} de 5 (1 = desde cero, 5 = experto)`,
+      `- Motivos: ${plan.reasons.join("; ")}`,
+      "",
+      `Tarjetas ya mostradas, no repitas: ${titles}`,
+      FIN_RX.test(S.topic) ? "Datos verificados que puedes usar si vienen al caso (no inventes otras cifras de actualidad):\n" + FACTS : "Si das cifras de actualidad, que sean aproximadas y dilo.",
+      "Conecta el contenido con lo que sabes de la persona.",
+      "",
+      "Responde SOLO con estas líneas, cada una con su etiqueta, sin markdown:",
+      "TITULO: máximo 8 palabras"
+    ];
+    if (plan.type === "pregunta") {
+      lines.push("TEXTO: la pregunta, en 1 o 2 frases", 'OPCIONES: tres opciones separadas por " | "', "CORRECTA: el número de la opción correcta (1, 2 o 3); que no sea siempre la misma posición", "EXPLICACION: 1 o 2 frases que se muestran después de responder");
+    } else if (plan.type === "mito") {
+      lines.push("TEXTO: la afirmación entre comillas latinas «»", "OPCIONES: Mito | Verdad", "CORRECTA: 1 si es mito, 2 si es verdad", "EXPLICACION: 1 o 2 frases que se muestran después de responder");
+    } else {
+      lines.push(`TEXTO: máximo ${paceWords()} palabras`);
+    }
+    lines.push("PORQUE: 1 frase dirigida a la persona (tú) que explique por qué le toca esta tarjeta, usando los motivos");
+    lines.push('SUBTEMA_NUEVO: si notas un subtema que le interesaría y no está en el mapa, nómbralo en 1 a 4 palabras; si no, escribe "no"');
+    return lines.join("\n");
+  }
+  function profilePrompt() {
+    return [
+      "Eres el motor de un feed educativo adaptativo. Escribe una tarjeta corta «Esto es lo que noto de ti», en español de Bolivia y tuteo, basada SOLO en estos datos medidos por la app (no inventes otros):",
+      `TEMA: ${S.topic}`,
+      `SOBRE LA PERSONA: ${S.about || "no dio datos"}`,
+      modelSummary(),
+      "",
+      "Responde SOLO con estas líneas, cada una con su etiqueta, sin markdown:",
+      "TITULO: máximo 8 palabras",
+      "OBS1: una observación concreta sobre cómo aprende, citando un dato medido",
+      "OBS2: otra observación concreta",
+      "OBS3: otra observación concreta",
+      "AHORA: 1 frase sobre qué vas a cambiar en las próximas tarjetas"
+    ].join("\n");
+  }
+  const normTag = (t) => t.toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  function parseTagged(text, tags) {
+    const out = {};
+    let cur = null;
+    for (const raw of String(text).split("\n")) {
+      const line = raw.replace(/\*\*/g, "").replace(/^\s*[-•]\s*/, "");
+      const m = line.match(/^\s*([A-Za-zÁÉÍÓÚÑáéíóúñ_0-9]+)\s*[:：]\s*(.*)$/);
+      if (m) {
+        const tag = normTag(m[1]);
+        if (tags.includes(tag)) { cur = tag; out[tag] = m[2].trim(); continue; }
+      }
+      if (cur && line.trim()) out[cur] = (out[cur] + " " + line.trim()).trim();
+    }
+    return out;
+  }
+  const splitOpts = (s) => String(s || "").split("|").map((x) => x.trim()).filter(Boolean).slice(0, 4);
+
+  /* ---------- card rendering ---------- */
+  function dots(level) { let h = ""; for (let i = 1; i <= 5; i++) h += `<i class="${i <= level ? "on" : ""}"></i>`; return h; }
+  function makeCard(plan) {
+    return {
+      id: S.nextId++, type: plan.type, sub: plan.sub, level: plan.level, plan,
+      title: "", text: "", options: null, correct: -1, expl: "", why: "", obs: [],
+      words: 0, expected: 6, dwell: 0, visibleSince: 0, firstSeen: 0, seen: false, classified: false,
+      reactions: new Set(), answered: false, notes: [], el: null, preview: false
+    };
+  }
+  function cardEl(card) {
+    const a = document.createElement("article");
+    a.className = `fcard t-${card.type}`;
+    a.dataset.id = card.id;
+    a.innerHTML = `<div class="gen-bar" aria-hidden="true"></div>
+      <div class="fc-head"><span class="fc-type">${TYPES[card.type].label}</span>${card.sub ? `<span class="fc-sub">${esc(card.sub.name)}</span>` : ""}<span class="fc-lv" aria-label="Nivel ${card.level} de 5">${card.type === "perfil" ? "" : dots(card.level)}</span><span class="fc-num">${card.preview ? "ejemplo" : "#" + card.id}</span></div>
+      <h2 class="fc-title"></h2>
+      <ul class="fc-obs" hidden></ul>
+      <p class="fc-text"></p>
+      <div class="fc-opts"></div>
+      <p class="fc-expl" hidden></p>
+      <div class="fc-react" hidden>${REACTIONS.map((r) => `<button type="button" data-r="${r.id}" aria-pressed="false">${r.label}</button>`).join("")}</div>
+      <p class="fc-why" hidden><span>Por qué ves esto</span><span class="fc-why-text"></span></p>
+      <div class="fc-foot"><span class="fc-dwell" aria-hidden="true"><i></i></span><span class="fc-chip"></span></div>`;
+    card.el = a;
+    return a;
+  }
+  function setTxt(node, text, typing, placeholder) {
+    node.textContent = text;
+    node.classList.toggle("typing", !!typing);
+    node.classList.toggle("placeholder", !!placeholder);
+  }
+  function optsHTML(opts, disabled) {
+    return opts.map((o, i) => `<button type="button" class="opt" data-i="${i}"${disabled ? " disabled" : ""}><span class="k">${i + 1}</span><span>${esc(o)}</span></button>`).join("");
+  }
+  function renderPartial(card, p) {
+    const q = (s) => card.el.querySelector(s);
+    if (card.type === "perfil") {
+      const order = ["TITULO", "OBS1", "OBS2", "OBS3", "AHORA"];
+      let last = null; for (const t of order) if (p[t]) last = t;
+      setTxt(q(".fc-title"), p.TITULO || "Analizando cómo aprendes…", last === "TITULO" || !last, !p.TITULO);
+      const obs = ["OBS1", "OBS2", "OBS3"].filter((k) => p[k]);
+      const ul = q(".fc-obs");
+      ul.hidden = !obs.length;
+      ul.innerHTML = obs.map((k) => `<li class="${k === last ? "typing" : ""}">${esc(p[k])}</li>`).join("");
+      setTxt(q(".fc-text"), p.AHORA ? "Ahora: " + p.AHORA : "", last === "AHORA");
+      return;
+    }
+    const order = ["TITULO", "TEXTO", "OPCIONES", "PORQUE"];
+    let last = null; for (const t of order) if (p[t]) last = t;
+    setTxt(q(".fc-title"), p.TITULO || `Escribiendo una tarjeta para ti…`, last === "TITULO" || !last, !p.TITULO);
+    setTxt(q(".fc-text"), p.TEXTO || "", last === "TEXTO");
+    const opts = QUIZ_TYPES.includes(card.type) ? splitOpts(p.OPCIONES) : [];
+    q(".fc-opts").innerHTML = opts.length ? optsHTML(opts, true) : "";
+    const why = q(".fc-why");
+    why.hidden = !p.PORQUE;
+    setTxt(why.querySelector(".fc-why-text"), p.PORQUE || "", last === "PORQUE");
+  }
+  function renderFinal(card) {
+    const q = (s) => card.el.querySelector(s);
+    card.el.classList.remove("generating");
+    setTxt(q(".fc-title"), card.title);
+    if (card.type === "perfil") {
+      const ul = q(".fc-obs");
+      ul.hidden = false;
+      ul.innerHTML = card.obs.map((o) => `<li>${esc(o)}</li>`).join("");
+      setTxt(q(".fc-text"), card.text ? "Ahora: " + card.text : "");
+      return;
+    }
+    setTxt(q(".fc-text"), card.text);
+    q(".fc-opts").innerHTML = card.options ? optsHTML(card.options, card.preview) : "";
+    q(".fc-react").hidden = card.preview;
+    const why = q(".fc-why");
+    why.hidden = !card.why;
+    setTxt(why.querySelector(".fc-why-text"), card.why);
+  }
+  function computeReading(card) {
+    const txt = [card.title, card.text, (card.options || []).join(" "), card.obs.join(" ")].join(" ");
+    card.words = txt.split(/\s+/).filter(Boolean).length;
+    card.expected = Math.max(4, card.words / 3.3);
+  }
+
+  /* ---------- panel ---------- */
+  function renderPanel() {
+    $("#m-level").textContent = fmt1(S.level);
+    $("#m-level-label").textContent = levelLabel(S.level);
+    const d = S.level - S.levelStart;
+    const tr = $("#m-trend");
+    tr.textContent = Math.abs(d) < 0.05 ? "" : `${d > 0 ? "▲ +" : "▼ "}${fmt1(d)} desde que empezaste`;
+    tr.className = "trend " + (d > 0 ? "up" : "down");
+    $("#m-level-bar").style.width = ((S.level - 1) / 4 * 100).toFixed(1) + "%";
+
+    const ranked = ALL_TYPES.slice().sort((a, b) => aff(b) - aff(a));
+    const topT = aff(ranked[0]) > 0.3 ? ranked[0] : null;
+    $("#m-formats").innerHTML = ranked.map((t) => {
+      const st = S.typeStats[t];
+      const w = clamp((aff(t) + 2) / 6) * 100;
+      return `<div class="row${t === topT ? " top-fmt" : ""}"><span>${TYPES[t].label}${t === topT ? '<span class="tags"><span class="tag">te funciona</span></span>' : ""}</span><span class="val">${st && st.n ? fmt1(st.dwell / st.n) + " s" : "—"}</span><span class="track"><i style="width:${w.toFixed(0)}%;background:${t === "reto" ? "var(--accent)" : QUIZ_TYPES.includes(t) ? "var(--c-quiz)" : `var(--c-${t})`}"></i></span></div>`;
+    }).join("");
+
+    $("#m-map").innerHTML = S.subs.length ? S.subs.map((s) => {
+      const tags = [];
+      if (s.interest >= 0.6) tags.push('<span class="tag">te interesa</span>');
+      if (s.isNew) tags.push('<span class="tag new">nuevo</span>');
+      return `<div class="row"><span>${esc(s.name)}${tags.length ? `<span class="tags">${tags.join("")}</span>` : ""}</span><span class="val">dominio ${pct(s.mastery)}%</span><span class="track"><i style="width:${pct(s.mastery)}%;background:var(--money)"></i></span></div>`;
+    }).join("") : '<p class="mini">Se arma cuando eliges un tema.</p>';
+
+    $("#m-pace").innerHTML = `Ritmo: <b>${paceLabel()}</b>`;
+    $("#m-quiz").innerHTML = `Preguntas: <b>${S.quiz.ok} bien de ${S.quiz.n}</b> · Tarjetas vistas: <b>${S.cards.filter((c) => c.seen && !c.preview).length}</b>`;
+    renderPlan();
+    const top = topT ? `te funcionan los ${TYPES[topT].pl}` : "midiendo cómo aprendes";
+    el.sumText.innerHTML = `<b>La IA:</b> nivel ${fmt1(S.level)} · ${top}`;
+  }
+  function renderPlan() {
+    const p = S.lastPlan;
+    const box = $("#m-plan");
+    $("#m-plan-label").textContent = S.busy ? "La IA está escribiendo" : "Última decisión de la app";
+    if (!p) { box.innerHTML = '<span class="mini">Cuando empieces, aquí verás por qué te toca cada tarjeta.</span>'; return; }
+    box.innerHTML = `<span><b>${TYPES[p.type].label}</b>${p.sub ? ` · ${esc(p.sub.name)}` : ""}${p.type !== "perfil" ? ` · nivel ${p.level}` : ""}</span><ul>${p.reasons.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>`;
+  }
+  const KIND = { senal: "Señal", ia: "IA", adapta: "Adapta" };
+  function renderLog() {
+    $("#m-log").innerHTML = S.events.length ? S.events.map((e) => `<li><span class="kd kd-${e.kind}">${KIND[e.kind]}</span><span>${e.html}</span></li>`).join("") : '<li><span class="kd kd-adapta">Adapta</span><span>Todo lo que hagas en el feed aparece aquí.</span></li>';
+  }
+  el.sum.addEventListener("click", () => {
+    const open = !el.panel.classList.contains("open");
+    el.panel.classList.toggle("open", open);
+    el.sum.setAttribute("aria-expanded", String(open));
+    el.sumChev.textContent = open ? "cerrar" : "ver";
+  });
+
+  /* ---------- visibility & dwell ---------- */
+  let ticker = 0;
+  function tick() {
+    const now = performance.now();
+    let any = false;
+    for (const c of S.cards) {
+      if (!c.visibleSince) continue;
+      any = true;
+      const live = (c.dwell + now - c.visibleSince) / 1000;
+      c.el.querySelector(".fc-dwell i").style.width = Math.min(100, (live / c.expected) * 100).toFixed(1) + "%";
+      if (!c.classified) c.el.querySelector(".fc-chip").textContent = `leyendo · ${Math.floor(live)} s`;
+    }
+    if (!any && ticker) { clearInterval(ticker); ticker = 0; }
+  }
+  function ensureTicker() { if (!ticker && S.cards.some((c) => c.visibleSince)) ticker = setInterval(tick, 250); }
+  const visIO = new IntersectionObserver((entries) => {
+    const now = performance.now();
+    for (const en of entries) {
+      const card = S.byId.get(Number(en.target.dataset.id));
+      if (!card || card.preview) continue;
+      const enough = en.isIntersecting && en.intersectionRect.height >= 0.6 * Math.min(en.boundingClientRect.height, window.innerHeight);
+      if (enough && !card.visibleSince && !document.hidden) {
+        card.visibleSince = now;
+        if (!card.seen) { card.seen = true; card.firstSeen = now; renderPanel(); maybeGenerate(); }
+      } else if (!enough && card.visibleSince) {
+        card.dwell += now - card.visibleSince;
+        card.visibleSince = 0;
+        classify(card);
+      }
+    }
+    ensureTicker();
+  }, { threshold: [0, 0.2, 0.4, 0.6, 0.8, 1] });
+  document.addEventListener("visibilitychange", () => {
+    const now = performance.now();
+    for (const c of S.cards) {
+      if (document.hidden && c.visibleSince) { c.dwell += now - c.visibleSince; c.visibleSince = 0; c.hiddenPause = true; }
+      else if (!document.hidden && c.hiddenPause) { c.visibleSince = now; c.hiddenPause = false; }
+    }
+    ensureTicker();
+  });
+  function classify(card) {
+    if (card.type === "perfil" || card.classified) return;
+    const secs = card.dwell / 1000;
+    if (secs < 0.5) return;
+    card.classified = true;
+    const ratio = secs / card.expected;
+    const quiz = QUIZ_TYPES.includes(card.type);
+    const chip = card.el.querySelector(".fc-chip");
+    const st = (S.typeStats[card.type] ||= { n: 0, dwell: 0 });
+    st.n++; st.dwell += secs;
+    S.ratios.push(Math.min(ratio, 3));
+    const s = card.sub;
+    if (!quiz && ratio < 0.35 && !card.reactions.size) {
+      S.aff[card.type] -= 0.6; s.interest = clamp(s.interest - 0.1);
+      chip.textContent = `saltada · ${Math.round(secs)} s`; chip.className = "fc-chip skip";
+      note(card, `la pasó rápido (${Math.round(secs)} s)`);
+      logEvent("senal", `#${card.id} ${TYPES[card.type].label}: la pasaste rápido → menos ${TYPES[card.type].pl}`);
+    } else if (ratio > 1.8) {
+      S.aff[card.type] += 0.7; s.interest = clamp(s.interest + 0.15);
+      chip.textContent = `te detuviste · ${Math.round(secs)} s`; chip.className = "fc-chip long";
+      note(card, `se detuvo ${Math.round(secs)} s`);
+      logEvent("senal", `#${card.id} ${TYPES[card.type].label}: te detuviste ${Math.round(secs)} s → «${esc(s.name)}» te interesa`);
+    } else {
+      S.aff[card.type] += 0.4; s.interest = clamp(s.interest + 0.05);
+      chip.textContent = `${quiz ? "vista" : "leída"} · ${Math.round(secs)} s`; chip.className = "fc-chip";
+      note(card, `la leyó (${Math.round(secs)} s)`);
+    }
+    renderPanel();
+  }
+
+  /* ---------- interactions ---------- */
+  function refreshAhead(reason) {
+    const stale = S.cards.filter((c) => !c.seen && !c.preview);
+    let changed = stale.length > 0;
+    for (const c of stale) {
+      if (c.bankIdx != null) S.bankUsed.delete(c.bankIdx);
+      visIO.unobserve(c.el);
+      c.el.remove();
+      S.cards.splice(S.cards.indexOf(c), 1);
+      S.byId.delete(c.id);
+      S.nextId = Math.min(S.nextId, c.id);
+    }
+    if (S.busy) { abortGen(); changed = true; }
+    if (changed) logEvent("adapta", `Cambié la próxima tarjeta porque ${esc(reason)}.`);
+    if (S.active && !S.busy && !S.paused) generateNext();
+  }
+  function onReact(card, r, btn) {
+    if (!card || card.type === "perfil" || card.reactions.has(r)) return;
+    card.reactions.add(r);
+    btn.setAttribute("aria-pressed", "true");
+    const s = card.sub;
+    if (r === "facil" || r === "noentendi") {
+      const other = card.el.querySelector(`.fc-react [data-r="${r === "facil" ? "noentendi" : "facil"}"]`);
+      if (other) other.disabled = true;
+    }
+    if (r === "sirvio") {
+      S.aff[card.type] += 1; s.interest = clamp(s.interest + 0.2);
+      note(card, "marcó «Me sirvió»");
+      logEvent("senal", `#${card.id}: «Me sirvió» → más ${TYPES[card.type].pl}`);
+    } else if (r === "facil") {
+      S.level = clamp(S.level + 0.5, 1, 5); s.mastery = clamp(s.mastery + 0.15);
+      S.levelNote = "te pareció fácil, así que subí el nivel";
+      note(card, "marcó «Muy fácil»");
+      logEvent("senal", `#${card.id}: «Muy fácil» → nivel ${fmt1(S.level)}`);
+      refreshAhead("te pareció fácil");
+    } else if (r === "noentendi") {
+      S.level = clamp(S.level - 0.4, 1, 5); s.mastery = clamp(s.mastery - 0.1);
+      S.confused = true; S.review = s;
+      note(card, "marcó «No entendí»");
+      logEvent("senal", `#${card.id}: «No entendí» → bajo el nivel y lo explico distinto`);
+      refreshAhead("marcaste «No entendí»");
+    } else if (r === "mas") {
+      s.interest = clamp(s.interest + 0.4); S.aff[card.type] += 0.5; S.forceSub = s;
+      note(card, `pidió más sobre «${s.name}»`);
+      logEvent("senal", `#${card.id}: «Más de esto» → sigo con «${esc(s.name)}»`);
+      refreshAhead(`pediste más sobre «${s.name}»`);
+    }
+    renderPanel();
+  }
+  function onAnswer(card, i) {
+    if (!card || card.answered || !card.options || card.preview) return;
+    card.answered = true;
+    const ok = i === card.correct;
+    const secs = Math.max(1, Math.round((performance.now() - (card.firstSeen || performance.now())) / 1000));
+    card.el.querySelectorAll(".opt").forEach((b, j) => {
+      b.disabled = true;
+      if (j === card.correct) b.classList.add("ok");
+      else if (j === i) b.classList.add("ko");
+      else b.classList.add("dim");
+    });
+    const ex = card.el.querySelector(".fc-expl");
+    ex.textContent = (ok ? "Correcto. " : "No era esa. ") + (card.expl || "");
+    ex.hidden = false;
+    S.quiz.n++;
+    const s = card.sub;
+    if (ok) {
+      S.quiz.ok++;
+      S.level = clamp(S.level + (secs < 8 ? 0.35 : 0.25), 1, 5); s.mastery = clamp(s.mastery + 0.25);
+      note(card, `respondió bien en ${secs} s`);
+      logEvent("senal", `#${card.id}: correcta en ${secs} s → nivel ${fmt1(S.level)}`);
+    } else {
+      S.level = clamp(S.level - 0.3, 1, 5); s.mastery = clamp(s.mastery - 0.15); S.review = s;
+      note(card, "respondió mal");
+      logEvent("senal", `#${card.id}: incorrecta → repaso «${esc(s.name)}» con un ejemplo`);
+      refreshAhead(`fallaste la pregunta sobre «${s.name}»`);
+    }
+    renderPanel();
+  }
+  el.feed.addEventListener("click", (e) => {
+    const art = e.target.closest(".fcard");
+    if (!art) return;
+    const card = S.byId.get(Number(art.dataset.id));
+    const rb = e.target.closest(".fc-react button");
+    if (rb && !rb.disabled) { onReact(card, rb.dataset.r, rb); return; }
+    const ob = e.target.closest(".opt");
+    if (ob && !ob.disabled) onAnswer(card, Number(ob.dataset.i));
+  });
+
+  /* ---------- generation ---------- */
+  function abortGen() {
+    S.gen++;
+    if (S.ctl) { try { S.ctl.abort(); } catch (e) { /* ignore */ } }
+    S.ctl = null;
+    S.busy = false;
+    if (S.pendingCard) { S.pendingCard.el.remove(); S.nextId = Math.min(S.nextId, S.pendingCard.id); S.pendingCard = null; }
+    renderPlan();
+  }
+  function unseenAhead() { return S.cards.filter((c) => !c.seen && !c.preview).length; }
+  function maybeGenerate() {
+    if (!S.active || S.busy || S.paused || !S.sentinelNear) return;
+    if (S.cards.length >= S.cap) { showMsg(`Llegaste a ${S.cap} tarjetas en esta sesión.`, "Seguir 20 más", () => { S.cap += 20; generateNext(); }); S.paused = true; return; }
+    if (unseenAhead() > 1) return;
+    generateNext();
+  }
+  function addCard(card) {
+    S.cards.push(card);
+    S.byId.set(card.id, card);
+    computeReading(card);
+    visIO.observe(card.el);
+  }
+  function addSubIfNew(name) {
+    const n = String(name || "").trim().replace(/[.«»"]/g, "");
+    if (!n || /^no\b/i.test(n) || n.length > 40 || S.subs.length >= 10) return;
+    if (S.subs.some((s) => s.name.toLowerCase() === n.toLowerCase())) return;
+    S.subs.push({ name: n, mastery: 0.2, interest: 0.55, isNew: true });
+    logEvent("adapta", `La IA detectó un subtema que te puede interesar: «${esc(n)}».`);
+  }
+  function showMsg(text, btnLabel, onClick) {
+    const box = document.createElement("div");
+    box.className = "feed-msg";
+    box.innerHTML = `<p>${esc(text)}</p>${btnLabel ? `<button type="button" class="btn sm">${esc(btnLabel)}</button>` : ""}`;
+    if (btnLabel) box.querySelector("button").addEventListener("click", () => { box.remove(); S.paused = false; onClick(); });
+    el.feed.appendChild(box);
+    return box;
+  }
+
+  async function generateNext() {
+    if (!S.active || S.busy) return;
+    const plan = planNext();
+    S.lastPlan = plan;
+    const token = ++S.gen;
+    S.busy = true;
+    const card = makeCard(plan);
+    el.feed.appendChild(cardEl(card));
+    card.el.classList.add("generating");
+    renderPartial(card, {});
+    S.pendingCard = card;
+    renderPlan();
+    const sample = await getSample();
+    if (token !== S.gen) return;
+    if (!sample) { S.busy = false; S.pendingCard = null; card.el.remove(); S.nextId = card.id; return bankNext(plan); }
+    const ctl = (S.ctl = new AbortController());
+    const isProfile = plan.type === "perfil";
+    const t0 = performance.now();
+    try {
+      const { text } = await sample(isProfile ? profilePrompt() : cardPrompt(plan), {
+        modelTier: "quick", cache: false, signal: ctl.signal,
+        onText: ({ text }) => { if (token === S.gen) renderPartial(card, parseTagged(text, isProfile ? PROFILE_TAGS : CARD_TAGS)); }
+      });
+      if (token !== S.gen) return;
+      S.busy = false; S.ctl = null; S.pendingCard = null;
+      const ok = isProfile ? buildProfile(card, parseTagged(text, PROFILE_TAGS)) : buildCard(card, parseTagged(text, CARD_TAGS));
+      if (!ok) {
+        card.el.remove(); S.nextId = card.id;
+        S.failStreak++;
+        logEvent("ia", "La IA respondió en otro formato; escribo otra tarjeta.");
+        if (S.failStreak < 2) generateNext(); else { S.paused = true; showMsg("No se pudo escribir la siguiente tarjeta.", "Intentar de nuevo", generateNext); }
+        return;
+      }
+      S.failStreak = 0;
+      renderFinal(card);
+      addCard(card);
+      const secs = fmt1((performance.now() - t0) / 1000);
+      logEvent("ia", isProfile ? `Tarjeta #${card.id}: tu perfil, escrito en ${secs} s.` : `Tarjeta #${card.id} escrita en ${secs} s: ${TYPES[card.type].label}, «${esc(card.sub.name)}», nivel ${card.level}.`);
+      renderPanel();
+      maybeGenerate();
+    } catch (e) {
+      if (token !== S.gen) return;
+      S.busy = false; S.ctl = null; S.pendingCard = null;
+      card.el.remove(); S.nextId = card.id;
+      renderPlan();
+      if (markPermanent(e)) {
+        logEvent("ia", "La IA en vivo no está disponible en este entorno.");
+        if (S.bankMode || isDefault(S.topic)) { S.bankMode = true; generateNext(); }
+        else showMsg("La generación personalizada requiere conexión con el modelo de IA. Utilizando tarjetas precargadas.", null);
+        return;
+      }
+      if (e && e.code === "cancelled") return;
+      S.paused = true;
+      showMsg(e && e.code === "rate_limited" ? "Demasiadas tarjetas seguidas. Espera unos segundos." : "No se pudo escribir la siguiente tarjeta.", "Seguir", generateNext);
+    }
+  }
+  function buildCard(card, p) {
+    if (!p.TITULO || !p.TEXTO) return false;
+    card.title = p.TITULO; card.text = p.TEXTO;
+    card.why = p.PORQUE || card.plan.reasons.join("; ");
+    if (QUIZ_TYPES.includes(card.type)) {
+      const opts = splitOpts(p.OPCIONES);
+      const k = parseInt(String(p.CORRECTA || "").match(/\d/)?.[0] || "", 10);
+      if (opts.length < 2 || !(k >= 1 && k <= opts.length)) return false;
+      card.options = opts; card.correct = k - 1; card.expl = p.EXPLICACION || "";
+    }
+    if (p.SUBTEMA_NUEVO) addSubIfNew(p.SUBTEMA_NUEVO);
+    return true;
+  }
+  function buildProfile(card, p) {
+    const obs = ["OBS1", "OBS2", "OBS3"].map((k) => p[k]).filter(Boolean);
+    if (obs.length < 2) { fillLocalProfile(card); return true; }
+    card.title = p.TITULO || "Esto es lo que noto de ti";
+    card.obs = obs; card.text = p.AHORA || "";
+    return true;
+  }
+  function fillLocalProfile(card) {
+    const ranked = ALL_TYPES.filter((t) => S.typeStats[t]?.n).sort((a, b) => aff(b) - aff(a));
+    const best = ranked[0], worst = ranked[ranked.length - 1];
+    const topSub = S.subs.slice().sort((a, b) => b.interest - a.interest)[0];
+    const d = S.level - S.levelStart;
+    card.title = "Esto es lo que noto de ti";
+    card.obs = [
+      best ? `Te quedas más en los ${TYPES[best].pl}: ${fmt1(S.typeStats[best].dwell / S.typeStats[best].n)} s en promedio.` : "Todavía estoy midiendo qué formato te funciona.",
+      S.quiz.n ? `Respondiste bien ${S.quiz.ok} de ${S.quiz.n} preguntas; tu nivel ${d >= 0 ? "subió" : "bajó"} de ${fmt1(S.levelStart)} a ${fmt1(S.level)}.` : `Tu nivel estimado es ${fmt1(S.level)} de 5.`,
+      topSub ? `Lo que más te interesa ahora: «${topSub.name}».` : "Aún no hay un subtema favorito."
+    ];
+    card.text = best && worst && best !== worst ? `más ${TYPES[best].pl} y menos ${TYPES[worst].pl}.` : "sigo probando formatos para conocerte mejor.";
+  }
+  function bankNext(plan) {
+    S.bankMode = true;
+    if (plan.type === "perfil") {
+      const card = makeCard(plan);
+      el.feed.appendChild(cardEl(card));
+      fillLocalProfile(card);
+      renderFinal(card); addCard(card); renderPanel(); maybeGenerate();
+      return;
+    }
+    const free = BANK.map((b, i) => ({ b, i })).filter(({ i }) => !S.bankUsed.has(i));
+    if (!free.length) { S.paused = true; showMsg("Has completado las tarjetas demostrativas disponibles para este tema.", null); return; }
+    const pick = free.find(({ b }) => b.type === plan.type && b.sub === plan.sub?.name) || free.find(({ b }) => b.type === plan.type) || free.find(({ b }) => b.sub === plan.sub?.name) || free[0];
+    S.bankUsed.add(pick.i);
+    const sub = S.subs.find((s) => s.name === pick.b.sub) || plan.sub;
+    const card = makeCard({ ...plan, type: pick.b.type, sub });
+    card.level = pick.b.level;
+    card.bankIdx = pick.i;
+    Object.assign(card, { title: pick.b.title, text: pick.b.text, why: pick.b.why + " (ejemplo sin IA)", options: pick.b.options || null, correct: pick.b.correct ?? -1, expl: pick.b.expl || "" });
+    el.feed.appendChild(cardEl(card));
+    renderFinal(card); addCard(card); renderPanel();
+    logEvent("ia", `Tarjeta #${card.id}: ejemplo pre-escrito (sin IA en vivo).`);
+    maybeGenerate();
+  }
+
+  /* ---------- start / topic ---------- */
+  const isDefault = (t) => /ahorr/i.test(t) && /bolivia/i.test(t);
+  async function startTopic(topic, about, lvl) {
+    abortGen();
+    for (const c of S.cards) visIO.unobserve(c.el);
+    freshState();
+    S.topic = topic; S.about = about; S.lvlChoice = lvl;
+    S.level = S.levelStart = LEVEL_START[lvl] || 2.2;
+    el.feed.innerHTML = "";
+    el.note.hidden = true;
+    el.start.hidden = true;
+    el.topicbar.hidden = false;
+    el.tbTopic.textContent = topic;
+    renderPanel(); renderLog();
+    const msg = showMsg("Analizando el tema y armando tu mapa…", null);
+    const token = ++S.gen;
+    const sample = await getSample();
+    if (token !== S.gen) return;
+    let names = null;
+    if (sample) {
+      try {
+        const res = await sample.json(mapPrompt(), { modelTier: "quick" });
+        if (token !== S.gen) return;
+        const arr = Array.isArray(res) ? res : res && Array.isArray(res.subtemas) ? res.subtemas : null;
+        if (arr) names = arr.map((x) => String(x).trim().slice(0, 40)).filter(Boolean).slice(0, 8);
+        if (names && names.length < 3) names = null;
+      } catch (e) {
+        if (token !== S.gen) return;
+        markPermanent(e);
+      }
+    }
+    msg.remove();
+    if (!names && (aiOff || !sample)) {
+      if (!isDefault(topic)) {
+        showMsg("La generación personalizada requiere conexión con el modelo de IA. Explora el tema demostrativo disponible.", "Usar tema demostrativo", () => {
+          el.topic.value = DEFAULT_TOPIC; startTopic(DEFAULT_TOPIC, about, lvl);
+        });
+        return;
+      }
+      names = BANK_SUBS.slice();
+      S.bankMode = true;
+    }
+    if (!names) names = GENERIC_SUBS.slice();
+    const base = { cero: 0.1, algo: 0.25, bastante: 0.45 }[lvl] ?? 0.25;
+    S.subs = names.map((n, i) => ({ name: n, mastery: clamp(base - i * 0.03, 0.05, 0.9), interest: 0.4, isNew: false }));
+    logEvent("adapta", `Mapa del tema listo: ${S.subs.length} subtemas, de lo básico a lo avanzado.`);
+    S.active = true;
+    renderPanel();
+    generateNext();
+  }
+  el.start.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const topic = el.topic.value.trim();
+    if (!topic) { el.topic.focus(); return; }
+    const lvl = (document.querySelector('input[name="lvl"]:checked') || {}).value || "algo";
+    startTopic(topic.slice(0, 120), el.about.value.trim().slice(0, 400), lvl);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+  $("#tb-change").addEventListener("click", () => {
+    abortGen();
+    S.active = false;
+    el.start.hidden = false;
+    el.topicbar.hidden = true;
+    el.topic.focus();
+    el.topic.select();
+  });
+  $("#sugs").innerHTML = SUGGESTIONS.map((s) => `<button type="button" class="sug">${esc(s)}</button>`).join("");
+  $("#sugs").addEventListener("click", (e) => { const b = e.target.closest(".sug"); if (b) { el.topic.value = b.textContent; el.topic.focus(); } });
+
+  const sentIO = new IntersectionObserver(([en]) => { S.sentinelNear = en.isIntersecting; if (S.sentinelNear) maybeGenerate(); }, { rootMargin: "0px 0px 700px 0px" });
+  sentIO.observe($("#sentinel"));
+
+  /* ---------- preview at rest ---------- */
+  function renderPreview() {
+    S.subs = BANK_SUBS.map((n, i) => ({ name: n, mastery: clamp(0.25 - i * 0.03, 0.05, 0.9), interest: 0.4, isNew: false }));
+    [1, 2].forEach((i) => {
+      const b = BANK[i];
+      const card = makeCard({ type: b.type, sub: S.subs.find((s) => s.name === b.sub), level: b.level, reasons: [] });
+      card.preview = true;
+      Object.assign(card, { title: b.title, text: b.text, why: b.why, options: b.options || null, correct: b.correct ?? -1 });
+      el.feed.appendChild(cardEl(card));
+      renderFinal(card);
+    });
+    S.subs = [];
+    S.nextId = 1;
+  }
+  renderAi();
+  renderPreview();
+  renderPanel();
+  renderLog();
+})();
