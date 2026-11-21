@@ -5,7 +5,7 @@
 //   fasesDesdeLook(l)  → fases para un look ya armado (mundos de ejemplo, editor)
 // Sirve en el navegador y en el servidor (Node), por eso no toca el DOM.
 import { FORMAS, OJOS, BOCAS, MARCAS, normalizarLook } from './aprendin.js';
-import { PIEZAS, NIVELES, NOMBRES_NIVEL } from './piezas.js';
+import { PIEZAS, NIVELES, NOMBRES_NIVEL, CUELLOS, ESTAMPADOS, EMBLEMAS } from './piezas.js';
 import { PALETA } from './color.js';
 import { NOMBRES } from './mundos.js';
 
@@ -13,6 +13,27 @@ export const FASES = 5;
 export const ZONAS = ['cabeza', 'pelo', 'cara', 'cuello', 'cuerpo', 'brazos', 'espalda', 'mano', 'aura'];
 const COLORES = Object.keys(PALETA);
 const txt = (v, max) => String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
+
+const esquemaPeinado = desc => ({
+  type: 'object', description: desc,
+  properties: {
+    mechones: { type: 'array', maxItems: 12, description: 'Puntas o mechones que salen del borde de la cabeza, de izquierda a derecha', items: { type: 'object', properties: {
+      pos: { type: 'number', description: 'Dónde nace en el borde: -1 costado izquierdo, 0 arriba al centro, 1 costado derecho' },
+      largo: { type: 'number', description: 'Largo, de 8 (corto) a 70 (muy largo)' },
+      ancho: { type: 'number', description: 'Ancho en la base, de 8 (fino) a 28 (grueso)' },
+      dir: { type: 'number', description: 'Hacia dónde apunta la punta, en grados: 0 arriba, -45 arriba a la izquierda, -90 izquierda, 45 arriba a la derecha, 90 derecha, ±135 abajo en diagonal' },
+      curva: { type: 'number', description: 'Curva de la punta, de -1 a 1 (0 recta)' }
+    }, required: ['pos', 'largo', 'ancho', 'dir'] } },
+    flequillo: { type: 'array', maxItems: 6, description: 'Mechones que caen sobre la frente', items: { type: 'object', properties: {
+      x: { type: 'number', description: 'Posición sobre la frente: -1 izquierda, 0 centro, 1 derecha' },
+      largo: { type: 'number', description: 'Cuánto baja sobre la frente, de 2 a 30' },
+      ancho: { type: 'number', description: 'Ancho, de 8 a 26' },
+      giro: { type: 'number', description: 'Hacia dónde cae la punta, de -40 (izquierda) a 40 (derecha)' }
+    }, required: ['x', 'largo', 'ancho'] } },
+    tapa: { type: 'number', description: 'Cuánto cubre el pelo la cabeza: 0 casi nada, 1 hasta las cejas' }
+  },
+  required: ['mechones', 'flequillo', 'tapa']
+});
 
 export function esquemaAprendin() {
   const colorPieza = { type: 'string', enum: [...COLORES, 'cuerpo'] };
@@ -36,16 +57,32 @@ export function esquemaAprendin() {
       forma: { type: 'string', enum: Object.keys(FORMAS) }, color: { type: 'string', enum: COLORES }, numero: { type: 'integer' },
       ojos: { type: 'string', enum: Object.keys(OJOS) }, boca: { type: 'string', enum: Object.keys(BOCAS) },
       marcas: { type: 'string', enum: Object.keys(MARCAS) }, panza: { type: 'boolean' }, pies: { type: 'string', enum: COLORES, description: 'Color de los pies (zapatos o botas de su disfraz)' },
+      peinado: esquemaPeinado('Peinado a medida que copia la silueta del pelo del personaje (se usa con la pieza de pelo «peinado»)'),
+      traje: {
+        type: 'object', description: 'Ropa a medida que copia la del personaje (se usa con la pieza de cuerpo «traje»)',
+        properties: {
+          arriba: { type: 'string', enum: COLORES, description: 'Color principal de la ropa' },
+          abajo: { type: 'string', enum: COLORES, description: 'Color del pantalón o falda, si es distinto (la parte de abajo del cuerpo)' },
+          cuello: { type: 'string', enum: CUELLOS, description: 'redondo, v, cruzado (kimono o artes marciales), alto, abierto (chaleco o chaqueta abierta), marinero o ninguno' },
+          interior: { type: 'string', enum: COLORES, description: 'Lo que se ve debajo en el cuello en V, cruzado, alto, abierto o marinero (polera, piel durazno…)' },
+          cinturon: { type: 'string', enum: COLORES, description: 'Color del cinturón o faja, si tiene' },
+          estampado: { type: 'string', enum: ESTAMPADOS }, estampadoColor: { type: 'string', enum: COLORES },
+          emblema: { type: 'string', enum: EMBLEMAS, description: 'Forma genérica en el pecho (nunca un logo real)' }, emblemaColor: { type: 'string', enum: COLORES },
+          emblemaPos: { type: 'string', enum: ['centro', 'izquierda'] }
+        },
+        required: ['arriba', 'cuello']
+      },
+      peinado_final: esquemaPeinado('Peinado de su transformación, si cambia de forma (se usa con la pieza «peinado_final»)'),
       fases: { type: 'array', minItems: FASES, maxItems: FASES, items: fase }
     },
-    required: ['inspiracion', 'nombre', 'mundo', 'de', 'personalidad', 'mision', 'saludo', 'forma', 'color', 'ojos', 'boca', 'marcas', 'panza', 'pies', 'fases']
+    required: ['inspiracion', 'nombre', 'mundo', 'de', 'personalidad', 'mision', 'saludo', 'forma', 'color', 'ojos', 'boca', 'marcas', 'panza', 'pies', 'peinado', 'fases']
   };
 }
 
 // Respuesta de la IA (ya con la forma del esquema, pero sin confiar en ella) → aprendín listo para dibujar.
 export function armarAprendin(r = {}, { gustos = '', tema = '', detalles = [] } = {}) {
   const nombre = txt(r.nombre, 14) || 'Aprendín';
-  const base = { nombre, forma: r.forma, color: r.color, numero: r.numero, rasgos: { ojos: r.ojos, boca: r.boca, marcas: r.marcas, panza: r.panza, pies: r.pies } };
+  const base = { nombre, forma: r.forma, color: r.color, numero: r.numero, rasgos: { ojos: r.ojos, boca: r.boca, marcas: r.marcas, panza: r.panza, pies: r.pies }, peinado: r.peinado, peinado_final: r.peinado_final, traje: r.traje };
   const entrada = Array.isArray(r.fases) ? r.fases.slice(0, FASES) : [];
   const piezas = {}, fases = [];
   let colorCuerpo = base.color;
