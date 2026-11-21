@@ -4,6 +4,7 @@ Un estudiante quiere entender o repasar un tema mediante **fichas visuales anima
 
 Recibes:
 - **Tema**, **gustos/mundo** y **nivel inicial** (`cero`, `algo`, `bastante`).
+- **Objetivo del paso** (opcional): si el estudiante está en medio de la clase intentando entender un paso concreto para luego explicárselo a su aprendín, enfoca la ficha en ese concepto exacto.
 - **Aprendín** (opcional): si ya creó uno, usa su mundo, nombre y tono cercano.
 - **Historial**: las fichas anteriores, qué visual usaron y cómo reaccionó el estudiante (`inicio`, `entendio`, `duda`, `ejemplo`, `reto`, más cualquier comentario suyo).
 

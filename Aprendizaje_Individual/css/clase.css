@@ -129,3 +129,27 @@
 .cl-sis-btn { display: block; margin: 8px auto 0; }
 .cl-sis-prueba span { background: #1E1B3A; color: #fff; }
 .cl-sis-prueba span::before { content: '🏆 '; }
+
+/* Fichas de apoyo dentro de la clase */
+.cl-ahora-acc { display: flex; flex-wrap: wrap; gap: 6px; }
+.cl-btn-apoyo { background: #fff; color: var(--indigo-2); border: 1.5px solid #D9D2FF; }
+.cl-btn-apoyo:hover { background: #EFEDFF; }
+.cl-apoyo-minis { display: grid; gap: 6px; margin-top: 8px; }
+.cl-apoyo-mini {
+  width: 100%; text-align: left; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  background: #FBFAFF; border: 1.5px solid var(--linea); border-radius: 12px; padding: 7px 10px; font-weight: 700; font-size: .86rem;
+}
+.cl-apoyo-mini:hover { border-color: var(--indigo); background: #F4F1FF; }
+.cl-apoyo-mini small { font: 800 .7rem var(--display); text-transform: uppercase; color: var(--indigo-2); background: #EFEDFF; padding: 2px 7px; border-radius: 999px; flex: none; }
+
+.cl-apoyo {
+  position: fixed; inset: 0; z-index: 58; overflow: auto; display: grid; place-items: start center; padding: 18px 12px;
+  background: rgba(30, 27, 58, .55); backdrop-filter: blur(4px); animation: nac-aparece .25s ease both;
+}
+.cl-apoyo-caja { width: min(820px, 100%); background: var(--fondo); border-radius: 26px; box-shadow: var(--sombra-2); overflow: hidden; }
+.cl-apoyo-cab { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px 18px; background: linear-gradient(120deg, #1E1B3A, #3A3470); color: #fff; }
+.cl-apoyo-tit small { display: block; font: 800 .72rem var(--display); text-transform: uppercase; letter-spacing: .06em; color: #FFC83D; }
+.cl-apoyo-tit h2 { font: 800 1.25rem/1.15 var(--display); color: #fff; }
+.cl-apoyo-cab-acc { display: flex; align-items: center; gap: 8px; }
+.cl-apoyo-cuerpo { padding: 18px; display: grid; gap: 16px; }
+@media (prefers-reduced-motion: reduce) { .cl-apoyo { animation: none !important; } }

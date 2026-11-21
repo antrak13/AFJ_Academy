@@ -309,9 +309,9 @@ export function fichaLocal(concepto, mensajes = []) {
 
 // Ficha adaptativa sin IA: elige un diseño visual distinto según el tema, el nivel y la reacción anterior.
 const normTxt = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-export function fichaInicioLocal({ tema = '', gustos = '', nivel = 'algo', reaccion = 'inicio', nota = '', historial = [] } = {}) {
-  const t = txt(tema, 80) || 'el tema', g = txt(gustos, 120) || 'tu día a día';
-  const nt = normTxt(t), ng = normTxt(g), paso = historial.filter(x => x.reaccion === 'entendio').length + (reaccion === 'entendio' ? 2 : 1);
+export function fichaInicioLocal({ tema = '', gustos = '', nivel = 'algo', reaccion = 'inicio', nota = '', objetivo = '', historial = [] } = {}) {
+  const t = txt(objetivo || tema, 80) || 'el tema', g = txt(gustos, 120) || 'tu día a día';
+  const nt = normTxt(`${tema} ${objetivo}`), no = normTxt(objetivo), ng = normTxt(g), paso = historial.filter(x => x.reaccion === 'entendio').length + (reaccion === 'entendio' ? 2 : 1);
   const ultimoTipo = historial.at(-1)?.tipo;
   const mundo = g.split(/,|;| y /)[0]?.trim() || 'tu mundo';
   const esFrac = /fracci/.test(nt), esPorc = /porcent/.test(nt), esEcu = /ecuaci|algebra|despej/.test(nt), esFoto = /fotosint|planta/.test(nt);
@@ -327,7 +327,8 @@ export function fichaInicioLocal({ tema = '', gustos = '', nivel = 'algo', reacc
       { titulo: 'Sumar fracciones', subtema: 'Mismo denominador', icono: '➕', idea: 'Solo puedes sumar pedazos del mismo tamaño: primero iguala el denominador y suma solo arriba.', visual: { tipo: 'fraccion', titulo: 'Un medio más un cuarto', fracciones: [{ num: 1, den: 2, etiqueta: 'Primero' }, { num: 1, den: 4, etiqueta: 'Después' }, { num: 3, den: 4 }], operacion: 'suma', forma: 'pizza' }, ejemplo: { situacion: `Usas 1/2 en la mañana y 1/4 en la tarde en ${objMundo}.`, pasos: ['Convierte 1/2 en 2/4', 'Suma arriba: 2/4 + 1/4'], resultado: '3/4 en total' }, cuidado: 'No sumes abajo con abajo (1/2 + 1/4 no es 2/6).', de_ti: 'Primero iguala los pedazos; luego suma arriba.' }
     ];
     const simple = { titulo: 'Error vs acierto en fracciones', subtema: 'Aclarando la base', icono: '🔍', idea: 'El denominador no se suma y las partes siempre deben ser iguales.', visual: { tipo: 'comparar', titulo: 'Cómo pensarlo bien', izquierda: { titulo: 'Confusión común', icono: '❌', puntos: ['Sumar arriba y abajo: 1/2 + 1/4 = 2/6', 'Cortar pedazos desiguales'] }, derecha: { titulo: 'Regla real', icono: '✅', puntos: ['Igualar tamaños: 2/4 + 1/4 = 3/4', 'Todas las partes miden igual'] } }, ejemplo: { situacion: `Piensa en barras iguales dentro de ${objMundo}.`, pasos: ['Corta ambas barras en 4', 'Cuenta los cuartos pintados'], resultado: '3 cuartos = 3/4' }, cuidado: 'El número de abajo solo nombra el tamaño del pedazo.', de_ti: 'Mismo tamaño primero, suma arriba después.' };
-    const f = reaccion === 'duda' ? simple : base[Math.min(base.length - 1, (nivel === 'bastante' ? 2 : nivel === 'algo' ? 1 : 0) + (paso - 1)) % base.length];
+    const idxObj = /equival/.test(no) ? 1 : /sum|rest|mixt/.test(no) ? 2 : (nivel === 'bastante' ? 2 : nivel === 'algo' ? 1 : 0);
+    const f = reaccion === 'duda' ? simple : base[Math.min(base.length - 1, idxObj + (paso - 1)) % base.length];
     return limpiarFichaInicio({ ...f, adaptacion: motivoLocal(reaccion, nivel, f.visual.tipo, nota) });
   }
   if (esPorc) {

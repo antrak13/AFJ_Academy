@@ -1,24 +1,18 @@
 // Fichas de inicio / estudio adaptativo: genera fichas visuales animadas según tema, gustos y nivel,
 // y adapta cada nueva ficha según las reacciones del estudiante.
-import { limpiarFicha, limpiarFichaInicio, fichaInicioLocal, htmlFicha, TIPOS } from './fichas.js';
+import { limpiarFicha, htmlFicha, TIPOS } from './fichas.js';
 import { activarFichas, animar } from './fichas-dom.js';
 import { EJEMPLOS } from './fichas-ejemplo.js';
 import { svgAprendin } from './aprendin.js';
 import { MUNDOS } from './mundos.js';
 import { tonos } from './color.js';
 import { cargarAprendin, cargarClase } from './guardado.js';
+import { cargarEstudio, guardarEstudio, solicitarFichaInicio, renderizarFichaEstudio, historialDe } from './fichas-apoyo.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const CLAVE_ESTUDIO = 'aprendines.fichas.estudio';
 const SUG_TEMAS = ['fracciones', 'porcentajes', 'ecuaciones lineales', 'la fotosíntesis', 'números negativos', 'el ciclo del agua'];
 const SUG_GUSTOS = ['fútbol', 'anime', 'videojuegos', 'cocinar', 'música', 'el espacio'];
-const ETIQUETAS_REACCION = {
-  entendio: '✓ Lo entendí',
-  duda: '🤔 Más simple',
-  ejemplo: '🌎 Otro ejemplo de mi mundo',
-  reto: '⚡ Reto práctico'
-};
 const NIVEL_NOMBRE = { cero: 'Inicio desde cero', algo: 'Nivel intermedio', bastante: 'Nivel avanzado' };
 
 let ia = false, cargando = false;
@@ -26,9 +20,7 @@ const A = cargarAprendin();
 const marca = $('#marcaAv');
 if (marca) marca.innerHTML = svgAprendin({ forma: 'bollo', color: 'coral', rasgos: { ojos: 'grandes' }, piezas: { pelo: 'mechon' } }, { emocion: 'feliz' });
 
-let S = cargarSesion() || { activo: false, tema: '', gustos: '', nivel: 'algo', usaAprendin: false, fichas: [] };
-function guardarSesion() { try { localStorage.setItem(CLAVE_ESTUDIO, JSON.stringify(S)); } catch { /* sin espacio */ } }
-function cargarSesion() { try { const x = JSON.parse(localStorage.getItem(CLAVE_ESTUDIO) || 'null'); return x?.fichas ? x : null; } catch { return null; } }
+let S = cargarEstudio() || { activo: false, tema: '', gustos: '', nivel: 'algo', usaAprendin: false, fichas: [] };
 
 async function comprobarIA() {
   try { const r = await fetch('/api/estado', { cache: 'no-store' }); const j = r.ok ? await r.json() : null; ia = !!j?.ia; } catch { ia = false; }
@@ -76,32 +68,14 @@ async function pedirFichaAdaptativa(reaccion, nota = '') {
   if (cargando) return;
   cargando = true;
   pintarEstadoCarga(true);
-  const historial = S.fichas.map(f => ({
-    titulo: f.datos.titulo, subtema: f.datos.subtema, tipo: f.datos.visual.tipo, reaccion: f.reaccion || 'inicio'
-  }));
-  let datos = null, fuente = 'ia';
-  try {
-    if (!ia) throw new Error('sin IA');
-    const r = await fetch('/api/ficha-inicio', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        tema: S.tema, gustos: S.gustos, nivel: S.nivel, reaccion, nota,
-        aprendin: S.usaAprendin && A ? A : null, historial
-      })
-    });
-    const j = await r.json();
-    if (!j.ok || !j.ficha) throw new Error(j.error || r.status);
-    datos = limpiarFichaInicio(j.ficha);
-  } catch {
-    fuente = 'local';
-    await new Promise(ok => setTimeout(ok, 450));
-    datos = fichaInicioLocal({ tema: S.tema, gustos: S.gustos, nivel: S.nivel, reaccion, nota, historial });
-  }
+  const { datos, fuente } = await solicitarFichaInicio({
+    ia, tema: S.tema, gustos: S.gustos, nivel: S.nivel, reaccion, nota,
+    aprendin: S.usaAprendin && A ? A : null, historial: historialDe(S.fichas)
+  });
   if (reaccion === 'entendio') S.nivel = S.nivel === 'cero' ? 'algo' : 'bastante';
   else if (reaccion === 'duda' && S.nivel === 'bastante') S.nivel = 'algo';
   S.fichas.push({ datos, fuente, reaccionOrigen: reaccion, reaccion: null, nota });
-  guardarSesion();
+  guardarEstudio(S);
   cargando = false;
   pintarEstadoCarga(false);
   pintarEstudio();
@@ -113,20 +87,19 @@ $('#formEstudio').addEventListener('submit', e => {
   if (!tema || cargando) return;
   const nivel = document.querySelector('input[name="nivelEstudio"]:checked')?.value || 'algo';
   S = { activo: true, tema, gustos, nivel, usaAprendin: !!A && tema === A.tema, fichas: [] };
-  guardarSesion();
+  guardarEstudio(S);
   pintarEstudio();
   pedirFichaAdaptativa('inicio');
 });
 
 $('#btnNuevoTema').addEventListener('click', () => {
-  S.activo = false; S.fichas = []; guardarSesion();
+  S.activo = false; S.fichas = []; guardarEstudio(S);
   pintarEstudio();
   $('#temaEstudio').focus();
 });
 
 function pintarEstadoCarga(si) {
-  const el = $('#estudioCargando');
-  el.hidden = !si;
+  $('#estudioCargando').hidden = !si;
   $('#btnGenerar').disabled = si;
   document.querySelectorAll('.fi-reaccion-btn').forEach(b => { b.disabled = si; });
 }
@@ -145,44 +118,21 @@ function pintarEstudio() {
   $('#estTipos').innerHTML = tipos.map(t => `<span class="fi-tipo-chip" title="${esc(TIPOS[t] || t)}">${esc(t)}</span>`).join('');
 
   const linkClase = $('#btnIrClase');
-  linkClase.href = A && S.usaAprendin ? 'clase.html' : 'taller.html';
-  linkClase.textContent = A && S.usaAprendin ? `Enseñarle a ${A.nombre} →` : 'Crear tu aprendín →';
+  const mismoTema = !!A && A.tema.toLowerCase() === S.tema.toLowerCase();
+  linkClase.href = mismoTema ? 'clase.html' : `taller.html?tema=${encodeURIComponent(S.tema)}&gustos=${encodeURIComponent(S.gustos)}`;
+  linkClase.textContent = mismoTema ? `Enseñarle a ${A.nombre} →` : 'Crear aprendín de este tema →';
 
   const lista = $('#estudioLista');
   lista.replaceChildren();
   const av = S.usaAprendin && A ? svgAprendin(A.fases.at(-1).look, { emocion: 'orgulloso' }) : '';
   const tono = S.usaAprendin && A ? tonos(A.fases.at(-1).look.color) : tonos('indigo');
 
-  // La ficha más reciente arriba para ver la adaptación al instante
   [...S.fichas].reverse().forEach((item, revIdx) => {
     const idx = S.fichas.length - 1 - revIdx;
     const esUltima = idx === S.fichas.length - 1;
-    const pieHtml = esUltima
-      ? `<div class="fi-adapta-acc" data-idx="${idx}">
-          <label class="solo-lector" for="notaDuda">¿Qué duda tienes?</label>
-          <input class="otra fi-nota-duda" id="notaDuda" type="text" maxlength="160" placeholder="Opcional: escribe qué parte no entendiste o qué ejemplo quieres…">
-          <div class="fi-reacciones">
-            <button type="button" class="btn btn-fuerte fi-reaccion-btn" data-reaccion="entendio">✓ Lo entendí</button>
-            <button type="button" class="btn fi-reaccion-btn" data-reaccion="duda">🤔 No entendí / más simple</button>
-            <button type="button" class="btn fi-reaccion-btn" data-reaccion="ejemplo">🌎 Otro ejemplo de mi mundo</button>
-            <button type="button" class="btn fi-reaccion-btn" data-reaccion="reto">⚡ Dame un reto</button>
-          </div>
-        </div>`
-      : item.reaccion
-        ? `<p class="fi-reaccion-res">Tu respuesta: <b>${esc(ETIQUETAS_REACCION[item.reaccion] || item.reaccion)}</b>${item.nota ? ` — «${esc(item.nota)}»` : ''}</p>`
-        : '';
-
     const wrap = document.createElement('div');
     wrap.className = 'cl-ficha' + (esUltima ? ' cl-nueva' : '');
-    wrap.innerHTML = htmlFicha(item.datos, {
-      numero: idx + 1,
-      fase: `${item.datos.subtema || 'Adaptada'} · ${item.datos.visual.tipo}`,
-      mundo: S.gustos,
-      avatar: av,
-      tono,
-      citaDe: 'Para recordar',
-      pieHtml
-    });
+    wrap.innerHTML = renderizarFichaEstudio(item, idx, { esUltima, gustos: S.gustos, avatar: av, tono });
     lista.append(wrap);
   });
 
@@ -193,7 +143,7 @@ function pintarEstudio() {
       const nota = lista.querySelector('#notaDuda')?.value.trim() || '';
       const ultima = S.fichas.at(-1);
       if (ultima) { ultima.reaccion = r; ultima.nota = nota; }
-      guardarSesion();
+      guardarEstudio(S);
       pedirFichaAdaptativa(r, nota);
     });
   });
