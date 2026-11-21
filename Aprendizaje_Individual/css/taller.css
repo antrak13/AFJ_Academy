@@ -257,3 +257,54 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .btn-txt { border: 0; background: none; color: var(--tinta-2); font-weight: 800; text-decoration: underline; text-underline-offset: 3px; padding: 6px 4px; }
 .btn-txt:hover { color: var(--tinta); }
 .btn:disabled { opacity: .6; cursor: progress; }
+
+/* Nacimiento en pantalla completa: golpear el huevo para que nazca */
+.nacimiento {
+  position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; overflow: auto;
+  background: radial-gradient(circle at 50% 42%, rgba(255, 255, 255, .97) 0%, rgba(240, 235, 255, .97) 45%, rgba(205, 194, 255, .98) 100%);
+  backdrop-filter: blur(6px); animation: nac-aparece .35s ease both;
+}
+@keyframes nac-aparece { from { opacity: 0; } }
+.nac-caja { display: grid; justify-items: center; gap: 10px; padding: 24px 18px; text-align: center; width: min(600px, 96vw); }
+.nac-titulo { margin: 0; font: 800 clamp(1.5rem, 4.5vw, 2.4rem)/1.1 var(--display); letter-spacing: -.02em; }
+.nac-sub { margin: 0; min-height: 3em; max-width: 46ch; font: 700 1.05rem/1.45 var(--texto); color: var(--tinta-2); }
+.nac-escena { position: relative; width: min(340px, 78vw); height: min(380px, 48vh); }
+.nac-escena::before {
+  content: ''; position: absolute; left: 50%; top: 52%; width: 150%; aspect-ratio: 1; transform: translate(-50%, -50%);
+  background: repeating-conic-gradient(from 0deg, rgba(255, 214, 90, .28) 0deg 10deg, transparent 10deg 30deg);
+  -webkit-mask: radial-gradient(circle, #000 20%, transparent 62%); mask: radial-gradient(circle, #000 20%, transparent 62%);
+  opacity: 0; transition: opacity .5s; pointer-events: none;
+}
+.nacimiento.listo .nac-escena::before { opacity: 1; animation: nac-rayos 14s linear infinite; }
+@keyframes nac-rayos { to { transform: translate(-50%, -50%) rotate(360deg); } }
+.nac-huevo { position: absolute; left: 50%; bottom: 4%; width: 62%; transform: translateX(-50%); border: 0; background: none; padding: 0; cursor: pointer; touch-action: manipulation; }
+.nac-huevo svg { display: block; width: 100%; height: auto; overflow: visible; transform-origin: 50% 95%; animation: huevo-mece 1.6s ease-in-out infinite; }
+.nac-huevo:focus { outline: none; }
+.nac-huevo:focus-visible svg { filter: drop-shadow(0 0 0 #fff) drop-shadow(0 0 3px var(--indigo)) drop-shadow(0 0 12px rgba(108, 99, 255, .5)); }
+.nacimiento.listo .nac-huevo svg { animation: nac-late 1s ease-in-out infinite; filter: drop-shadow(0 0 18px rgba(255, 200, 61, .7)); }
+@keyframes nac-late { 50% { transform: scale(1.05) rotate(-2deg); } }
+.nacimiento.golpe .nac-huevo svg { animation: nac-golpe .38s ease; }
+.nacimiento.golpe-flojo .nac-huevo svg { animation: nac-golpe .3s ease; }
+@keyframes nac-golpe { 15% { transform: rotate(-10deg) scale(.95, 1.03); } 45% { transform: rotate(9deg) scale(1.03, .96); } 75% { transform: rotate(-4deg); } }
+.nac-grieta { stroke-dasharray: 100; stroke-dashoffset: 100; transition: stroke-dashoffset .3s ease-out; }
+.nacimiento[data-golpes="1"] .nac-grieta { stroke-dashoffset: 70; }
+.nacimiento[data-golpes="2"] .nac-grieta { stroke-dashoffset: 36; }
+.nacimiento[data-golpes="3"] .nac-grieta { stroke-dashoffset: 0; }
+.nacimiento.abierto .nac-huevo { pointer-events: none; }
+.nacimiento.abierto .nac-huevo svg { animation: none; filter: none; }
+.nacimiento.abierto .huevo-arriba { transform: translate(-46px, -120px) rotate(-50deg); opacity: 0; }
+.nacimiento.abierto .huevo-abajo { transform: translateY(24px) scale(1.05, .85); opacity: 0; transition-delay: .2s; }
+.nacimiento.abierto .nac-grieta { opacity: 0; transition: opacity .1s; }
+.nac-escena::after { content: ''; position: absolute; left: 50%; top: 58%; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%; background: radial-gradient(circle, #fff 0%, rgba(255, 246, 200, .9) 40%, rgba(255, 255, 255, 0) 70%); opacity: 0; pointer-events: none; }
+.nacimiento.abierto .nac-escena::after { animation: destello-huevo .9s ease-out forwards; }
+.nac-aprendin { position: absolute; left: 50%; bottom: 0; width: 86%; transform: translateX(-50%); pointer-events: none; }
+.nac-aprendin .aprendin { animation: nac-sale .9s cubic-bezier(.3, 1.6, .5, 1) both; }
+@keyframes nac-sale { 0% { opacity: 0; transform: translateY(40px) scale(.2); } 60% { opacity: 1; transform: translateY(-14px) scale(1.1); } 100% { opacity: 1; transform: none; } }
+.nac-golpes { display: flex; gap: 8px; }
+.nac-golpes i { width: 12px; height: 12px; border-radius: 50%; background: #fff; box-shadow: inset 0 0 0 2px #C9C2F2; transition: background .2s, transform .2s; }
+.nac-golpes i.dado { background: var(--sol); box-shadow: inset 0 0 0 2px #E0A100; transform: scale(1.2); }
+.nacimiento.abierto .nac-golpes { visibility: hidden; }
+.nac-listo { font-size: 1.1rem; padding: 12px 26px; justify-self: center; grid-column: auto; }
+@media (prefers-reduced-motion: reduce) {
+  .nacimiento, .nac-huevo svg, .nac-aprendin .aprendin, .nacimiento.listo .nac-escena::before, .nacimiento.abierto .nac-escena::after { animation: none !important; }
+}

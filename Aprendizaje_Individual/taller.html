@@ -118,6 +118,25 @@
   </section>
 </main>
 
+<div class="nacimiento" id="nacimiento" hidden>
+  <div class="nac-caja" role="dialog" aria-modal="true" aria-labelledby="nacTitulo" aria-describedby="nacSub">
+    <p class="nac-titulo" id="nacTitulo">Tu aprendín se está formando…</p>
+    <div class="nac-escena">
+      <button class="nac-huevo" id="nacHuevo" type="button" aria-label="Golpear el huevo">
+        <svg viewBox="0 0 120 150" overflow="visible" aria-hidden="true">
+          <g class="huevo-abajo" clip-path="url(#huevoAbajo)"><use href="#huevoForma"/></g>
+          <g class="huevo-arriba" clip-path="url(#huevoArriba)"><use href="#huevoForma"/></g>
+          <path class="nac-grieta" d="M60 72L48 84L36 72L24 84L12 74L9 80M60 72L72 84L84 72L96 84L108 74L111 80" fill="none" stroke="#8F82D6" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" pathLength="100"/>
+        </svg>
+      </button>
+      <div class="nac-aprendin" id="nacAprendin"></div>
+    </div>
+    <div class="nac-golpes" id="nacGolpes" aria-hidden="true"><i></i><i></i><i></i></div>
+    <p class="nac-sub" id="nacSub" aria-live="polite"></p>
+    <button class="btn btn-crear nac-listo" id="nacListo" type="button" hidden>Conocerlo</button>
+  </div>
+</div>
+
 <script type="module" src="js/taller.js"></script>
 </body>
 </html>

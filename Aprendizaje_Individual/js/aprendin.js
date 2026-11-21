@@ -5,7 +5,7 @@
 //   · cada emoción es una mezcla de esos parámetros, y el personaje pasa de una a otra sin saltos.
 // El vestuario (piezas.js) se dibuja encima con las mismas medidas.
 import { PALETA, color, tonos, mover } from './color.js';
-import { PIEZAS, SLOTS, NIVELES, pintarPieza } from './piezas.js';
+import { PIEZAS, SLOTS, NIVELES, pintarPieza, CUELLOS, ESTAMPADOS, EMBLEMAS } from './piezas.js';
 import { n, lim, curvaCerrada, curvaAbierta, estrella } from './trazos.js';
 
 const TINTA = '#1E1B3A', BOCA = '#5B1A32', LENGUA = '#FF8A9A', RUBOR = '#FF6F8E';
@@ -16,12 +16,12 @@ const RM = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-moti
 // nArr / nAba: redondez de la mitad de arriba y de abajo (2 = elipse, más alto = más cuadrado, menos de 2 = en punta)
 // ojos: altura de los ojos
 export const FORMAS = {
-  bollo: { nombre: 'Bolita', W: 158, H: 146, tm: .54, nArr: 2, nAba: 2.5, ojos: .45 },
-  gota: { nombre: 'Gota', W: 146, H: 156, tm: .62, nArr: 1.55, nAba: 2.6, ojos: .5 },
-  pera: { nombre: 'Pera', W: 158, H: 148, tm: .66, nArr: 1.85, nAba: 2.7, ojos: .46 },
-  huevo: { nombre: 'Huevo', W: 140, H: 156, tm: .58, nArr: 1.85, nAba: 2.4, ojos: .44 },
+  bollo: { nombre: 'Bolita', W: 158, H: 146, tm: .54, nArr: 2, nAba: 2.5, ojos: .39 },
+  gota: { nombre: 'Gota', W: 146, H: 156, tm: .62, nArr: 1.55, nAba: 2.6, ojos: .46 },
+  pera: { nombre: 'Pera', W: 158, H: 148, tm: .66, nArr: 1.85, nAba: 2.7, ojos: .41 },
+  huevo: { nombre: 'Huevo', W: 140, H: 156, tm: .58, nArr: 1.85, nAba: 2.4, ojos: .4 },
   torre: { nombre: 'Torre', W: 124, H: 160, tm: .52, nArr: 2.8, nAba: 3.3, ojos: .37 },
-  cubo: { nombre: 'Cubo', W: 146, H: 138, tm: .5, nArr: 5.5, nAba: 5.5, ojos: .43 }
+  cubo: { nombre: 'Cubo', W: 146, H: 138, tm: .5, nArr: 5.5, nAba: 5.5, ojos: .39 }
 };
 
 const cacheGeo = new Map();
@@ -54,7 +54,7 @@ export function geometria(forma) {
   const R = lim(F.W * .088, 10.5, 13.5);
   const ojoY = y(F.ojos), ojoDx = lim(hw(F.ojos) * .3, 15, 22);
   const bocaY = ojoY + R * 1.95;
-  const tC = lim((bocaY + R * 1.4 - top) / F.H, 0, .82);
+  const tC = lim((bocaY + R * 1.05 - top) / F.H, 0, .8);
   const tH = lim(F.ojos + .15, 0, .75);
 
   const centro = [cx, top + F.H * .5];
@@ -232,12 +232,32 @@ function pintarMarcas(g, t, r) {
 }
 
 /* ================= Look ================= */
+// Peinado a medida: mechones (puntas que salen del borde de la cabeza) y flequillo (mechones sobre la frente).
+const num = (v, a, b, def) => { const x = Number(v); return Number.isFinite(x) ? lim(x, a, b) : def; };
+export function limpiarTraje(t) {
+  if (!t || typeof t !== 'object') return null;
+  const c = v => (v ? color(v, '') : '') || undefined, de = (v, xs, def) => xs.includes(v) ? v : def;
+  return { arriba: c(t.arriba), abajo: c(t.abajo), interior: c(t.interior), cinturon: c(t.cinturon), cuello: de(t.cuello, CUELLOS, 'redondo'), estampado: de(t.estampado, ESTAMPADOS, 'ninguno'), estampadoColor: c(t.estampadoColor), emblema: de(t.emblema, EMBLEMAS, 'ninguno'), emblemaColor: c(t.emblemaColor), emblemaPos: t.emblemaPos === 'izquierda' ? 'izquierda' : 'centro' };
+}
+export function limpiarPeinado(p) {
+  if (!p || typeof p !== 'object') return null;
+  const mechones = (Array.isArray(p.mechones) ? p.mechones : []).slice(0, 14).map(m => ({ pos: num(m?.pos, -1.2, 1.2, 0), largo: num(m?.largo, 6, 75, 30), ancho: num(m?.ancho, 6, 30, 18), dir: num(m?.dir, -180, 180, num(m?.pos, -1.2, 1.2, 0) * 60), curva: num(m?.curva, -1, 1, 0) }));
+  const flequillo = (Array.isArray(p.flequillo) ? p.flequillo : []).slice(0, 7).map(f => ({ x: num(f?.x, -1, 1, 0), largo: num(f?.largo, 2, 34, 14), ancho: num(f?.ancho, 6, 28, 14), giro: num(f?.giro, -45, 45, 0) }));
+  if (!mechones.length && !flequillo.length) return null;
+  return { mechones, flequillo, tapa: num(p.tapa, 0, 1, .8) };
+}
+
 // Un look: { nombre, forma, color, numero, piezas: { slot: { id, colores: [c1, c2] } } }
 export function normalizarLook(l = {}) {
   const forma = FORMAS[l.forma] ? l.forma : 'bollo';
   const r = l.rasgos || {};
   const rasgos = { ojos: OJOS[r.ojos] ? r.ojos : 'ovalados', boca: BOCAS[r.boca] ? r.boca : 'normal', panza: !!r.panza, marcas: MARCAS[r.marcas] ? r.marcas : 'ninguna', pies: r.pies ? color(r.pies, '') : '' };
   const out = { nombre: String(l.nombre || '').slice(0, 24), forma, color: color(l.color, PALETA.coral), numero: lim(parseInt(l.numero, 10) || 0, 0, 99), rasgos, piezas: {} };
+  const pe = limpiarPeinado(l.peinado), pf = limpiarPeinado(l.peinado_final);
+  if (pe) out.peinado = pe;
+  if (pf) out.peinado_final = pf;
+  const tj = limpiarTraje(l.traje);
+  if (tj) out.traje = tj;
   for (const slot of SLOTS) {
     const x = l.piezas?.[slot];
     const id = typeof x === 'string' ? x : x?.id;

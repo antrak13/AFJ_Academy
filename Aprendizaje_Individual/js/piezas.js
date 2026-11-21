@@ -786,6 +786,84 @@ Object.assign(espalda, {
   }
 });
 
+// Peinado a medida: la IA describe la silueta (mechones y flequillo) y este código la dibuja.
+const PEINADO_BASE = { tapa: .9, mechones: [{ pos: -.95, largo: 30, ancho: 20, dir: -105 }, { pos: -.65, largo: 46, ancho: 24, dir: -68 }, { pos: -.3, largo: 58, ancho: 26, dir: -32 }, { pos: .05, largo: 50, ancho: 22, dir: -4 }, { pos: .4, largo: 60, ancho: 26, dir: 28 }, { pos: .75, largo: 46, ancho: 24, dir: 62 }, { pos: 1, largo: 30, ancho: 20, dir: 100 }], flequillo: [{ x: -.5, largo: 20, ancho: 16, giro: -12 }, { x: -.1, largo: 14, ancho: 14, giro: 4 }, { x: .32, largo: 24, ancho: 16, giro: 14 }] };
+function pintarPeinado(g, A, B, pe) {
+  const p = pe || PEINADO_BASE, tapa = lim(p.tapa ?? .8, 0, 1), yf = g.top + (frente(g) + 6 - g.top) * tapa;
+  const grosor = 4 + tapa * 9;
+  // masa de pelo: sobresale del borde de la cabeza y de ella salen las puntas
+  const masa = `<path d="${volumen(g, .55 + tapa * .5, grosor)}"/>`;
+  const puntas = p.mechones.map(m => {
+    const b = g.borde(m.pos, grosor - 6), L = m.largo * 1.08, w = m.ancho * .72, c = m.curva || 0;
+    return `<path transform="translate(${n(b.x)} ${n(b.y)}) rotate(${n(m.dir)})" d="M${n(-w)} 12Q${n(-w * .3 + c * w)} ${n(-L * .45)} ${n(c * L * .32)} ${n(-L)}Q${n(w * .3 + c * w)} ${n(-L * .45)} ${n(w)} 12Z"/>`;
+  }).join('');
+  const half = g.hw((yf - g.top) / g.H), y0 = yf - 14, tope = g.ojo.y - g.ojo.r * 1.9;
+  const mechones = p.flequillo.map(f => {
+    const X = g.cx + f.x * half * .85, w = f.ancho * .62, L = Math.max(6, Math.min(f.largo + 12, tope - y0)), tx = X + Math.tan(f.giro * Math.PI / 180) * L * .7;
+    return `<path d="M${P(X - w, y0)}Q${P(X - w * .45, y0 + L * .55)} ${P(tx, y0 + L)}Q${P(X + w * .45, y0 + L * .55)} ${P(X + w, y0)}Z"/>`;
+  }).join('');
+  // tapa el contorno del cuerpo donde lo cubre el pelo
+  const mitad = Math.floor(g.contorno.length / 2), arriba = (a, b) => g.contorno.slice(a, b).filter(([, y]) => y < yf - 3);
+  const borde = [...arriba(mitad, g.contorno.length), ...arriba(0, mitad)];
+  const tapaBorde = borde.length > 2 ? `<path d="${curvaAbierta(borde)}" fill="none" stroke="${A.base}" stroke-width="5" stroke-linecap="round"/>` : '';
+  return {
+    fuera: tapaBorde,
+    atras: `<g fill="${A.base}" stroke="${A.tinta}" stroke-width="${SW}" stroke-linejoin="round">${puntas}${masa}</g><g fill="${A.base}">${puntas}</g>`,
+    dentro: `<path d="${casquete(g, yf - 4, { k: 1, prof: 0 })}" fill="${A.base}"/><g fill="${A.base}">${mechones}</g><path d="M${P(g.cx - half * .55, g.top + (yf - g.top) * .35)}q${n(half * .25)} -5 ${n(half * .5)} -2" stroke="#fff" stroke-opacity=".22" stroke-width="3" fill="none" stroke-linecap="round"/>`
+  };
+}
+Object.assign(pelo, {
+  peinado: { nombre: 'Peinado a medida', c: ['#1E1B3A', '#1E1B3A'], desc: 'el peinado que diseñaste en el campo peinado (copia la silueta del personaje)', pinta(g, A, B, o) { return pintarPeinado(g, A, B, o.look?.peinado); } },
+  peinado_final: { nombre: 'Peinado transformado', c: ['#FFD83D', '#FFF3A0'], desc: 'el peinado de transformación que diseñaste en peinado_final', pinta(g, A, B, o) { return pintarPeinado(g, A, B, o.look?.peinado_final || o.look?.peinado); } }
+});
+
+// Traje a medida: la IA describe la ropa del personaje (colores, cuello, cinturón, estampado, emblema) y este código la dibuja.
+export const CUELLOS = ['redondo', 'v', 'cruzado', 'alto', 'abierto', 'marinero', 'ninguno'];
+export const ESTAMPADOS = ['ninguno', 'horizontales', 'verticales', 'cuadros', 'diagonal'];
+export const EMBLEMAS = ['ninguno', 'circulo', 'estrella', 'rayo', 'escudo', 'corazon', 'luna', 'gota'];
+function emblema(tipo, x, y, r, c, borde) {
+  const st = `fill="${c}" stroke="${borde}" stroke-width="1.4" stroke-linejoin="round"`;
+  if (tipo === 'circulo') return `<circle cx="${n(x)}" cy="${n(y)}" r="${n(r)}" ${st}/>`;
+  if (tipo === 'estrella') return `<path d="${estrella(x, y, r * 1.15)}" ${st}/>`;
+  if (tipo === 'rayo') return `<path d="M${P(x + r * .3, y - r * 1.2)}L${P(x - r * .7, y + r * .15)}H${n(x)}L${P(x - r * .3, y + r * 1.2)}L${P(x + r * .7, y - r * .15)}H${n(x)}Z" ${st}/>`;
+  if (tipo === 'escudo') return `<path d="M${P(x - r, y - r)}H${n(x + r)}V${n(y)}Q${P(x + r, y + r * .8)} ${P(x, y + r * 1.2)}Q${P(x - r, y + r * .8)} ${P(x - r, y)}Z" ${st}/>`;
+  if (tipo === 'corazon') return `<path d="M${P(x, y + r)}C${P(x - r * 1.6, y)} ${P(x - r * .9, y - r * 1.3)} ${P(x, y - r * .4)}C${P(x + r * .9, y - r * 1.3)} ${P(x + r * 1.6, y)} ${P(x, y + r)}Z" ${st}/>`;
+  if (tipo === 'luna') return `<path d="M${P(x + r * .4, y - r)}A${n(r)} ${n(r)} 0 1 0 ${P(x + r * .4, y + r)}A${n(r * .75)} ${n(r * .75)} 0 1 1 ${P(x + r * .4, y - r)}Z" ${st}/>`;
+  if (tipo === 'gota') return `<path d="M${P(x, y - r * 1.2)}C${P(x + r, y)} ${P(x + r, y + r)} ${P(x, y + r)}C${P(x - r, y + r)} ${P(x - r, y)} ${P(x, y - r * 1.2)}Z" ${st}/>`;
+  return '';
+}
+function pintarTraje(g, A, B, o) {
+  const tr = o.look?.traje || {}, cx = g.cx, W = g.W, y0 = g.cuello.y - 2, alto = g.piso - y0;
+  const arriba = tonos(tr.arriba || A.base), interior = tr.interior ? tonos(tr.interior) : o.cuerpo, cint = tr.cinturon ? tonos(tr.cinturon) : null;
+  const yCint = y0 + alto * .58, yAbajo = cint ? yCint + 9 : y0 + alto * .62;
+  const region = `M${P(cx - W, y0 - 6)}Q${P(cx, y0 + 4)} ${P(cx + W, y0 - 6)}V${n(g.piso + 20)}H${n(cx - W)}Z`, id = `tr${Math.round(y0)}${tr.cuello || ''}`;
+  let s = `<path d="${region}" fill="${arriba.base}"/>`;
+  // estampado
+  const ec = tr.estampadoColor ? tonos(tr.estampadoColor).base : arriba.oscuro; let est = '';
+  if (tr.estampado === 'horizontales') for (let y = y0 + 4; y < g.piso + 10; y += 13) est += `<rect x="${n(cx - W)}" y="${n(y)}" width="${n(W * 2)}" height="6.5"/>`;
+  if (tr.estampado === 'verticales') for (let x = cx - 6.5 - 26 * 3; x < cx + W; x += 26) est += `<rect x="${n(x)}" y="${n(y0 - 12)}" width="13" height="${n(alto + 34)}"/>`;
+  if (tr.estampado === 'cuadros') for (let y = y0 - 8, j = 0; y < g.piso + 14; y += 11, j++) for (let x = cx - W, i = 0; x < cx + W; x += 11, i++) if ((i + j) % 2) est += `<rect x="${n(x)}" y="${n(y)}" width="11" height="11"/>`;
+  if (tr.estampado === 'diagonal') est += `<path d="M${P(cx - W * .5, y0 - 8)}L${P(cx + W * .3, g.piso + 20)}" stroke="${ec}" stroke-width="12"/>`;
+  if (est) s += `<clipPath id="${id}"><path d="${region}"/></clipPath><g clip-path="url(#${id})" fill="${ec}">${est}</g>`;
+  // parte de abajo (pantalón, falda)
+  if (tr.abajo) s += `<rect x="${n(cx - W)}" y="${n(yAbajo)}" width="${n(W * 2)}" height="${n(g.piso - yAbajo + 20)}" fill="${tonos(tr.abajo).base}"/><path d="M${P(cx, yAbajo + 4)}V${n(g.piso + 10)}" stroke="${tonos(tr.abajo).oscuro}" stroke-width="1.6"/>`;
+  // cuello
+  const ci = interior.base, linea = arriba.oscuro;
+  if (tr.cuello === 'redondo') s += `<path d="M${P(cx - W, y0 - 6)}Q${P(cx, y0 + 4)} ${P(cx + W, y0 - 6)}" stroke="${linea}" stroke-width="4" fill="none"/>`;
+  if (tr.cuello === 'v') s += `<path d="M${P(cx - 15, y0 - 3)}L${P(cx, y0 + 17)}L${P(cx + 15, y0 - 3)}Z" fill="${ci}" stroke="${linea}" stroke-width="2.4" stroke-linejoin="round"/>`;
+  if (tr.cuello === 'cruzado') s += `<path d="M${P(cx - 17, y0 - 3)}L${P(cx + 3, y0 + alto * .5)}L${P(cx + 19, y0 - 4)}Z" fill="${ci}"/><path d="M${P(cx - 19, y0 - 4)}L${P(cx + 6, y0 + alto * .52)}M${P(cx + 19, y0 - 4)}L${P(cx - 1, y0 + alto * .45)}" stroke="${linea}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+  if (tr.cuello === 'alto') s += `<path d="M${P(cx - W, y0 - 7)}Q${P(cx, y0 + 3)} ${P(cx + W, y0 - 7)}V${n(y0 + 5)}Q${P(cx, y0 + 15)} ${P(cx - W, y0 + 5)}Z" fill="${ci}"/>`;
+  if (tr.cuello === 'abierto') s += `<path d="M${P(cx - 9, y0 - 6)}L${P(cx - 13, g.piso + 20)}H${n(cx + 13)}L${P(cx + 9, y0 - 6)}Z" fill="${ci}"/><path d="M${P(cx - 9, y0 - 6)}L${P(cx - 13, g.piso + 20)}M${P(cx + 9, y0 - 6)}L${P(cx + 13, g.piso + 20)}M${P(cx - 9, y0 - 6)}L${P(cx - 21, y0 + 10)}M${P(cx + 9, y0 - 6)}L${P(cx + 21, y0 + 10)}" stroke="${linea}" stroke-width="2.6" stroke-linecap="round"/>`;
+  if (tr.cuello === 'marinero') s += `<path d="M${P(cx - W, y0 - 7)}H${n(cx + W)}V${n(y0 + 6)}H${n(cx + 22)}L${P(cx, y0 + 22)}L${P(cx - 22, y0 + 6)}H${n(cx - W)}Z" fill="${ci}"/><path d="M${P(cx - W, y0 + 2)}H${n(cx - 19)}L${P(cx, y0 + 17)}L${P(cx + 19, y0 + 2)}H${n(cx + W)}" stroke="#fff" stroke-width="1.8" fill="none"/>`;
+  // cinturón
+  if (cint) s += `<rect x="${n(cx - W)}" y="${n(yCint)}" width="${n(W * 2)}" height="9" fill="${cint.base}"/><path d="M${P(cx - W, yCint)}H${n(cx + W)}M${P(cx - W, yCint + 9)}H${n(cx + W)}" stroke="${cint.oscuro}" stroke-width="1.4"/><path d="M${P(cx + 4, yCint + 7)}l-4 13l7 1l3 -13zM${P(cx + 9, yCint + 7)}l5 11l6 -2l-6 -10z" fill="${cint.base}" stroke="${cint.oscuro}" stroke-width="1.2" stroke-linejoin="round"/>`;
+  // emblema y número
+  if (tr.emblema && tr.emblema !== 'ninguno') { const izq = tr.emblemaPos === 'izquierda'; s += emblema(tr.emblema, izq ? cx - W * .24 : cx, y0 + (izq ? 13 : alto * .3), izq ? 6.5 : 9, tonos(tr.emblemaColor || '#FFFFFF').base, '#1E1B3A'); }
+  if (o.numero) s += `<text x="${n(cx)}" y="${n(y0 + alto * .66)}" font-size="${n(lim(alto * .38, 16, 28))}" font-weight="800" font-family="'Bricolage Grotesque', 'Nunito', sans-serif" text-anchor="middle" fill="${tonos(tr.emblemaColor || '#1E1B3A').base}" stroke="#fff" stroke-width="3" paint-order="stroke">${o.numero}</text>`;
+  return s;
+}
+cuerpo.traje = { nombre: 'Traje a medida', c: ['#FF8A1E', '#2E5BD9'], desc: 'la ropa que diseñaste en el campo traje (copia la ropa del personaje)', pinta: (g, A, B, o) => pintarTraje(g, A, B, o) };
+
 aura.super = { nombre: 'Aura dorada', c: ['#FFD83D', '#FFF7C2'], desc: 'transformación, poder máximo, anime de peleas', pinta(g, A, B) { return aura.fuego.pinta(g, A, B) + aura.rayos.pinta(g, tonos('#FFFFFF'), tonos('#FFB000')); } };
 
 export const PIEZAS = { cabeza, pelo, cara, cuello, cuerpo, brazos, espalda, mano, aura };
@@ -795,9 +873,10 @@ export const CATALOGO = Object.fromEntries(Object.entries(PIEZAS).map(([slot, ps
 
 // Dibuja una pieza y devuelve sus capas: { atras, dentro, fuera, cara, cuello, espalda, aura, mano }
 export function pintarPieza(slot, pz, g, tCuerpo, look) {
+  // las piezas «a medida» leen sus formas del look
   const def = PIEZAS[slot]?.[pz.id]; if (!def) return {};
   const [c1, c2] = pz.colores.map(c => c === 'cuerpo' ? tCuerpo : tonos(c));
   let r;
-  try { r = def.pinta(g, c1, c2, { numero: look.numero, cuerpo: tCuerpo }); } catch (e) { console.warn('pieza', slot, pz.id, e); return {}; }
+  try { r = def.pinta(g, c1, c2, { numero: look.numero, cuerpo: tCuerpo, look }); } catch (e) { console.warn('pieza', slot, pz.id, e); return {}; }
   return typeof r === 'string' ? { [CAPA[slot]]: r } : r;
 }
