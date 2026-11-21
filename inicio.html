@@ -6,7 +6,7 @@
   <title>AFJ Academy — Plataforma de Aprendizaje & Estudio Colaborativo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg-paper: #F4EFE6;
@@ -19,6 +19,8 @@
       --blue-dark: #467EBF;
       --purple-accent: #7D628C;
       --purple-dark: #634A72;
+      --menta-accent: #2FC495;
+      --sol-accent: #FFCB3D;
       --card-bg: #FCF9F4;
       --border-soft: rgba(138, 121, 104, 0.22);
       --gold-glow: rgba(244, 189, 108, 0.75);
@@ -60,7 +62,7 @@
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.28'/%3E%3C/svg%3E");
     }
 
-    /* Fondo ilustrado: Doodles académicos + Constelaciones */
+    /* Fondo ilustrado: Doodles académicos + Constelaciones + Aprendines */
     .bg-illustrations {
       position: fixed;
       inset: 0;
@@ -86,6 +88,36 @@
     @keyframes floatSlow {
       0%, 100% { transform: translateY(0px) rotate(0deg); }
       50% { transform: translateY(-7px) rotate(1.5deg); }
+    }
+
+    /* Capa y estilos de los Aprendines dinámicos en movimiento continuo */
+    #aprendinesLayer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    .moving-aprendin {
+      position: absolute;
+      top: 0;
+      left: 0;
+      will-change: transform, opacity;
+      pointer-events: none;
+      user-select: none;
+      filter: drop-shadow(0 4px 10px rgba(44, 54, 74, 0.08));
+    }
+
+    /* Pestañeo de ojos de los Aprendines */
+    .pupil-blink {
+      transform-origin: center;
+      animation: blinkEyes 4.5s infinite;
+    }
+
+    @keyframes blinkEyes {
+      0%, 93%, 100% { transform: scaleY(1); }
+      96.5% { transform: scaleY(0.08); }
     }
 
     /* Barra superior */
@@ -491,6 +523,7 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
+      text-decoration: none;
       transition: filter 0.2s ease, transform 0.15s ease;
     }
 
@@ -520,7 +553,7 @@
   <div class="paper-texture"></div>
   <div class="paper-noise"></div>
 
-  <!-- Ilustraciones académicas y constelaciones del fondo -->
+  <!-- Ilustraciones académicas, constelaciones y APRENDINES flotantes del fondo -->
   <div class="bg-illustrations">
     <!-- Red geométrica superior derecha -->
     <svg style="position:absolute; top:0; right:0; width:340px; height:280px; opacity:0.35;" viewBox="0 0 340 280" fill="none">
@@ -583,6 +616,11 @@
     <svg class="doodle" style="top:11%; right:2%; width:48px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
       <path d="M3 21h18L3 3v18z"/><path d="M7 17h6L7 11v6z"/>
     </svg>
+
+    <!-- ==============================================================
+         CAPA DE APRENDINES EN MOVIMIENTO DINÁMICO (APARECEN Y FLOTAN CONTINUAMENTE)
+         ============================================================== -->
+    <div id="aprendinesLayer"></div>
   </div>
 
   <!-- Header -->
@@ -636,58 +674,118 @@
     <!-- 3 Tarjetas de Módulos -->
     <section class="cards-grid">
 
-      <!-- TARJETA 1: FREDDY -->
+      <!-- TARJETA 1: FREDDY (LOS APRENDINES & FEED) -->
       <article class="module-card card-blue">
         <div class="card-top-meta">
           <div class="module-icon-box">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/>
-              <path d="M9 21h6"/>
+            <!-- Ícono Aprendín Avatar en el cabezal -->
+            <svg width="22" height="22" viewBox="0 0 64 64" fill="none">
+              <path d="M32 8C50 8 58 22 58 38C58 52 47 58 32 58C17 58 6 52 6 38C6 22 14 8 32 8Z" fill="#FF9A2E"/>
+              <ellipse cx="24" cy="34" rx="3.5" ry="4.5" fill="#23264A"/>
+              <circle cx="25" cy="32" r="1.2" fill="#FFFFFF"/>
+              <ellipse cx="40" cy="34" rx="3.5" ry="4.5" fill="#23264A"/>
+              <circle cx="41" cy="32" r="1.2" fill="#FFFFFF"/>
+              <path d="M27 42q5 4 10 0" fill="none" stroke="#23264A" stroke-width="2.8" stroke-linecap="round"/>
             </svg>
           </div>
-          <span class="module-tag">Individual · IA &amp; Feed</span>
+          <span class="module-tag">Individual · Los Aprendines</span>
         </div>
 
         <span class="module-author">MÓDULO DE FREDDY</span>
-        <h2 class="module-title">Los Aprendices &amp; Feed<br>(Módulo de Freddy)</h2>
+        <h2 class="module-title">Los Aprendines &amp; Feed<br>(Módulo de Freddy)</h2>
 
-        <!-- Ilustración SVG Dashboard Adaptativo -->
-        <div class="mockup-box">
+        <!-- Ilustración SVG del Módulo de Freddy: Lección interactiva + Aprendín con Gorro de Chef -->
+        <div class="mockup-box" style="background: linear-gradient(180deg, #F8FAFD 0%, #EFF5FD 100%);">
           <svg width="100%" height="100%" viewBox="0 0 280 175" fill="none">
-            <!-- Paneles blancos -->
-            <rect x="6" y="8" width="125" height="65" rx="8" fill="#FFFFFF" stroke="#E5DDD2"/>
-            <rect x="148" y="8" width="125" height="65" rx="8" fill="#FFFFFF" stroke="#E5DDD2"/>
-            <rect x="6" y="84" width="125" height="82" rx="8" fill="#FFFFFF" stroke="#E5DDD2"/>
-            <rect x="148" y="84" width="125" height="82" rx="8" fill="#FFFFFF" stroke="#E5DDD2"/>
+            <!-- Barra superior tipo app de aprendizaje adaptativo -->
+            <rect x="6" y="6" width="268" height="18" rx="5" fill="#E8F1FC" stroke="#D1E2F6" stroke-width="1"/>
+            <circle cx="16" cy="15" r="3" fill="#FF6B4D"/>
+            <circle cx="26" cy="15" r="3" fill="#FFCB3D"/>
+            <circle cx="36" cy="15" r="3" fill="#22B888"/>
+            <text x="48" y="18" fill="#587EA8" font-family="'Inter', sans-serif" font-size="7.5" font-weight="600">aprendines_feed.ai · Mundo de Cocina &amp; Física</text>
 
-            <!-- Líneas de texto simuladas -->
-            <rect x="14" y="16" width="52" height="5" rx="2.5" fill="#9BBCE3"/>
-            <rect x="14" y="26" width="85" height="4" rx="2" fill="#E3DDD5"/>
-            <rect x="14" y="34" width="70" height="4" rx="2" fill="#E3DDD5"/>
-            <rect x="14" y="46" width="38" height="12" rx="4" fill="#EBF3FC"/>
+            <!-- Tarjeta izquierda: Feed adaptativo con lección de Newton / analogía cotidiana -->
+            <g transform="translate(6, 28)">
+              <rect x="0" y="0" width="144" height="135" rx="8" fill="#FFFFFF" stroke="#D8E5F5" stroke-width="1.2"/>
+              <!-- Chip de Mundo -->
+              <rect x="8" y="8" width="76" height="13" rx="4" fill="#FFF3EB"/>
+              <text x="12" y="17" fill="#E26237" font-family="'Inter', sans-serif" font-size="6.8" font-weight="700">MUNDO: COCINA</text>
+              
+              <!-- Mini ilustración de la lección (Olla hirviendo / vapor / calor) -->
+              <rect x="8" y="25" width="128" height="42" rx="6" fill="#F4F8FD"/>
+              <path d="M52 50h40a4 4 0 0 1 4 4v7a4 4 0 0 1-4 4H52a4 4 0 0 1-4-4v-7a4 4 0 0 1 4-4z" fill="#4E9DFF" opacity="0.85"/>
+              <line x1="44" y1="55" x2="48" y2="55" stroke="#2C74D6" stroke-width="2" stroke-linecap="round"/>
+              <line x1="96" y1="55" x2="100" y2="55" stroke="#2C74D6" stroke-width="2" stroke-linecap="round"/>
+              <path d="M60 44c1-4-2-6 0-10m12 10c1-4-2-6 0-10m12 10c1-4-2-6 0-10" stroke="#FFCB3D" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+              
+              <!-- Pregunta adaptativa generada por IA -->
+              <text x="8" y="78" fill="#23264A" font-family="'Inter', sans-serif" font-size="8" font-weight="700">¿Por qué salta la tapa?</text>
+              <text x="8" y="89" fill="#718096" font-family="'Inter', sans-serif" font-size="7">Acción y reacción en vapor</text>
+              
+              <!-- Barra de Dominio (Mastery) -->
+              <rect x="8" y="102" width="128" height="23" rx="5" fill="#F0F7FF" stroke="#D6E6FB" stroke-width="1"/>
+              <text x="14" y="113" fill="#4B6B94" font-family="'Inter', sans-serif" font-size="6.5" font-weight="700">DOMINIO ADAPTATIVO</text>
+              <text x="112" y="113" fill="#22B888" font-family="'Inter', sans-serif" font-size="7" font-weight="800">88%</text>
+              <rect x="14" y="117" width="116" height="4" rx="2" fill="#D7E7FA"/>
+              <rect x="14" y="117" width="102" height="4" rx="2" fill="#4E9DFF"/>
+            </g>
 
-            <rect x="158" y="16" width="56" height="5" rx="2.5" fill="#9BBCE3"/>
-            <rect x="158" y="27" width="90" height="4" rx="2" fill="#E3DDD5"/>
-            <rect x="158" y="35" width="76" height="4" rx="2" fill="#E3DDD5"/>
-
-            <!-- Mini gráfico de líneas abajo derecha -->
-            <polyline points="158,150 180,132 204,138 228,112 260,104" stroke="#5C95D6" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-            <circle cx="180" cy="132" r="3" fill="#5C95D6"/>
-            <circle cx="228" cy="112" r="3" fill="#E8835C"/>
-
-            <!-- Bombilla central de IA -->
-            <circle cx="140" cy="86" r="24" fill="#FFF9EC" stroke="#F2C97D" stroke-width="1.5"/>
-            <path d="M140 73a9 9 0 0 1 6 15.7V92a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2v-3.3A9 9 0 0 1 140 73z" fill="#F6C85F" stroke="#D99B26" stroke-width="1.3"/>
-            <line x1="136" y1="97" x2="144" y2="97" stroke="#D99B26" stroke-width="1.5" stroke-linecap="round"/>
+            <!-- Aprendín en la parte derecha (Criatura animada con Gorro de Chef) -->
+            <g transform="translate(154, 30)">
+              <!-- Sombra -->
+              <ellipse cx="60" cy="128" rx="36" ry="5.5" fill="#23264A" opacity="0.12"/>
+              <!-- Patitas -->
+              <ellipse cx="44" cy="120" rx="10" ry="6" fill="#D9770F"/>
+              <ellipse cx="76" cy="120" rx="10" ry="6" fill="#D9770F"/>
+              <!-- Brazo izquierdo -->
+              <ellipse cx="20" cy="85" rx="6" ry="11" fill="#FF9A2E" stroke="#D9770F" stroke-width="2" transform="rotate(20 20 85)"/>
+              <!-- Brazo derecho saludando alegremente -->
+              <ellipse cx="100" cy="74" rx="6" ry="12" fill="#FF9A2E" stroke="#D9770F" stroke-width="2" transform="rotate(-40 100 74)"/>
+              
+              <!-- Cuerpo Aprendín (naranja mandarina) -->
+              <defs>
+                <radialGradient id="apCardGrad" cx="35%" cy="30%" r="75%">
+                  <stop offset="0%" stop-color="#FFC07A"/>
+                  <stop offset="55%" stop-color="#FF9A2E"/>
+                  <stop offset="100%" stop-color="#D9770F"/>
+                </radialGradient>
+              </defs>
+              <path d="M60 28C92 28 108 52 108 82C108 108 88 122 60 122C32 122 12 108 12 82C12 52 28 28 60 28Z" fill="url(#apCardGrad)" stroke="#D9770F" stroke-width="2.5"/>
+              <!-- Brillo cuerpo -->
+              <ellipse cx="42" cy="48" rx="10" ry="5" fill="#FFFFFF" opacity="0.45" transform="rotate(-20 42 48)"/>
+              <!-- Mejillas sonrosadas -->
+              <ellipse cx="38" cy="80" rx="6" ry="3.5" fill="#FF7D8C" opacity="0.6"/>
+              <ellipse cx="82" cy="80" rx="6" ry="3.5" fill="#FF7D8C" opacity="0.6"/>
+              <!-- Ojos grandes y curiosos -->
+              <ellipse cx="44" cy="71" rx="6" ry="8" fill="#23264A"/>
+              <circle cx="46.5" cy="68" r="2.2" fill="#FFFFFF"/>
+              <ellipse cx="76" cy="71" rx="6" ry="8" fill="#23264A"/>
+              <circle cx="78.5" cy="68" r="2.2" fill="#FFFFFF"/>
+              <!-- Sonrisa -->
+              <path d="M52 82q8 7 16 0" fill="none" stroke="#23264A" stroke-width="2.8" stroke-linecap="round"/>
+              
+              <!-- Gorro de Chef del mundo Cocina (accesorio oficial) -->
+              <g transform="translate(60, 24) scale(0.65) translate(-100, -42)">
+                <path d="M66 46C50 36 58 8 80 14C84 -6 116 -6 120 14C142 8 150 36 134 46Z" fill="#FFFFFF" stroke="#D6CFC2" stroke-width="2.5"/>
+                <rect x="68" y="38" width="64" height="16" rx="6" fill="#FFFFFF" stroke="#D6CFC2" stroke-width="2.2"/>
+              </g>
+              
+              <!-- Bocadillo de pensamiento: ¡Eureka! -->
+              <g transform="translate(14, -4)">
+                <rect x="0" y="0" width="82" height="20" rx="10" fill="#FFFFFF" stroke="#F2C97D" stroke-width="1.4" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.06))"/>
+                <polygon points="40,20 48,20 42,26" fill="#FFFFFF"/>
+                <text x="41" y="14" fill="#B7791F" font-family="'Inter', sans-serif" font-size="7.5" font-weight="700" text-anchor="middle">💡 ¡Ya lo entiendo!</text>
+              </g>
+            </g>
           </svg>
         </div>
 
-        <button class="card-cta" onclick="alert('Abriendo Módulo de Freddy: Aprendizaje Individual Adaptativo')">
-          Comenzar a los Aprendices <span>→</span>
-        </button>
+        <a href="prototipo/aprende.html" class="card-cta">
+          Comenzar a los Aprendines <span>→</span>
+        </a>
       </article>
 
-      <!-- TARJETA 2: RUA -->
+      <!-- TARJETA 2: RUA (LAPTOP CON VÍDEO CENTRAL + PERSONAS CONECTADAS) -->
       <article class="module-card card-purple">
         <div class="card-top-meta">
           <div class="module-icon-box">
@@ -704,45 +802,111 @@
         <span class="module-author">MÓDULO DE RUA</span>
         <h2 class="module-title">Estudio Grupal &amp; Sincronía<br>(Módulo de Rua)</h2>
 
-        <!-- Ilustración SVG Sala Grupal Dark -->
-        <div class="mockup-box" style="background:#262C3A; border-color:#384054;">
+        <!-- Ilustración SVG: Laptop central reproduciendo vídeo + Personas reales conectadas -->
+        <div class="mockup-box" style="background:#1B202D; border-color:#2D3548;">
           <svg width="100%" height="100%" viewBox="0 0 280 175" fill="none">
-            <!-- Nodos conectados -->
-            <line x1="140" y1="84" x2="72" y2="42" stroke="#586380" stroke-width="1.5" stroke-dasharray="3 3"/>
-            <line x1="140" y1="84" x2="210" y2="44" stroke="#586380" stroke-width="1.5" stroke-dasharray="3 3"/>
-            <line x1="140" y1="84" x2="78" y2="128" stroke="#586380" stroke-width="1.5" stroke-dasharray="3 3"/>
-            <line x1="140" y1="84" x2="206" y2="126" stroke="#586380" stroke-width="1.5" stroke-dasharray="3 3"/>
+            <!-- Cabecera de la sala -->
+            <rect x="8" y="6" width="264" height="16" rx="4" fill="#252C3D"/>
+            <circle cx="18" cy="14" r="3" fill="#EF4444"/>
+            <text x="26" y="17" fill="#E2E8F0" font-family="'Inter', sans-serif" font-size="7.5" font-weight="700">SALA-402 · VÍDEO EN SINCRONÍA</text>
+            <rect x="220" y="9" width="46" height="10" rx="3" fill="#3B445B"/>
+            <text x="243" y="17" fill="#93C5FD" font-family="'JetBrains Mono', monospace" font-size="6.5" font-weight="600" text-anchor="middle">4/5 LIVE</text>
 
-            <!-- Avatar Central -->
-            <circle cx="140" cy="84" r="22" fill="#3B445B" stroke="#9B7EDE" stroke-width="2.5"/>
-            <circle cx="140" cy="79" r="6" fill="#E2D9F3"/>
-            <path d="M130 94c2-5 18-5 20 0" stroke="#E2D9F3" stroke-width="2.2" stroke-linecap="round"/>
+            <!-- Líneas de sincronía elástica conectando cada persona a la laptop central -->
+            <line x1="60" y1="50" x2="114" y2="78" stroke="#7D628C" stroke-width="1.8" stroke-dasharray="3 3"/>
+            <line x1="220" y1="50" x2="166" y2="78" stroke="#7D628C" stroke-width="1.8" stroke-dasharray="3 3"/>
+            <line x1="60" y1="124" x2="114" y2="108" stroke="#7D628C" stroke-width="1.8" stroke-dasharray="3 3"/>
+            <line x1="220" y1="124" x2="166" y2="108" stroke="#7D628C" stroke-width="1.8" stroke-dasharray="3 3"/>
 
-            <!-- Avatares periféricos -->
-            <circle cx="72" cy="42" r="14" fill="#3B445B" stroke="#649EE0" stroke-width="2"/>
-            <circle cx="72" cy="39" r="4" fill="#D6E6F9"/>
-            <circle cx="210" cy="44" r="14" fill="#3B445B" stroke="#E8835C" stroke-width="2"/>
-            <circle cx="210" cy="41" r="4" fill="#FADCD0"/>
-            <circle cx="78" cy="128" r="14" fill="#3B445B" stroke="#59C393" stroke-width="2"/>
-            <circle cx="78" cy="125" r="4" fill="#D2F3E4"/>
-            <circle cx="206" cy="126" r="14" fill="#3B445B" stroke="#F2C97D" stroke-width="2"/>
-            <circle cx="206" cy="123" r="4" fill="#FDF1D6"/>
+            <!-- ==============================================
+                 LAPTOP CENTRAL REPRODUCIENDO VÍDEO EN VIVO
+                 ============================================== -->
+            <g transform="translate(100, 56)">
+              <!-- Pantalla de la Laptop (Chasis exterior) -->
+              <rect x="0" y="0" width="80" height="52" rx="4" fill="#0F121C" stroke="#48536E" stroke-width="1.8"/>
+              <!-- Cámara web frontal (dot azul) -->
+              <circle cx="40" cy="3.5" r="1" fill="#60A5FA"/>
+              <!-- Pantalla activa con vídeo reproduciéndose -->
+              <rect x="4" y="6" width="72" height="42" rx="2" fill="#182030"/>
+              <!-- Frame del vídeo: clase / gráfica dinámica -->
+              <rect x="7" y="9" width="66" height="28" rx="2" fill="#202A3E"/>
+              <path d="M12 25L24 16L36 28L48 18L60 22L66 17" stroke="#60A5FA" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+              <!-- Botón de Play / Live en el vídeo -->
+              <circle cx="40" cy="22" r="7.5" fill="#EF4444" opacity="0.95"/>
+              <polygon points="38,18 45,22 38,26" fill="#FFFFFF"/>
+              <!-- Barra de progreso del vídeo en la laptop -->
+              <rect x="7" y="41" width="66" height="3" rx="1.5" fill="#334155"/>
+              <rect x="7" y="41" width="38" height="3" rx="1.5" fill="#EF4444"/>
+              <circle cx="45" cy="42.5" r="2.5" fill="#FFFFFF"/>
+              
+              <!-- Base y teclado de la laptop con perspectiva -->
+              <path d="M-8 52L88 52L96 61L-16 61Z" fill="#2A3144" stroke="#48536E" stroke-width="1.2"/>
+              <rect x="28" y="54" width="24" height="4" rx="1" fill="#1C2130"/>
+            </g>
 
-            <!-- Barra de progreso elástica inferior con zona de fricción -->
-            <rect x="20" y="156" width="240" height="6" rx="3" fill="#3E4659"/>
-            <rect x="20" y="156" width="135" height="6" rx="3" fill="#876B96"/>
-            <rect x="95" y="156" width="28" height="6" rx="2" fill="#E8835C"/>
-            <circle cx="155" cy="159" r="4.5" fill="#FFFFFF"/>
-            <circle cx="122" cy="159" r="4.5" fill="#E8835C" stroke="#262C3A" stroke-width="1.2"/>
+            <!-- ==============================================
+                 PERSONAS CONECTADAS A LA SALA (ÍCONOS HUMANOS)
+                 ============================================== -->
+            <!-- Persona 1 (Top-Left): Rua (Host) -->
+            <g transform="translate(38, 28)">
+              <circle cx="22" cy="22" r="16" fill="#293145" stroke="#9B7EDE" stroke-width="2"/>
+              <circle cx="22" cy="17" r="5" fill="#E2D9F3"/>
+              <path d="M13 29c1.5-4.5 16.5-4.5 18 0" stroke="#E2D9F3" stroke-width="2" stroke-linecap="round" fill="#9B7EDE" opacity="0.3"/>
+              <!-- Badge Host -->
+              <rect x="4" y="38" width="36" height="10" rx="3" fill="#7D628C"/>
+              <text x="22" y="45.5" fill="#FFFFFF" font-family="'Inter', sans-serif" font-size="6" font-weight="700" text-anchor="middle">Rua (Host)</text>
+            </g>
+
+            <!-- Persona 2 (Top-Right): Andre -->
+            <g transform="translate(198, 28)">
+              <circle cx="22" cy="22" r="16" fill="#293145" stroke="#5C95D6" stroke-width="2"/>
+              <circle cx="22" cy="17" r="5" fill="#D6E6F9"/>
+              <path d="M13 29c1.5-4.5 16.5-4.5 18 0" stroke="#D6E6F9" stroke-width="2" stroke-linecap="round" fill="#5C95D6" opacity="0.3"/>
+              <!-- Auriculares -->
+              <path d="M15 17a7 7 0 0 1 14 0" stroke="#60A5FA" stroke-width="1.6" fill="none"/>
+              <!-- Badge Andre -->
+              <rect x="5" y="38" width="34" height="10" rx="3" fill="#3D5A80"/>
+              <text x="22" y="45.5" fill="#D6E6F9" font-family="'Inter', sans-serif" font-size="6" font-weight="700" text-anchor="middle">Andre · 0s</text>
+            </g>
+
+            <!-- Persona 3 (Bottom-Left): Freddy -->
+            <g transform="translate(38, 102)">
+              <circle cx="22" cy="22" r="16" fill="#293145" stroke="#34D399" stroke-width="2"/>
+              <circle cx="22" cy="17" r="5" fill="#D2F3E4"/>
+              <path d="M13 29c1.5-4.5 16.5-4.5 18 0" stroke="#D2F3E4" stroke-width="2" stroke-linecap="round" fill="#34D399" opacity="0.3"/>
+              <line x1="18" y1="17" x2="26" y2="17" stroke="#10B981" stroke-width="1.2"/>
+              <circle cx="19" cy="17" r="2.2" stroke="#10B981" stroke-width="1" fill="none"/>
+              <circle cx="25" cy="17" r="2.2" stroke="#10B981" stroke-width="1" fill="none"/>
+              <!-- Badge Freddy -->
+              <rect x="5" y="38" width="34" height="10" rx="3" fill="#205743"/>
+              <text x="22" y="45.5" fill="#6EE7B7" font-family="'Inter', sans-serif" font-size="6" font-weight="700" text-anchor="middle">Freddy</text>
+            </g>
+
+            <!-- Persona 4 (Bottom-Right): Sofía (+1) -->
+            <g transform="translate(198, 102)">
+              <circle cx="22" cy="22" r="16" fill="#293145" stroke="#FBBF24" stroke-width="2"/>
+              <circle cx="22" cy="17" r="5" fill="#FDF1D6"/>
+              <path d="M13 29c1.5-4.5 16.5-4.5 18 0" stroke="#FDF1D6" stroke-width="2" stroke-linecap="round" fill="#FBBF24" opacity="0.3"/>
+              <!-- Badge Sofía -->
+              <rect x="5" y="38" width="34" height="10" rx="3" fill="#644A1D"/>
+              <text x="22" y="45.5" fill="#FDE68A" font-family="'Inter', sans-serif" font-size="6" font-weight="700" text-anchor="middle">Sofía (+1)</text>
+            </g>
+
+            <!-- Barra de sincronía elástica inferior -->
+            <rect x="22" y="159" width="236" height="5" rx="2.5" fill="#333D52"/>
+            <rect x="22" y="159" width="145" height="5" rx="2.5" fill="#7D628C"/>
+            <rect x="105" y="159" width="30" height="5" rx="1.5" fill="#E8835C"/>
+            <circle cx="167" cy="161.5" r="4.5" fill="#FFFFFF"/>
+            <circle cx="128" cy="161.5" r="4" fill="#E8835C" stroke="#1B202D" stroke-width="1.2"/>
           </svg>
         </div>
 
-        <button class="card-cta" onclick="alert('Abriendo Módulo de Rua: Salas de Estudio Grupal y Sincronía Elástica')">
+        <a href="public/prueba/estudio-grupal.html" class="card-cta">
           Salas de Estudio Grupal <span>→</span>
-        </button>
+        </a>
       </article>
 
-      <!-- TARJETA 3: ANDRÉ -->
+      <!-- TARJETA 3: ANDRÉ (CLASES GRUPALES & SOCIAL) -->
       <article class="module-card card-coral">
         <div class="card-top-meta">
           <div class="module-icon-box">
@@ -755,16 +919,16 @@
         </div>
 
         <span class="module-author">MÓDULO DE ANDRÉ</span>
-        <h2 class="module-title">Efecto Protégé &amp; Cuaderno<br>(Módulo de André)</h2>
+        <h2 class="module-title">Clases Grupales &amp; Social<br>(Módulo de André)</h2>
 
-        <!-- Ilustración SVG Pizarra y Notas -->
+        <!-- Ilustración SVG Pizarra Colaborativa y Cuaderno Social -->
         <div class="mockup-box">
           <svg width="100%" height="100%" viewBox="0 0 280 175" fill="none">
-            <!-- Pizarra blanca inclinada -->
+            <!-- Pizarra blanca inclinada con clase en vivo -->
             <g transform="rotate(-4 120 75)">
               <rect x="24" y="12" width="175" height="108" rx="8" fill="#FFFFFF" stroke="#DFD5C7" stroke-width="1.5"/>
-              <text x="42" y="45" fill="#4A5568" font-family="Playfair Display, serif" font-style="italic" font-size="14">f(x) = ?</text>
-              <text x="42" y="70" fill="#718096" font-family="Inter, sans-serif" font-size="12">a + b = c</text>
+              <text x="42" y="45" fill="#4A5568" font-family="'Playfair Display', serif" font-style="italic" font-size="14">f(x) = ?</text>
+              <text x="42" y="70" fill="#718096" font-family="'Inter', sans-serif" font-size="12">a + b = c</text>
               <line x1="120" y1="35" x2="178" y2="35" stroke="#CBD5E0" stroke-width="2" stroke-linecap="round"/>
               <line x1="120" y1="48" x2="165" y2="48" stroke="#CBD5E0" stroke-width="2" stroke-linecap="round"/>
               <circle cx="145" cy="80" r="14" stroke="#E8835C" stroke-width="1.8" fill="#FDF0EA"/>
@@ -776,7 +940,7 @@
             <line x1="22" y1="137" x2="56" y2="137" stroke="#E89D7E" stroke-width="2" stroke-linecap="round"/>
             <line x1="22" y1="147" x2="62" y2="147" stroke="#E89D7E" stroke-width="2" stroke-linecap="round"/>
 
-            <!-- Tarjeta flotante derecha -->
+            <!-- Tarjeta flotante derecha con miembros conectados -->
             <rect x="150" y="96" width="116" height="68" rx="8" fill="#FFFFFF" stroke="#DFD5C7"/>
             <rect x="160" y="106" width="52" height="5" rx="2.5" fill="#E8835C"/>
             <circle cx="164" cy="122" r="2.5" fill="#5C95D6"/>
@@ -787,9 +951,9 @@
           </svg>
         </div>
 
-        <button class="card-cta" onclick="alert('Abriendo Módulo de André: Clases en Vivo por Pares, Cartelera y Cuaderno')">
-          Clases en Vivo &amp; Cuaderno <span>→</span>
-        </button>
+        <a href="Andre2/futuro-yo-aprende.html" class="card-cta">
+          Clases Grupales &amp; Social <span>→</span>
+        </a>
       </article>
 
     </section>
@@ -807,7 +971,7 @@
       clearTimers();
       const body = document.body;
 
-      // Estado inicial limpio (solo fondo con doodles)
+      // Estado inicial limpio (fondo con doodles y aprendines)
       body.classList.remove('stage-hero', 'stage-quote', 'stage-cards');
 
       // Forzar reflow para reiniciar animaciones CSS
@@ -833,7 +997,157 @@
       startIntroSequence();
     }
 
-    window.addEventListener('DOMContentLoaded', startIntroSequence);
+    // ==============================================================
+    // SISTEMA DINÁMICO DE APRENDINES EN MOVIMIENTO CONTINUO
+    // (Aparecen nuevos constantemente y flotan por el fondo de la pantalla)
+    // ==============================================================
+    const VARIEDAD_APRENDINES = [
+      { color: 'menta', base: '#2FC495', light: '#8DE6C4', dark: '#1C9B72', acc: 'brote' },
+      { color: 'mandarina', base: '#FF9A2E', light: '#FFC07A', dark: '#D9770F', acc: 'audifonos' },
+      { color: 'cielo', base: '#4E9DFF', light: '#9CCBFF', dark: '#2C74D6', acc: 'antena' },
+      { color: 'coral', base: '#FF6B4D', light: '#FF9A82', dark: '#D94A2E', acc: 'gorro_chef' },
+      { color: 'sol', base: '#FFCB3D', light: '#FFE48A', dark: '#DDA41A', acc: 'lentes' },
+      { color: 'uva', base: '#8E70FF', light: '#C3B0FF', dark: '#6649DB', acc: 'audifonos' }
+    ];
+
+    let aprendinUID = 0;
+    const activeAprendines = [];
+
+    function generarAprendinSVG(v) {
+      const id = 'ap_dyn_' + (++aprendinUID);
+      let accSvg = '';
+      if (v.acc === 'brote') {
+        accSvg = `<path d="M50 26C49 19 51 13 50 8" stroke="#1C9B72" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M50 14C43 6 34 8 33 13C39 18 46 18 50 14Z" fill="#5ACF8E" stroke="#1C9B72" stroke-width="1.6"/>
+        <path d="M50 10C56 1 67 3 68 9C62 14 54 14 50 10Z" fill="#78E6AB" stroke="#1C9B72" stroke-width="1.6"/>`;
+      } else if (v.acc === 'audifonos') {
+        accSvg = `<path d="M15 64C10 20 90 20 85 64" stroke="#23264A" stroke-width="4" stroke-linecap="round" fill="none"/>
+        <rect x="9" y="54" width="10" height="18" rx="4" fill="#4E9DFF" stroke="#23264A" stroke-width="2"/>
+        <rect x="81" y="54" width="10" height="18" rx="4" fill="#4E9DFF" stroke="#23264A" stroke-width="2"/>`;
+      } else if (v.acc === 'antena') {
+        accSvg = `<line x1="50" y1="26" x2="50" y2="11" stroke="#23264A" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="50" cy="7" r="5" fill="#FFCB3D" stroke="#DDA41A" stroke-width="1.8"/>
+        <circle cx="48.5" cy="5.5" r="1.5" fill="#FFFFFF"/>`;
+      } else if (v.acc === 'gorro_chef') {
+        accSvg = `<g transform="translate(50, 26) scale(0.38) translate(-100, -42)">
+          <path d="M66 46C50 36 58 8 80 14C84 -6 116 -6 120 14C142 8 150 36 134 46Z" fill="#FFFFFF" stroke="#D6CFC2" stroke-width="2.5"/>
+          <rect x="68" y="38" width="64" height="16" rx="6" fill="#FFFFFF" stroke="#D6CFC2" stroke-width="2.2"/>
+        </g>`;
+      } else if (v.acc === 'lentes') {
+        accSvg = `<circle cx="38" cy="62" r="8" fill="rgba(255,255,255,0.22)" stroke="#23264A" stroke-width="2"/>
+        <circle cx="62" cy="62" r="8" fill="rgba(255,255,255,0.22)" stroke="#23264A" stroke-width="2"/>
+        <path d="M46 62Q50 59 54 62" stroke="#23264A" stroke-width="2" fill="none"/>`;
+      }
+
+      return `<svg viewBox="0 0 100 120" width="100%" height="100%" fill="none">
+        <defs>
+          <radialGradient id="${id}" cx="35%" cy="30%" r="75%">
+            <stop offset="0%" stop-color="${v.light}"/>
+            <stop offset="60%" stop-color="${v.base}"/>
+            <stop offset="100%" stop-color="${v.dark}"/>
+          </radialGradient>
+        </defs>
+        <ellipse cx="50" cy="112" rx="26" ry="4" fill="#2C364A" opacity="0.12"/>
+        <ellipse cx="38" cy="106" rx="8" ry="4.5" fill="${v.dark}"/>
+        <ellipse cx="62" cy="106" rx="8" ry="4.5" fill="${v.dark}"/>
+        <ellipse cx="16" cy="76" rx="4.5" ry="9" fill="${v.base}" stroke="${v.dark}" stroke-width="1.5" transform="rotate(25 16 76)"/>
+        <ellipse cx="84" cy="74" rx="4.5" ry="9" fill="${v.base}" stroke="${v.dark}" stroke-width="1.5" transform="rotate(-30 84 74)"/>
+        <path d="M50 26C76 26 90 46 90 70C90 91 73 101 50 101C27 101 10 91 10 70C10 46 24 26 50 26Z" fill="url(#${id})" stroke="${v.dark}" stroke-width="1.8"/>
+        <ellipse cx="36" cy="41" rx="9" ry="4.5" fill="#FFFFFF" opacity="0.45" transform="rotate(-20 36 41)"/>
+        <ellipse cx="32" cy="68" rx="4.5" ry="2.8" fill="#FF7D8C" opacity="0.65"/>
+        <ellipse cx="68" cy="68" rx="4.5" ry="2.8" fill="#FF7D8C" opacity="0.65"/>
+        <g class="pupil-blink">
+          <ellipse cx="38" cy="62" rx="4.8" ry="6.2" fill="#23264A"/>
+          <circle cx="40" cy="60" r="1.8" fill="#FFFFFF"/>
+          <ellipse cx="62" cy="62" rx="4.8" ry="6.2" fill="#23264A"/>
+          <circle cx="64" cy="60" r="1.8" fill="#FFFFFF"/>
+        </g>
+        <path d="M44 70q6 5 12 0" stroke="#23264A" stroke-width="2" stroke-linecap="round" fill="none"/>
+        ${accSvg}
+      </svg>`;
+    }
+
+    function spawnAprendin(startY) {
+      const container = document.getElementById('aprendinesLayer');
+      if (!container) return;
+
+      const v = VARIEDAD_APRENDINES[Math.floor(Math.random() * VARIEDAD_APRENDINES.length)];
+      const div = document.createElement('div');
+      div.className = 'moving-aprendin';
+
+      const width = 56 + Math.random() * 26; // Entre 56px y 82px
+      const height = width * 1.2;
+      div.style.width = width + 'px';
+      div.style.height = height + 'px';
+      div.innerHTML = generarAprendinSVG(v);
+
+      const W = window.innerWidth;
+      const isLeft = Math.random() > 0.48;
+      const posX = isLeft ? 15 + Math.random() * (W * 0.28) : (W * 0.70) + Math.random() * (W * 0.26 - 30);
+      const posY = (typeof startY === 'number') ? startY : (window.innerHeight + 40);
+
+      container.appendChild(div);
+
+      activeAprendines.push({
+        el: div,
+        x: posX,
+        y: posY,
+        baseX: posX,
+        speed: 0.45 + Math.random() * 0.45,
+        swaySpeed: 0.015 + Math.random() * 0.015,
+        swayAmp: 12 + Math.random() * 20,
+        time: Math.random() * 100,
+        targetOpacity: 0.52 + Math.random() * 0.16,
+        opacity: (typeof startY === 'number') ? (0.52 + Math.random() * 0.16) : 0
+      });
+    }
+
+    function animarAprendines() {
+      const H = window.innerHeight;
+      for (let i = activeAprendines.length - 1; i >= 0; i--) {
+        const p = activeAprendines[i];
+        p.y -= p.speed;
+        p.time += 1;
+        const currentX = p.baseX + Math.sin(p.time * p.swaySpeed) * p.swayAmp;
+
+        if (p.y > H - 120 && p.opacity < p.targetOpacity) {
+          p.opacity += 0.01;
+        } else if (p.y < 120) {
+          p.opacity = Math.max(0, p.opacity - 0.01);
+        } else {
+          p.opacity = p.targetOpacity;
+        }
+
+        p.el.style.transform = `translate3d(${currentX}px, ${p.y}px, 0)`;
+        p.el.style.opacity = p.opacity;
+
+        if (p.y < -130) {
+          if (p.el.parentNode) p.el.parentNode.removeChild(p.el);
+          activeAprendines.splice(i, 1);
+          spawnAprendin(window.innerHeight + 30);
+        }
+      }
+      requestAnimationFrame(animarAprendines);
+    }
+
+    function initAprendinesManager() {
+      const H = window.innerHeight;
+      const alturasIniciales = [H * 0.18, H * 0.38, H * 0.58, H * 0.76, H * 0.92];
+      alturasIniciales.forEach(y => spawnAprendin(y));
+
+      setInterval(() => {
+        if (activeAprendines.length < 8) {
+          spawnAprendin();
+        }
+      }, 4000);
+
+      requestAnimationFrame(animarAprendines);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      startIntroSequence();
+      initAprendinesManager();
+    });
   </script>
 </body>
 </html>
