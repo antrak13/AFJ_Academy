@@ -211,7 +211,7 @@ ${v.items.map((it, i) => { const [x, y] = pos(i); return `<div class="v-nodo" st
       }
       return `<div class="v-fr-dib">${s}</div>`;
     };
-    return `<div class="v-fracciones${fs.length === 1 ? ' v-fr-sola' : ''}">${fs.map((f, i) => `<div class="v-fr"><div class="v-fr-num"><span>${f.num}</span><span>${f.den}</span></div>${dibujo(f)}${f.etiqueta ? `<small>${esc(f.etiqueta)}</small>` : ''}</div>${i < fs.length - 1 && simbolo(i) ? `<span class="v-op">${simbolo(i)}</span>` : ''}`).join('')}</div>`;
+    return `<div class="v-fracciones${fs.length === 1 ? ' v-fr-sola' : ''}">${fs.map((f, i) => `<div class="v-fr">${v.ocultarNumeros ? '' : `<div class="v-fr-num"><span>${f.num}</span><span>${f.den}</span></div>`}${dibujo(f)}${f.etiqueta ? `<small>${esc(f.etiqueta)}</small>` : ''}</div>${i < fs.length - 1 && simbolo(i) ? `<span class="v-op">${simbolo(i)}</span>` : ''}`).join('')}</div>`;
   },
   recta(v) {
     const mid = `vf${++cuenta}`, W = 320, x0 = 16, x1 = W - 16, X = val => x0 + (val - v.min) / (v.max - v.min) * (x1 - x0), Y = 70;

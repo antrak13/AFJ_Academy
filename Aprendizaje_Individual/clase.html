@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="css/taller.css">
 <link rel="stylesheet" href="css/fichas.css">
 <link rel="stylesheet" href="css/clase.css">
+<link rel="stylesheet" href="css/prueba.css">
 </head>
 <body class="pag-clase">
 <header class="barra">
@@ -40,6 +41,7 @@
       <p class="cl-concepto" id="concepto"></p>
       <button class="btn btn-chico" id="btnPista" type="button" aria-expanded="false" aria-controls="pista">¿Cómo se lo explico?</button>
       <p class="cl-pista" id="pista" hidden></p>
+      <button class="btn btn-crear cl-btn-prueba" id="btnPrueba" type="button" hidden>Hacer la prueba juntos</button>
     </div>
     <details class="cl-mision"><summary>Su misión</summary><p id="mision"></p></details>
   </section>
@@ -73,6 +75,25 @@
     <div class="cl-vacio-acc"><a class="btn btn-crear" href="taller.html">Ir al taller</a><button class="btn" id="btnEjemplo" type="button">Probar con uno de ejemplo</button></div>
   </div>
 </section>
+
+<div class="prueba" id="prueba" hidden>
+  <div class="pr-caja" role="dialog" aria-modal="true" aria-labelledby="prTitulo">
+    <header class="pr-cab">
+      <div class="pr-tit"><small>La prueba de la misión · juntos</small><h2 id="prTitulo">La prueba</h2></div>
+      <ol class="pr-progreso" id="prProgreso" aria-label="Preguntas"></ol>
+      <span class="pr-equipo" id="prEquipo"></span>
+      <button class="pr-cerrar" id="prCerrar" type="button" aria-label="Salir de la prueba (se guarda)">✕</button>
+    </header>
+    <div class="pr-cuerpo">
+      <div class="pr-apr">
+        <div class="pr-globo" id="prGlobo" aria-live="polite"></div>
+        <div class="pr-av" id="prAv"></div>
+        <span class="pr-nombre" id="prNombre"></span>
+      </div>
+      <div class="pr-zona" id="prZona"></div>
+    </div>
+  </div>
+</div>
 
 <div class="nacimiento cl-final" id="final" hidden>
   <div class="nac-caja" role="dialog" aria-modal="true" aria-labelledby="finTit">

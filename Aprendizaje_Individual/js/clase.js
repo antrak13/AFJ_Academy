@@ -7,13 +7,16 @@ import { ESTADOS, PASOS, preguntaInicial, turnoLocal, resumenAprendin } from './
 import { htmlFicha, fichaLocal, limpiarFicha } from './fichas.js';
 import { activarFichas, animar } from './fichas-dom.js';
 import { DEMO } from './demo-aprendin.js';
+import { crearPrueba } from './prueba.js';
+import { demoClase } from './demo-clase.js';
 
 const $ = s => document.querySelector(s);
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const espera = ms => new Promise(ok => setTimeout(ok, RM ? 0 : ms));
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-let A = new URLSearchParams(location.search).has('ejemplo') ? DEMO : cargarAprendin();
+const EJEMPLO = new URLSearchParams(location.search).get('ejemplo');   // ?ejemplo=1 clase desde cero con Kori · ?ejemplo=prueba con los 4 pasos listos
+let A = EJEMPLO != null ? DEMO : cargarAprendin();
 // Estado de la clase: paso que le enseñas (1 a 4; 5 = terminó), mensajes, fichas y lo que midió la IA.
 let C = null, estrella = null, ia = false, ocupado = false, hablarVoz = false;
 const nuevo = () => ({ paso: 1, chat: [], fichas: {}, medicion: {}, pista: '' });
@@ -21,6 +24,14 @@ const guardar = () => guardarClase(A.id, C);
 const faseActual = () => Math.min(PASOS, C.paso - 1);
 const look = (nv = faseActual()) => A.fases[nv].look;
 const turnosDe = paso => C.chat.filter(m => m.paso === paso && m.de === 'yo').length;
+
+// La prueba de la misión (examen en equipo)
+const prueba = crearPrueba({
+  get A() { return A; }, get C() { return C; }, guardar: () => guardar(), ia: () => ia, aprendido: () => aprendido(),
+  alAprobar: r => mostrarFinal(r), alCambiar: () => { pintarAhora(); pintarMedicion(); },
+  alRepasar: () => { $('#fichas').scrollIntoView({ behavior: RM ? 'auto' : 'smooth' }); document.querySelectorAll('#fichas .vis').forEach(animar); }
+});
+$('#btnPrueba').addEventListener('click', () => prueba.abrir());
 
 /* ---------- Inicio ---------- */
 const marca = crearAprendin({ look: { forma: 'bollo', color: 'coral', rasgos: { ojos: 'grandes' }, piezas: { pelo: 'mechon' } }, emocion: 'feliz', seguir: false });
@@ -34,7 +45,8 @@ async function estadoIA() {
 function empezar() {
   if (!A) { $('#vacio').hidden = false; $('#clase').hidden = true; return; }
   $('#vacio').hidden = true; $('#clase').hidden = false;
-  C = cargarClase(A.id) || nuevo();
+  const guardada = cargarClase(A.id);
+  C = EJEMPLO === 'prueba' && A === DEMO ? (guardada?.paso > PASOS ? guardada : demoClase(A)) : guardada || nuevo();
   document.title = `Clase de ${A.nombre} · Aprendines`;
   $('#nombre').textContent = A.nombre;
   $('#deDonde').textContent = A.de ? `viene ${A.de}` : '';
@@ -46,6 +58,7 @@ function empezar() {
   $('#estrella').replaceChildren(estrella.el);
   pintarFases(); pintarAhora(); pintarChat(); pintarFichas(); pintarMedicion();
   for (const [p, f] of Object.entries(C.fichas)) if (f.estado !== 'lista') pedirFicha(Number(p));   // quedó a medias al recargar
+  if (C.paso >= PASOS) prueba.preparar();
   if (!C.chat.length) arrancar();
   else bloquear(false);
 }
@@ -79,6 +92,10 @@ function pintarAhora() {
   $('#concepto').textContent = fin ? `${A.nombre} ya es ${A.fases[PASOS].titulo}.` : A.fases[C.paso].concepto;
   $('#btnPista').hidden = fin;
   $('#pista').textContent = C.pista || pistaBase();
+  const pr = C.prueba, bp = $('#btnPrueba');
+  bp.hidden = !fin;
+  bp.textContent = !pr?.respuestas?.length ? 'Hacer la prueba juntos' : !pr.terminado ? 'Seguir con la prueba' : pr.aprobado ? `Prueba aprobada: ${pr.puntaje} de ${pr.examen.preguntas.length}` : 'Ver la prueba e intentar otra vez';
+  if (fin) $('#ahoraTit').textContent = pr?.aprobado ? '¡Misión cumplida!' : 'Falta la prueba de su misión';
 }
 const pistaBase = () => `Empieza con un ejemplo de su mundo (${A.mundo || 'lo que le gusta'}) y dile por qué funciona. Después deja que lo intente.`;
 $('#btnPista').addEventListener('click', () => {
@@ -92,6 +109,7 @@ function burbuja(m) {
   if (m.de === 'sis') {
     el.className = `cl-sis cl-sis-${m.tipo || 'info'}`;
     el.innerHTML = `<span>${esc(m.texto)}</span>`;
+    if (m.tipo === 'prueba') { const b = document.createElement('button'); b.className = 'btn btn-crear cl-sis-btn'; b.type = 'button'; b.textContent = 'Hacer la prueba juntos'; b.addEventListener('click', () => prueba.abrir()); el.append(b); }
     if (m.ficha) { el.classList.add('cl-sis-link'); el.addEventListener('click', () => document.getElementById(`ficha-${m.ficha}`)?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'start' })); }
     return el;
   }
@@ -175,6 +193,7 @@ async function subirDeFase(paso, t) {
   C.paso = paso + 1; guardar();
   const f = A.fases[paso];
   pedirFicha(paso);                     // la ficha se escribe mientras sigue la clase
+  if (paso === PASOS - 1 && ia) setTimeout(() => prueba.preparar(), 4000);   // el examen se arma mientras le enseñas el último paso
   await espera(500);
   $('#evoTxt').textContent = paso === PASOS ? '¡Transformación!' : '¡Evolucionó!';
   const evo = $('#evo'); evo.classList.remove('si'); void evo.offsetWidth; evo.classList.add('si');
@@ -184,7 +203,12 @@ async function subirDeFase(paso, t) {
   pintarFases(); pintarAhora(); C.pista = ''; $('#pista').textContent = pistaBase(); $('#pista').hidden = true; $('#btnPista').setAttribute('aria-expanded', 'false');
   await espera(1400);
   if (paso < PASOS) await decir(t.siguiente || preguntaInicial(A, paso + 1), 'curioso');
-  else { estrella.saltar(); await decir(`¡Lo logré! Ya puedo cumplir mi misión. Gracias por enseñarme ${A.tema}.`, 'agradecido'); await espera(900); mostrarFinal(); }
+  else {
+    estrella.saltar();
+    await decir(`¡Ya aprendí los ${PASOS} pasos! Ahora viene la prueba de mi misión… Solo no puedo: ¿la respondemos juntos?`, 'nervioso');
+    sistema('La prueba de la misión: la responden en equipo', 'prueba');
+    pintarAhora(); if (ia || C.fichas[PASOS]?.estado === 'lista') prueba.preparar();
+  }
 }
 
 /* ---------- Fichas ---------- */
@@ -204,6 +228,7 @@ async function pedirFicha(paso) {
   C.fichas[paso] = { estado: 'lista', datos: limpiarFicha(datos), nueva: true }; guardar();
   pintarFichas();
   sistema(`Nueva ficha: ${C.fichas[paso].datos.titulo}`, 'ficha', paso);
+  if (C.paso > PASOS && !ia) prueba.preparar();
 }
 function pintarFichas() {
   const caja = $('#fichas'), hechas = Object.values(C.fichas).filter(f => f.estado === 'lista').length;
@@ -233,6 +258,13 @@ function medir(paso, t, fuente) {
 }
 function pintarMedicion() {
   const caja = $('#medicionLista'); caja.replaceChildren();
+  const pr = C.prueba;
+  if (pr?.respuestas?.length) {
+    const rs = pr.respuestas.filter(r => r && r.eleccion != null), bien = rs.filter(r => r.bien).length;
+    const fila = document.createElement('div'); fila.className = 'cl-med cl-med-prueba';
+    fila.innerHTML = `<div class="cl-med-cab"><b>Prueba en equipo${pr.intento > 1 ? ` (intento ${pr.intento})` : ''}</b><span class="est-chips">${rs.map(r => `<i class="est ${r.bien ? 'est-entendio' : 'est-error'}" title="${r.bien ? 'Bien' : 'Mal'}${r.aprBien ? '' : ' · el aprendín cayó en la trampa'}"></i>`).join('')}</span></div><p>${bien} de ${rs.length} bien · lo salvó ${rs.filter(r => r.bien && !r.aprBien).length} ${rs.filter(r => r.bien && !r.aprBien).length === 1 ? 'vez' : 'veces'}</p>`;
+    caja.append(fila);
+  }
   for (let p = 1; p <= PASOS; p++) {
     const m = C.medicion[p], f = A.fases[p];
     const fila = document.createElement('div'); fila.className = 'cl-med';
@@ -245,13 +277,14 @@ function pintarMedicion() {
 
 /* ---------- Final ---------- */
 let finMini = null;
-function mostrarFinal() {
+function mostrarFinal(r) {
   const el = $('#final'); el.hidden = false; el.classList.add('listo');
   finMini?.destruir();
   finMini = crearAprendin({ look: A.fases[PASOS].look, emocion: 'orgulloso' });
   $('#finAprendin').replaceChildren(finMini.el);
   $('#finTit').textContent = `¡${A.nombre} es ${A.fases[PASOS].titulo}!`;
-  $('#finSub').textContent = `Le enseñaste ${A.tema} en ${PASOS} pasos y escribió ${PASOS} fichas con lo que aprendió. Ahora puede cumplir su misión.`;
+  $('#finSub').textContent = r ? `Le enseñaste ${A.tema} en ${PASOS} pasos y aprobaron juntos la prueba: ${r.bien} de ${r.n}${r.salvadas ? `, y lo salvaste ${r.salvadas === 1 ? 'una vez' : r.salvadas + ' veces'}` : ''}. ¡Misión cumplida!` : `Le enseñaste ${A.tema} en ${PASOS} pasos y escribió ${PASOS} fichas con lo que aprendió.`;
+  estrella?.sentir('orgulloso'); pintarAhora();
   setTimeout(() => finMini?.entender(), RM ? 0 : 700);
   $('#finFichas').focus();
 }

@@ -78,6 +78,7 @@ export function esquemaAprendin(modo = 'piezas') {
         dibujo: {
           type: 'object', description: 'Tu dibujo del disfraz: figuras SVG en las coordenadas del lienzo',
           properties: {
+            boceto: { type: 'string', description: 'Antes de dibujar: cómo se ve de frente el pelo (largo, volumen, forma, color), la ropa pieza por pieza con colores y sus 2 o 3 detalles inconfundibles. 3 a 5 oraciones' },
             pelo_atras: capa('Silueta del pelo (o casco, capucha, orejas) detrás de la cabeza'),
             pelo_frente: capa('Pelo sobre la frente, con el flequillo'),
             ropa: capa('Ropa sobre el cuerpo, desde y≈184 hacia abajo'),
@@ -85,7 +86,7 @@ export function esquemaAprendin(modo = 'piezas') {
             final_atras: capa('Pelo de la transformación, detrás (vacío si no tiene)'),
             final_frente: capa('Pelo de la transformación, sobre la frente (vacío si no tiene)')
           },
-          required: ['pelo_atras', 'pelo_frente', 'ropa', 'extra']
+          required: ['boceto', 'pelo_atras', 'pelo_frente', 'ropa', 'extra']
         },
         fases: { type: 'array', minItems: FASES, maxItems: FASES, items: fase }
       },
@@ -131,8 +132,9 @@ export function armarAprendin(r = {}, { gustos = '', tema = '', detalles = [], n
   // si la IA dibujó pero olvidó usar su dibujo en las fases, se agrega solo
   const usadas = new Set(entrada.flatMap(f => Object.entries(f?.agrega || {}).map(([z, a]) => `${z}:${a?.id}`)));
   const dj = base.dibujo || {}, auto = [{}, {}, {}, {}, {}];
-  if ((dj.pelo_atras || dj.pelo_frente) && !usadas.has('pelo:dibujo')) auto[0].pelo = { id: 'dibujo' };
-  if (dj.ropa && !usadas.has('cuerpo:dibujo')) auto[0].cuerpo = { id: 'dibujo' };
+  // el pelo y la ropa dibujados van siempre desde la fase 0: tiene que reconocerse apenas nace
+  if (dj.pelo_atras || dj.pelo_frente) auto[0].pelo = { id: 'dibujo' };
+  if (dj.ropa) auto[0].cuerpo = { id: 'dibujo' };
   if (dj.extra && !usadas.has('cabeza:dibujo')) auto[2].cabeza = { id: 'dibujo' };
   if ((dj.final_atras || dj.final_frente) && !usadas.has('pelo:dibujo_final')) auto[4].pelo = { id: 'dibujo_final' };
   const piezas = {}, fases = [];
@@ -141,7 +143,7 @@ export function armarAprendin(r = {}, { gustos = '', tema = '', detalles = [], n
     const f = entrada[i] || {};
     for (const z of ZONAS) {
       const a = f.agrega?.[z];
-      if (a && PIEZAS[z][a.id]) piezas[z] = { id: a.id, colores: [a.color1 || undefined, a.color2 || undefined] };
+      if (a && PIEZAS[z][a.id] && !(i > 0 && dj.ropa && z === 'cuerpo') && !(i > 0 && z === 'pelo' && piezas.pelo?.id === 'dibujo' && a.id !== 'dibujo_final')) piezas[z] = { id: a.id, colores: [a.color1 || undefined, a.color2 || undefined] };
     }
     for (const [z, a] of Object.entries(auto[i])) if (!(z === 'cabeza' && piezas.cabeza)) piezas[z] = a;
     if (i === FASES - 1 && f.color && PALETA[f.color]) colorCuerpo = f.color;

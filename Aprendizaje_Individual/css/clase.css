@@ -126,3 +126,6 @@
 @media (prefers-reduced-motion: reduce) {
   .cl-msg, .cl-sis, .cl-nueva, .cl-evo.si, .cl-evo.si b, .cl-fase.meta .mini, .cl-puntos i { animation: none !important; }
 }
+.cl-sis-btn { display: block; margin: 8px auto 0; }
+.cl-sis-prueba span { background: #1E1B3A; color: #fff; }
+.cl-sis-prueba span::before { content: '🏆 '; }

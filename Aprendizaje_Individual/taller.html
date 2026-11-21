@@ -75,6 +75,11 @@
           <label class="pregunta-txt" for="nombrePropio">¿Quieres ponerle nombre?</label>
           <input class="otra" id="nombrePropio" maxlength="14" autocomplete="off" placeholder="Si lo dejas vacío, la IA elige uno">
         </div>
+        <div class="calidad" role="radiogroup" aria-labelledby="tCalidad">
+          <span class="campo-nombre" id="tCalidad">Diseño</span>
+          <label><input type="radio" name="calidad" value="rapido" checked> <b>Rápido</b> <small>en unos segundos</small></label>
+          <label><input type="radio" name="calidad" value="maxima"> <b>Máxima calidad</b> <small>piensa más el dibujo, tarda 1 a 3 minutos</small></label>
+        </div>
         <div class="preguntas-acciones">
           <button class="btn btn-crear" type="button" id="btnNacer">¡Que nazca!</button>
           <button class="btn" type="button" id="btnSaltar">Saltar preguntas</button>

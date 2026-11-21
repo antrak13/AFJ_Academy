@@ -124,7 +124,7 @@ async function estadoIA() {
 }
 
 // Flujo: 1) gustos y tema → aparece el huevo y la IA hace 2 o 3 preguntas · 2) respuestas → la IA crea · 3) el huevo se rompe.
-const PASOS = ['Leyendo lo que te gusta…', 'Eligiendo su disfraz y sus colores…', 'Probándole el peinado…', 'Dividiendo el tema en pasos…', 'Pensando por qué lo necesita…', 'Ya casi sale del huevo…'];
+const PASOS = ['Leyendo lo que te gusta…', 'Imaginando cómo se ve de frente…', 'Dibujando su peinado mechón por mechón…', 'Eligiendo los colores exactos…', 'Cosiendo su ropa…', 'Agregando los detalles que lo hacen único…', 'Dividiendo el tema en pasos…', 'Pensando por qué lo necesita…', 'Dibujando su transformación…', 'Revisando que se parezca…', 'Ya casi sale del huevo…'];
 const pedido = { gustos: '', tema: '', preguntas: [], huevo: null };
 // El huevo se dibuja con los gustos: primero el que se deduce sin IA y, cuando la IA responde, el suyo.
 function pintarHuevo(h, cambio = false) {
@@ -200,7 +200,8 @@ async function crear(detalles) {
   const t0 = performance.now();
   try {
     if (!E.ia?.ia) throw new Error('sin IA');
-    const j = await pedirIA('/api/aprendin', { gustos: pedido.gustos, tema: pedido.tema, detalles, nombre });
+    const maxima = document.querySelector('input[name="calidad"]:checked')?.value === 'maxima';
+    const j = await pedirIA('/api/aprendin', { gustos: pedido.gustos, tema: pedido.tema, detalles, nombre, calidad: maxima ? 'maxima' : 'rapido' });
     a = j.aprendin; info = j.ia ? { ...j.ia, ensayo: j.ensayo } : null;
   } catch (err) {
     const falta = 2500 - (performance.now() - t0);
@@ -229,8 +230,10 @@ function abrirNacimiento() {
   n.el.className = 'nacimiento'; n.el.dataset.golpes = '0'; n.el.hidden = false;
   $('#nacTitulo').textContent = pedido.huevo?.nombre ? `Tu ${pedido.huevo.nombre.charAt(0).toLowerCase() + pedido.huevo.nombre.slice(1)} se está formando…` : 'Tu aprendín se está formando…';
   $('#nacListo').hidden = true; $('#nacClase').hidden = true; $('#nacAprendin').replaceChildren();
-  let i = 0; $('#nacSub').textContent = PASOS[0];
-  n.pasos = setInterval(() => { i = Math.min(i + 1, PASOS.length - 1); $('#nacSub').textContent = PASOS[i]; }, 2600);
+  let i = 0; const t0 = Date.now(), lento = document.querySelector('input[name="calidad"]:checked')?.value === 'maxima';
+  const reloj = () => { const s = Math.round((Date.now() - t0) / 1000); return lento && s >= 20 ? ` (${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')})` : ''; };
+  $('#nacSub').textContent = PASOS[0];
+  n.pasos = setInterval(() => { i = Math.min(i + 1, PASOS.length - 1); $('#nacSub').textContent = PASOS[i] + reloj(); }, lento ? 14000 : 2600);
   pintarGolpes(); $('#nacHuevo').focus();
 }
 function pintarGolpes() { $('#nacGolpes').querySelectorAll('i').forEach((el, i) => el.classList.toggle('dado', i < NAC.golpes)); }

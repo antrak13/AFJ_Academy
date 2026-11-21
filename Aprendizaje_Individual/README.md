@@ -21,7 +21,11 @@ En el estudio individual, el estudiante no recibe una explicación: **le enseña
 - Cuando entiende un paso, **evoluciona** a la fase siguiente y abre el próximo paso con una pregunta de su misión. Al cuarto paso se transforma y cumple su misión.
 - Sin IA, la clase funciona en modo práctica (pide ejemplos y entiende al segundo mensaje claro).
 
-**3. Fichas** (`fichas.html` muestra una de cada tipo)
+**3. La prueba de la misión, en equipo**
+
+Al terminar los 4 pasos llega la prueba de su misión: 5 preguntas de opción múltiple, dentro de su mundo, que el estudiante y el aprendín **responden juntos**. En cada pregunta el aprendín dice qué respuesta cree y cómo lo pensó; el estudiante decide la respuesta del equipo. El aprendín cae en la trampa (el error típico) justo en los pasos que le enseñaste con menos claridad según lo que midió la IA, así que a veces tienes que **salvarlo**. Al final se ve cuántas respondieron bien, cuántas veces lo salvaste y en qué paso se confundió. Con 3 de 5 aprueban y se cumple la misión; si no, repasan las fichas y piden otra prueba. La IA arma el examen mientras le enseñas el último paso; sin IA, se arma con sus fichas.
+
+**4. Fichas** (`fichas.html` muestra una de cada tipo)
 
 Cada paso aprendido deja una **ficha**: la idea clave, un **visual animado** que la IA elige entre 13 tipos y llena con datos de su mundo, un ejemplo resuelto, el «¡Ojo!» con el error en que cayó y la mejor frase que dijiste. Los tipos: pasos, ciclo, partes (mapa de conceptos), comparar, barras, torta, fracciones (pizzas o barras, con suma, resta o equivalencia; la cuenta la verifica el código), recta numérica con saltos, línea de tiempo, ecuación paso a paso, tabla, gráfico x-y e íconos. El código los dibuja y anima; el botón ↻ repite la animación.
 
@@ -34,9 +38,9 @@ cd Aprendizaje_Individual
 npm start              # o: node servidor.mjs
 ```
 
-Abre http://localhost:8080. Para probar la clase sin crear un aprendín: http://localhost:8080/clase.html?ejemplo=1
+Abre http://localhost:8080. Para probar la clase sin crear un aprendín: http://localhost:8080/clase.html?ejemplo=1 (desde cero) o http://localhost:8080/clase.html?ejemplo=prueba (con los 4 pasos listos, directo a la prueba en equipo)
 
-Variables: `MODO` (`dibujo` por defecto, o `piezas`), `MODELO` (por defecto `gemini-3.8-flash-low`; con `medium` el parecido fue igual y tardó 4 veces más), `MODELO_CREAR` (otro modelo solo para crear), `AGY` (por defecto `agy2`), `PUERTO`, `HOST`. Con `npm run ensayo`, cada huevo, aprendín, turno de la clase y ficha se guarda y, si se pide igual, se repite al instante, lo que sirve para ensayar el pitch.
+Variables: `MODO` (`dibujo` por defecto, o `piezas`), `MODELO` (por defecto `gemini-3.8-flash-low`, 16–38 s), `MODELO_CREAR` (otro modelo para crear en modo rápido), `MODELO_MAXIMO` (por defecto `gemini-3.8-flash-medium` para la opción «Máxima calidad» en el taller, 1–3 min), `AGY` (por defecto `agy2`), `PUERTO`, `HOST`. Con `npm run ensayo`, cada huevo, aprendín, turno de la clase, ficha y examen se guarda y, si se pide igual, se repite al instante, lo que sirve para ensayar el pitch.
 
 Sin IA, con cualquier servidor estático: `python3 -m http.server 8080` y abre http://localhost:8080/taller.html
 
@@ -50,9 +54,10 @@ Sin IA, con cualquier servidor estático: `python3 -m http.server 8080` y abre h
 | `js/huevo.js` | El huevo personalizado: patrones, formas y el diseño sin IA |
 | `js/creador.js` | Los esquemas que se le piden a la IA, el armado de las fases y el creador sin IA |
 | `js/turno.js` | Un turno de la clase: esquema, evaluación y modo sin IA |
+| `js/examen.js`, `js/prueba.js`, `css/prueba.css` | La prueba en equipo: el examen que arma la IA, en qué preguntas cae el aprendín y la pantalla de la prueba |
 | `js/fichas.js`, `js/fichas-dom.js` | Las fichas: esquema, validación, los 13 visuales y su animación |
 | `js/clase.js`, `clase.html`, `css/clase.css` | La página de la clase |
 | `js/taller.js`, `taller.html`, `css/taller.css` | La página del taller |
 | `servidor.mjs`, `ia/*.md` | El servidor que conecta con `agy2` y las instrucciones para la IA (preguntas y huevo, creación por dibujo o por piezas, turnos de la clase y fichas) |
-| `js/mundos.js`, `js/fichas-ejemplo.js`, `js/demo-aprendin.js` | Ejemplos: mundos listos, fichas de muestra y un aprendín para probar la clase |
+| `js/mundos.js`, `js/fichas-ejemplo.js`, `js/demo-aprendin.js`, `js/demo-clase.js` | Ejemplos: mundos listos, fichas de muestra, un aprendín y una clase terminada para probar |
 | `js/color.js`, `js/trazos.js`, `js/guardado.js` | Colores, utilidades de dibujo y guardado en el navegador |
