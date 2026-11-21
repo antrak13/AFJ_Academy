@@ -1,5 +1,6 @@
 // Helpers compartidos para generar, calibrar por aceptación y mostrar fichas de estudio (en fichas.html y dentro de clase.html).
 import { TIPOS, limpiarFichaInicio, fichaInicioLocal, htmlFicha } from './fichas.js';
+import { resumenAprendin } from './turno.js';
 
 export const CLAVE_ESTUDIO = 'aprendines.fichas.estudio';
 export const CLAVE_EFICACIA = 'aprendines.fichas.eficacia';
@@ -114,13 +115,14 @@ export function calcularCalibracion(historial = [], ef = cargarEficacia()) {
 
 export async function solicitarFichaInicio({ ia, tema, gustos, nivel = 'algo', reaccion = 'inicio', nota = '', objetivo = '', aprendin = null, historial = [], calibracion = null }) {
   const cal = calibracion || calcularCalibracion(historial);
+  const aprendinResumen = aprendin?.nombre ? resumenAprendin(aprendin) : null;
   let datos = null, fuente = 'ia';
   try {
     if (!ia) throw new Error('sin IA');
     const r = await fetch('/api/ficha-inicio', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tema, gustos, nivel, reaccion, nota, objetivo, aprendin, historial, calibracion: cal })
+      body: JSON.stringify({ tema, gustos, nivel, reaccion, nota, objetivo, aprendin: aprendinResumen, historial, calibracion: cal })
     });
     const j = await r.json();
     if (!j.ok || !j.ficha) throw new Error(j.error || r.status);

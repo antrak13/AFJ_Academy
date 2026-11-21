@@ -234,12 +234,28 @@ async function transcribirAudio(wavBuf, idioma = 'es') {
 }
 
 /* ---------- HTTP ---------- */
-function leerCuerpo(req, max = 4096) {
+function leerCuerpo(req, max = 32768) {
   return new Promise((ok, mal) => {
-    let s = '';
-    req.on('data', d => { s += d; if (s.length > max) { mal(new Error('pedido demasiado grande')); req.destroy(); } });
-    req.on('end', () => { try { ok(JSON.parse(s || '{}')); } catch { mal(new Error('JSON inválido')); } });
-    req.on('error', mal);
+    const partes = [];
+    let bytes = 0, fallado = false;
+    req.on('data', d => {
+      if (fallado) return;
+      bytes += d.length;
+      if (bytes > max) {
+        fallado = true;
+        const ruta = (req.url || '/').split('?')[0];
+        mal(Object.assign(new Error(`pedido demasiado grande (${req.method} ${ruta}: > ${max} B)`), { codigo: 413 }));
+        req.resume();
+        return;
+      }
+      partes.push(d);
+    });
+    req.on('end', () => {
+      if (fallado) return;
+      try { ok(JSON.parse(Buffer.concat(partes).toString('utf8') || '{}')); }
+      catch { mal(Object.assign(new Error('JSON inválido'), { codigo: 400 })); }
+    });
+    req.on('error', e => { if (!fallado) mal(e); });
   });
 }
 const json = (res, code, obj) => res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }).end(JSON.stringify(obj));
@@ -250,7 +266,7 @@ const servidor = http.createServer(async (req, res) => {
     if (url.pathname === '/api/estado') return json(res, 200, { ia: iaDisponible, proveedor: AGY, modelo: MODELO_CREAR, modeloPreguntas: MODELO, ensayo: ENSAYO, modo: MODO, modelos: MODELOS, modeloMaximo: MODELO_MAXIMO });
     if (url.pathname === '/api/aprendin' || url.pathname === '/api/preguntas') {
       if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'usa POST' });
-      const cuerpo = await leerCuerpo(req);
+      const cuerpo = await leerCuerpo(req, 32768);
       const g = String(cuerpo.gustos || '').trim().slice(0, 160), t = String(cuerpo.tema || '').trim().slice(0, 80);
       if (!g || !t) return json(res, 400, { ok: false, error: 'faltan los gustos o el tema' });
       if (!iaDisponible) return json(res, 503, { ok: false, error: `no está disponible ${AGY}` });
@@ -272,7 +288,7 @@ const servidor = http.createServer(async (req, res) => {
     if (url.pathname === '/api/examen') {
       if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'usa POST' });
       if (!iaDisponible) return json(res, 503, { ok: false, error: `no está disponible ${AGY}` });
-      const cuerpo = await leerCuerpo(req, 32768), a = resumenAprendin(cuerpo.aprendin);
+      const cuerpo = await leerCuerpo(req, 65536), a = resumenAprendin(cuerpo.aprendin);
       if (!a.nombre || !a.tema || a.conceptos.length < PASOS) return json(res, 400, { ok: false, error: 'falta el aprendín o sus pasos' });
       const fichas = (Array.isArray(cuerpo.fichas) ? cuerpo.fichas : []).slice(0, PASOS).map(x => String(x).replace(/\s+/g, ' ').slice(0, 300));
       const intento = Math.max(1, Math.min(20, parseInt(cuerpo.intento, 10) || 1));
@@ -284,7 +300,7 @@ const servidor = http.createServer(async (req, res) => {
     if (url.pathname === '/api/ficha-inicio') {
       if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'usa POST' });
       if (!iaDisponible) return json(res, 503, { ok: false, error: `no está disponible ${AGY}` });
-      const cuerpo = await leerCuerpo(req, 16384);
+      const cuerpo = await leerCuerpo(req, 65536);
       const tema = String(cuerpo.tema || '').replace(/\s+/g, ' ').trim().slice(0, 80);
       const gustos = String(cuerpo.gustos || '').replace(/\s+/g, ' ').trim().slice(0, 140) || 'vida cotidiana';
       if (!tema) return json(res, 400, { ok: false, error: 'falta el tema' });
@@ -306,11 +322,11 @@ const servidor = http.createServer(async (req, res) => {
     if (url.pathname === '/api/transcribir') {
       if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'usa POST' });
       if (!iaDisponible) return json(res, 503, { ok: false, error: `no está disponible ${AGY}` });
-      const cuerpo = await leerCuerpo(req, 3 * 1024 * 1024);
+      const cuerpo = await leerCuerpo(req, 6 * 1024 * 1024);
       const b64 = String(cuerpo.audioBase64 || '').replace(/^data:[^;]+;base64,/, '').trim();
-      if (!b64 || b64.length > 2.8 * 1024 * 1024) return json(res, 400, { ok: false, error: 'audio vacío o demasiado largo' });
+      if (!b64 || b64.length > 5.6 * 1024 * 1024) return json(res, 400, { ok: false, error: 'audio vacío o demasiado largo' });
       const wavBuf = Buffer.from(b64, 'base64');
-      if (wavBuf.length < 44 || wavBuf.length > 2 * 1024 * 1024 || wavBuf.toString('ascii', 0, 4) !== 'RIFF' || wavBuf.toString('ascii', 8, 12) !== 'WAVE') {
+      if (wavBuf.length < 44 || wavBuf.length > 4 * 1024 * 1024 || wavBuf.toString('ascii', 0, 4) !== 'RIFF' || wavBuf.toString('ascii', 8, 12) !== 'WAVE') {
         return json(res, 400, { ok: false, error: 'formato de audio inválido (se esperaba WAV)' });
       }
       console.log(`→ transcribir · ${Math.round(wavBuf.length / 1024)} KB`);
@@ -322,7 +338,7 @@ const servidor = http.createServer(async (req, res) => {
       if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'usa POST' });
       if (!iaDisponible) return json(res, 503, { ok: false, error: `no está disponible ${AGY}` });
       let d;
-      try { d = leerClase(await leerCuerpo(req, 32768)); } catch (e) { return json(res, e.codigo || 400, { ok: false, error: e.message }); }
+      try { d = leerClase(await leerCuerpo(req, 65536)); } catch (e) { return json(res, e.codigo || 400, { ok: false, error: e.message }); }
       if (url.pathname === '/api/turno') {
         if (!d.mensaje) return json(res, 400, { ok: false, error: 'falta el mensaje' });
         console.log(`→ turno · ${d.a.nombre} · paso ${d.paso} · «${d.mensaje.slice(0, 60)}»`);
@@ -345,7 +361,7 @@ const servidor = http.createServer(async (req, res) => {
     res.writeHead(200, { 'Content-Type': TIPOS[path.extname(abs).toLowerCase()] || 'application/octet-stream', 'Cache-Control': 'no-cache' }).end(req.method === 'HEAD' ? undefined : datos);
   } catch (e) {
     console.error('✗', e.message);
-    if (!res.headersSent) json(res, 500, { ok: false, error: e.message });
+    if (!res.headersSent) json(res, e.codigo || 500, { ok: false, error: e.message });
   }
 });
 
