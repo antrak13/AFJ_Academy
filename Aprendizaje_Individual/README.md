@@ -27,7 +27,7 @@ Al terminar los 4 pasos llega la prueba de su misión: 5 preguntas de opción m�
 
 **4. Fichas adaptativas y galería** (`fichas.html`)
 
-- **Fichas de inicio y estudio adaptativo**: escribes un tema y tus gustos (o usas tu aprendín), la IA genera una ficha visual animada eligiendo el mejor diseño entre los 13 tipos cuando aplica, y cada reacción («Lo entendí», «No entendí / más simple», «Otro ejemplo de mi mundo», «Dame un reto») adapta el nivel, el ejemplo y el tipo visual de la siguiente ficha. Sin IA, usa fichas adaptativas locales.
+- **Fichas de inicio y estudio adaptativo**: escribes un tema y tus gustos (o usas tu aprendín), la IA genera una ficha visual animada eligiendo el mejor diseño entre los 13 tipos cuando aplica, y cada reacción («Lo entendí», «No entendí / más simple», «Otro ejemplo de mi mundo», «Dame un reto») adapta el nivel, el ejemplo y el tipo visual de la siguiente ficha. También se pueden abrir y adaptar **dentro de `clase.html`** («📖 Ficha de este paso») para entender un concepto antes de explicárselo al aprendín. Sin IA, usa fichas adaptativas locales.
 - **Fichas de la clase y galería de los 13 tipos**: cada paso aprendido en `clase.html` deja una **ficha**: la idea clave, un **visual animado** que la IA elige entre 13 tipos y llena con datos de su mundo, un ejemplo resuelto, el «¡Ojo!» con el error en que cayó y la mejor frase que dijiste. Los tipos: pasos, ciclo, partes (mapa de conceptos), comparar, barras, torta, fracciones (pizzas o barras, con suma, resta o equivalencia; la cuenta la verifica el código), recta numérica con saltos, línea de tiempo, ecuación paso a paso, tabla, gráfico x-y e íconos. El código los dibuja y anima; el botón ↻ repite la animación.
 
 ## Cómo verlo

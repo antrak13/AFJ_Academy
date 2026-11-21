@@ -9,6 +9,7 @@ import { activarFichas, animar } from './fichas-dom.js';
 import { DEMO } from './demo-aprendin.js';
 import { crearPrueba } from './prueba.js';
 import { demoClase } from './demo-clase.js';
+import { cargarEstudio, guardarEstudio, solicitarFichaInicio, renderizarFichaEstudio, historialDe } from './fichas-apoyo.js';
 
 const $ = s => document.querySelector(s);
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -56,7 +57,7 @@ function empezar() {
   estrella?.destruir();
   estrella = crearAprendin({ look: look(), emocion: 'feliz' });
   $('#estrella').replaceChildren(estrella.el);
-  pintarFases(); pintarAhora(); pintarChat(); pintarFichas(); pintarMedicion();
+  pintarFases(); pintarAhora(); pintarChat(); pintarFichas(); pintarMedicion(); pintarApoyoLista();
   for (const [p, f] of Object.entries(C.fichas)) if (f.estado !== 'lista') pedirFicha(Number(p));   // quedó a medias al recargar
   if (C.paso >= PASOS) prueba.preparar();
   if (!C.chat.length) arrancar();
@@ -91,6 +92,7 @@ function pintarAhora() {
   $('#ahoraTit').textContent = fin ? '¡Aprendió todo el tema!' : `Paso ${C.paso} de ${PASOS} · le enseñas`;
   $('#concepto').textContent = fin ? `${A.nombre} ya es ${A.fases[PASOS].titulo}.` : A.fases[C.paso].concepto;
   $('#btnPista').hidden = fin;
+  $('#btnApoyo').hidden = fin;
   $('#pista').textContent = C.pista || pistaBase();
   const pr = C.prueba, bp = $('#btnPrueba');
   bp.hidden = !fin;
@@ -316,6 +318,101 @@ if (Rec) {
     mic.classList.add('grabando'); rec.start();
   });
 }
+
+/* ---------- Fichas de apoyo para estudiar durante la clase ---------- */
+let cargandoApoyo = false;
+function fichasEstudioTema() {
+  const s = cargarEstudio();
+  const prev = s && s.tema?.toLowerCase() === A.tema.toLowerCase() ? s.fichas : [];
+  const clase = C.apoyo || [];
+  const mismo = (a, b) => a.datos.titulo === b.datos.titulo && a.datos.visual.tipo === b.datos.visual.tipo;
+  return [...prev.filter(pf => !clase.some(cf => mismo(pf, cf))), ...clase];
+}
+function guardarApoyo(item) {
+  (C.apoyo ||= []).push(item); guardar();
+  const s = cargarEstudio();
+  if (s && s.tema?.toLowerCase() === A.tema.toLowerCase()) { s.fichas.push(item); guardarEstudio(s); }
+  else guardarEstudio({ activo: true, tema: A.tema, gustos: A.gustos || A.mundo, nivel: 'algo', usaAprendin: true, fichas: [...(C.apoyo || [])] });
+  pintarApoyoLista();
+}
+function marcarReaccionApoyo(r, nota) {
+  if (C.apoyo?.length) { const u = C.apoyo.at(-1); u.reaccion = r; u.nota = nota; guardar(); }
+  const s = cargarEstudio();
+  if (s?.fichas?.length && s.tema?.toLowerCase() === A.tema.toLowerCase()) {
+    const u = s.fichas.at(-1); u.reaccion = r; u.nota = nota; guardarEstudio(s);
+  }
+}
+function pintarApoyoLista() {
+  const todas = fichasEstudioTema(), det = $('#apoyoGuardadas'), lista = $('#apoyoMiniLista');
+  if (!det || !lista) return;
+  det.hidden = !todas.length;
+  $('#cuentaApoyo').textContent = String(todas.length);
+  lista.replaceChildren();
+  [...todas].reverse().forEach(it => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'cl-apoyo-mini';
+    b.innerHTML = `<span>${esc(it.datos.icono)} ${esc(it.datos.titulo)}</span><small>${esc(it.datos.visual.tipo)}</small>`;
+    b.addEventListener('click', () => abrirApoyo(false));
+    lista.append(b);
+  });
+}
+function pintarApoyoModal() {
+  const caja = $('#apoyoLista'); caja.replaceChildren();
+  const todas = fichasEstudioTema();
+  const av = svgAprendin(look(), { emocion: 'curioso' }), tono = tonos(look().color);
+  [...todas].reverse().forEach((item, revIdx) => {
+    const idx = todas.length - 1 - revIdx, esUltima = idx === todas.length - 1;
+    const wrap = document.createElement('div');
+    wrap.className = 'cl-ficha' + (esUltima ? ' cl-nueva' : '');
+    wrap.innerHTML = renderizarFichaEstudio(item, idx, { esUltima, gustos: A.gustos || A.mundo, avatar: av, tono, placeholder: 'Opcional: ¿qué parte de este paso no entiendes?' });
+    caja.append(wrap);
+  });
+  caja.querySelectorAll('.fi-reaccion-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (cargandoApoyo) return;
+      const r = btn.dataset.reaccion, nota = caja.querySelector('#notaDuda')?.value.trim() || '';
+      marcarReaccionApoyo(r, nota);
+      pedirApoyo(r, nota);
+    });
+  });
+  activarFichas(caja);
+  const vis = caja.querySelector('.vis'); if (vis) animar(vis);
+}
+async function pedirApoyo(reaccion, nota = '') {
+  if (cargandoApoyo || C.paso > PASOS) return;
+  cargandoApoyo = true;
+  $('#apoyoCargando').hidden = false;
+  document.querySelectorAll('#apoyoLista .fi-reaccion-btn').forEach(b => { b.disabled = true; });
+  const objetivo = A.fases[C.paso]?.concepto || '';
+  const { datos, fuente } = await solicitarFichaInicio({
+    ia, tema: A.tema, gustos: A.gustos || A.mundo, nivel: reaccion === 'inicio' ? 'cero' : 'algo',
+    reaccion, nota, objetivo, aprendin: A, historial: historialDe(fichasEstudioTema())
+  });
+  guardarApoyo({ paso: C.paso, datos, fuente, reaccionOrigen: reaccion, reaccion: null, nota });
+  cargandoApoyo = false;
+  $('#apoyoCargando').hidden = true;
+  pintarApoyoModal();
+}
+function abrirApoyo(autoGenerar = true) {
+  const pasoActual = Math.min(PASOS, C.paso);
+  const concepto = A.fases[pasoActual]?.concepto || A.tema;
+  $('#apoyoTit').textContent = `${pasoActual}. ${concepto}`;
+  $('#apoyoSub').textContent = `Para entenderlo antes de explicarle a ${A.nombre}`;
+  $('#apoyo').hidden = false; document.body.classList.add('con-prueba');
+  const todas = fichasEstudioTema();
+  const hayDelPaso = todas.some(f => f.paso === pasoActual);
+  pintarApoyoModal();
+  if (autoGenerar && !hayDelPaso && C.paso <= PASOS) pedirApoyo('inicio');
+  $('#apoyoCerrar').focus();
+}
+function cerrarApoyo(enfocarChat = false) {
+  $('#apoyo').hidden = true; document.body.classList.remove('con-prueba');
+  if (enfocarChat && C.paso <= PASOS) $('#msg').focus();
+}
+$('#btnApoyo').addEventListener('click', () => abrirApoyo(true));
+$('#apoyoCerrar').addEventListener('click', () => cerrarApoyo(false));
+$('#apoyoExplicar').addEventListener('click', () => cerrarApoyo(true));
+$('#apoyo').addEventListener('keydown', e => { if (e.key === 'Escape') cerrarApoyo(false); });
 
 /* ---------- Reiniciar y ejemplo ---------- */
 $('#btnReiniciar').addEventListener('click', () => {

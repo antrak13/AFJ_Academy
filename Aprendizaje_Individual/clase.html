@@ -39,7 +39,10 @@
     <div class="cl-ahora">
       <span class="cl-ahora-tit" id="ahoraTit">Ahora le enseñas</span>
       <p class="cl-concepto" id="concepto"></p>
-      <button class="btn btn-chico" id="btnPista" type="button" aria-expanded="false" aria-controls="pista">¿Cómo se lo explico?</button>
+      <div class="cl-ahora-acc">
+        <button class="btn btn-chico" id="btnPista" type="button" aria-expanded="false" aria-controls="pista">¿Cómo se lo explico?</button>
+        <button class="btn btn-chico cl-btn-apoyo" id="btnApoyo" type="button">📖 Ficha de este paso</button>
+      </div>
       <p class="cl-pista" id="pista" hidden></p>
       <button class="btn btn-crear cl-btn-prueba" id="btnPrueba" type="button" hidden>Hacer la prueba juntos</button>
     </div>
@@ -64,6 +67,11 @@
       <summary>Lo que midió la IA</summary>
       <p class="nota">Mientras conversan, la IA evalúa cada explicación sin ponerte nota. Así se ve dónde te trabaste.</p>
       <div id="medicionLista"></div>
+    </details>
+    <details class="cl-medicion cl-apoyo-lista" id="apoyoGuardadas" hidden>
+      <summary>Fichas para estudiar (<span id="cuentaApoyo">0</span>)</summary>
+      <p class="nota">Fichas visuales para entender cada concepto antes o mientras se lo explicas.</p>
+      <div id="apoyoMiniLista" class="cl-apoyo-minis"></div>
     </details>
   </aside>
 </main>
@@ -91,6 +99,22 @@
         <span class="pr-nombre" id="prNombre"></span>
       </div>
       <div class="pr-zona" id="prZona"></div>
+    </div>
+  </div>
+</div>
+
+<div class="cl-apoyo" id="apoyo" hidden>
+  <div class="cl-apoyo-caja" role="dialog" aria-modal="true" aria-labelledby="apoyoTit">
+    <header class="cl-apoyo-cab">
+      <div class="cl-apoyo-tit"><small id="apoyoSub">Ficha de apoyo para entender este paso</small><h2 id="apoyoTit">Ficha de estudio</h2></div>
+      <div class="cl-apoyo-cab-acc">
+        <button class="btn btn-fuerte btn-chico" id="apoyoExplicar" type="button">Ya lo entendí, ir a explicarle →</button>
+        <button class="pr-cerrar" id="apoyoCerrar" type="button" aria-label="Cerrar ficha de apoyo">✕</button>
+      </div>
+    </header>
+    <div class="cl-apoyo-cuerpo">
+      <div class="fi-cargando" id="apoyoCargando" hidden><p class="cargando">Armando una ficha visual adaptada a este paso…</p></div>
+      <div class="fi-feed" id="apoyoLista"></div>
     </div>
   </div>
 </div>

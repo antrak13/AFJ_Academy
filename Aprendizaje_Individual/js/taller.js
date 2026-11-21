@@ -396,5 +396,8 @@ $('#sorpresa').addEventListener('click', () => {
 });
 
 /* ---------- Inicio ---------- */
+const paramsInicio = new URLSearchParams(location.search);
+if (paramsInicio.get('gustos')) $('#gustos').value = paramsInicio.get('gustos');
+if (paramsInicio.get('tema')) $('#tema').value = paramsInicio.get('tema');
 teñir(); marcarEmocion(); pintarTodo(); estadoIA();
 setTimeout(() => { if (!E.creando && !E.ficha) decir(`¡Hola! Soy ${look().nombre} y vengo ${E.mundo.de}. Todavía no sé casi nada… ¿me enseñas?`, 'feliz'); }, 400);
