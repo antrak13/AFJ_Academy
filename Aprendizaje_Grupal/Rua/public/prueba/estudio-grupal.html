@@ -1,0 +1,2075 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Estudio en grupo · prueba</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='22' cy='30' r='14' fill='%23FF6B4D'/><circle cx='42' cy='30' r='14' fill='%2322B888' opacity='.9'/><circle cx='32' cy='44' r='14' fill='%23FFCB3D' opacity='.9'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Caveat:wght@500;700&family=Fraunces:ital,opsz,wght@0,9..144,500..800;1,9..144,500..700&display=swap">
+<style>
+/* Paleta y tipografía de Enséñale */
+:root {
+  --papel: #FBF7EF; --papel-2: #F3ECDF; --tinta: #23264A; --tinta-2: #565A7C; --tinta-3: #8D90A8; --linea: #E6DECF; --blanco: #fff;
+  --coral: #FF6B4D; --coral-2: #E24E30; --sol: #FFCB3D; --sol-2: #E0A21A; --menta: #22B888; --menta-2: #16956C; --cielo: #4E9DFF; --uva: #8E70FF;
+  --ambar-bg: #FFF4D6; --ambar-borde: #F3DC9C; --ambar-txt: #8A5A00;
+  --r-s: 12px; --r-m: 18px; --r-l: 26px;
+  --sombra-1: 0 1px 2px rgba(35, 38, 74, .06), 0 4px 14px rgba(35, 38, 74, .06);
+  --sombra-2: 0 2px 4px rgba(35, 38, 74, .05), 0 14px 38px rgba(35, 38, 74, .11);
+  --display: 'Fraunces', Georgia, serif; --texto: 'Atkinson Hyperlegible', system-ui, sans-serif; --mano: 'Caveat', 'Comic Sans MS', cursive;
+  --barra: 64px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body { font: 16px/1.5 var(--texto); color: var(--tinta); -webkit-font-smoothing: antialiased;
+  background: var(--papel) radial-gradient(circle at 1px 1px, rgba(35, 38, 74, .075) 1px, transparent 0) 0 0 / 24px 24px; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:disabled { cursor: default; opacity: .5; }
+input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--cielo); outline-offset: 2px; border-radius: 8px; }
+[hidden] { display: none !important; }
+
+/* Botones */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .5em; border: 0; border-radius: 999px; padding: .75em 1.35em; font-weight: 700; transition: transform .15s, box-shadow .15s, background .15s; white-space: nowrap; }
+.btn:active:not(:disabled) { transform: translateY(1px) scale(.98); }
+.btn-pri { background: var(--tinta); color: #fff; box-shadow: 0 4px 0 #0E1030, 0 10px 24px rgba(35, 38, 74, .22); }
+.btn-pri:hover:not(:disabled) { transform: translateY(-1px); }
+.btn-coral { background: var(--coral); color: #fff; box-shadow: 0 4px 0 var(--coral-2); }
+.btn-menta { background: var(--menta); color: #fff; box-shadow: 0 4px 0 var(--menta-2); }
+.btn-sol { background: var(--sol); color: var(--tinta); box-shadow: 0 3px 0 var(--sol-2); }
+.btn-sec { background: var(--blanco); border: 1.5px solid var(--linea); padding: .5em 1em; font-size: .88rem; box-shadow: var(--sombra-1); }
+.btn-sec:hover:not(:disabled) { border-color: var(--tinta-3); }
+.btn-sec.activo { background: var(--tinta); color: #fff; border-color: var(--tinta); }
+.btn-txt { background: none; border: 0; padding: .3em .2em; font-weight: 700; color: var(--tinta-2); text-decoration: underline; text-decoration-color: var(--linea); text-underline-offset: 4px; text-decoration-thickness: 2px; }
+.btn-txt:hover { color: var(--tinta); text-decoration-color: var(--coral); }
+.btn-chico { padding: .35em .8em; font-size: .8rem; }
+
+/* Barra */
+.barra { position: sticky; top: 0; z-index: 30; height: var(--barra); display: flex; align-items: center; gap: 14px; padding: 0 22px; background: rgba(251, 247, 239, .88); backdrop-filter: blur(10px); border-bottom: 1px solid var(--linea); }
+.marca { display: flex; align-items: center; gap: 10px; font: 700 1.25rem/1 var(--display); letter-spacing: -.02em; white-space: nowrap; }
+.marca b { color: var(--coral); }
+.marca .puntos3 { display: flex; }
+.marca .puntos3 i { width: 16px; height: 16px; border-radius: 50%; margin-left: -5px; border: 2px solid var(--papel); }
+.chip { display: inline-flex; align-items: center; gap: 8px; border: 1.5px solid var(--linea); background: var(--blanco); border-radius: 999px; padding: .38em .85em; font-size: .8rem; font-weight: 700; color: var(--tinta-2); white-space: nowrap; }
+.chip i.led { width: 9px; height: 9px; border-radius: 50%; background: var(--tinta-3); }
+.chip.ok i.led { background: var(--menta); box-shadow: 0 0 0 3px rgba(34, 184, 136, .2); }
+.chip.aviso i.led { background: var(--sol); animation: latido 1s infinite; }
+.chip.voz i.led { background: var(--coral); animation: latido 1s infinite; }
+.chip code { font: 700 .86rem/1 ui-monospace, monospace; letter-spacing: .12em; color: var(--tinta); }
+.barra-acc { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-wrap: nowrap; }
+@keyframes latido { 50% { transform: scale(1.45); opacity: .6; } }
+.kicker { display: inline-flex; align-items: center; gap: 8px; font: 700 .76rem/1 var(--texto); letter-spacing: .14em; text-transform: uppercase; color: var(--coral); margin: 0 0 12px; }
+.kicker::before { content: ''; width: 22px; height: 3px; border-radius: 3px; background: currentColor; }
+.et { margin: 0 0 4px; font: 700 .7rem/1 var(--texto); letter-spacing: .14em; text-transform: uppercase; color: var(--tinta-3); }
+
+/* Entrada (login y vestíbulo) */
+.entrada { max-width: 1120px; margin: 0 auto; padding: 48px 28px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 44px; align-items: start; }
+.entrada h1 { font: 700 clamp(2.2rem, 4vw, 3.4rem)/1.03 var(--display); letter-spacing: -.035em; margin: 0 0 14px; }
+.entrada h1 em { font-style: italic; font-weight: 600; background: linear-gradient(transparent 62%, color-mix(in srgb, var(--sol) 75%, transparent) 62% 92%, transparent 92%); }
+.bajada { font-size: 1.08rem; color: var(--tinta-2); margin: 0 0 22px; max-width: 46ch; }
+.lista-ideas { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.lista-ideas li { display: flex; gap: 12px; align-items: flex-start; color: var(--tinta-2); }
+.lista-ideas b { color: var(--tinta); }
+.lista-ideas .n { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: .8rem; color: #fff; flex-shrink: 0; }
+.form { background: var(--blanco); border-radius: var(--r-l); box-shadow: var(--sombra-2); padding: 26px; display: grid; gap: 18px; border: 1px solid rgba(230, 222, 207, .7); }
+.form h2 { margin: 0; font: 700 1.35rem/1.1 var(--display); }
+.campo { display: grid; gap: 6px; }
+.campo label { font-weight: 700; font-size: .9rem; }
+.in { width: 100%; border: 2px solid var(--linea); border-radius: var(--r-m); padding: .7em .95em; background: var(--papel); transition: border-color .15s, background .15s; }
+.in:focus { outline: 0; border-color: var(--tinta); background: #fff; }
+.in-codigo { font: 700 1.5rem/1 ui-monospace, monospace; letter-spacing: .3em; text-transform: uppercase; text-align: center; }
+.seg { display: inline-flex; background: var(--papel-2); border-radius: 999px; padding: 4px; gap: 2px; }
+.seg button { border: 0; background: none; border-radius: 999px; padding: .5em 1em; font-weight: 700; font-size: .88rem; color: var(--tinta-2); }
+.seg button[aria-pressed="true"] { background: var(--blanco); color: var(--tinta); box-shadow: var(--sombra-1); }
+.fila { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.separador { display: flex; align-items: center; gap: 12px; color: var(--tinta-3); font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; }
+.separador::before, .separador::after { content: ''; flex: 1; height: 1px; background: var(--linea); }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: .88rem; color: var(--tinta-2); }
+.check input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--menta); }
+.error-txt { color: var(--coral-2); font-weight: 700; margin: 0; font-size: .9rem; }
+.nota { margin: 0; font-size: .84rem; color: var(--tinta-2); background: var(--ambar-bg); border: 1px solid var(--ambar-borde); border-radius: var(--r-s); padding: 10px 12px; }
+.nota code { background: rgba(0, 0, 0, .05); padding: 1px 5px; border-radius: 5px; font-size: .8rem; }
+
+/* Sala */
+.sala { max-width: 1440px; margin: 0 auto; padding: 18px 22px 28px; display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; align-items: start; }
+.escenario { display: grid; gap: 14px; min-width: 0; }
+.titulo-clase { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.titulo-clase h1 { margin: 0; font: 700 1.6rem/1.1 var(--display); letter-spacing: -.02em; }
+.titulo-clase p { margin: 2px 0 0; color: var(--tinta-2); font-size: .9rem; }
+
+/* Reproductor */
+.reproductor { position: relative; background: #0E1030; border-radius: var(--r-l); overflow: hidden; box-shadow: var(--sombra-2); aspect-ratio: 16 / 9; isolation: isolate; }
+.reproductor video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #0E1030; transition: filter .4s; }
+.reproductor.atenuado video { filter: brightness(.55) saturate(.8); }
+.reproductor .clic { position: absolute; inset: 0; z-index: 1; }
+.capa { position: absolute; z-index: 5; }
+
+/* Avatares de integrantes */
+.av { --c: var(--cielo); width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--c); color: #fff; font: 700 .78rem/1 var(--texto); letter-spacing: .02em; border: 2.5px solid #fff; flex-shrink: 0; position: relative; box-shadow: var(--sombra-1); overflow: hidden; }
+.av img { width: 100%; height: 100%; object-fit: cover; }
+.av.habla { box-shadow: 0 0 0 3px var(--coral), 0 0 0 7px rgba(255, 107, 77, .25); animation: anillo 1.1s ease-in-out infinite; }
+@keyframes anillo { 50% { box-shadow: 0 0 0 3px var(--coral), 0 0 0 11px rgba(255, 107, 77, 0); } }
+.av.desfasado { box-shadow: 0 0 0 3px var(--sol); }
+.av.chico { width: 24px; height: 24px; font-size: .6rem; border-width: 2px; }
+
+/* Avatares arriba del video (co-presencia) */
+.presentes { top: 14px; left: 14px; display: flex; gap: 6px; align-items: center; }
+.presentes .av { width: 36px; height: 36px; }
+.estado-sala { top: 14px; right: 14px; display: flex; gap: 8px; }
+.estado-sala .chip { background: rgba(255, 255, 255, .92); border-color: transparent; }
+
+/* Aviso ámbar de desfase (reglas 6 a 8) */
+.aviso-desfase { left: 50%; top: 64px; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; background: var(--ambar-bg); border: 1.5px solid var(--ambar-borde); border-radius: 999px; padding: 6px 8px 6px 8px; box-shadow: var(--sombra-2); animation: entra .4s cubic-bezier(.3, 1.4, .5, 1) both; max-width: calc(100% - 28px); }
+.aviso-desfase .txt { font-size: .88rem; color: var(--ambar-txt); line-height: 1.2; }
+.aviso-desfase .txt b { color: var(--tinta); display: block; font-size: .92rem; }
+@keyframes entra { from { opacity: 0; transform: translate(-50%, -8px) scale(.97); } }
+
+/* Voz y auto-pausa (reglas 13 a 15) */
+.voz-capa { inset: 0; display: grid; place-items: center; pointer-events: none; }
+.voz-tarjeta { pointer-events: auto; background: #fff; border-radius: var(--r-l); padding: 18px 22px; display: grid; justify-items: center; gap: 10px; box-shadow: 0 20px 60px rgba(0, 0, 0, .35); min-width: 300px; text-align: center; animation: sube .4s cubic-bezier(.3, 1.4, .5, 1) both; }
+@keyframes sube { from { transform: translateY(20px) scale(.96); opacity: 0; } }
+.voz-tarjeta .av { width: 64px; height: 64px; font-size: 1.2rem; border-width: 3px; }
+.voz-tarjeta h3 { margin: 0; font: 700 1.2rem/1.2 var(--display); }
+.voz-tarjeta p { margin: 0; color: var(--tinta-2); font-size: .86rem; }
+.ondas { display: flex; gap: 4px; align-items: center; height: 26px; }
+.ondas i { width: 5px; border-radius: 4px; background: var(--coral); animation: onda .9s ease-in-out infinite; }
+.ondas i:nth-child(2) { animation-delay: .1s; } .ondas i:nth-child(3) { animation-delay: .2s; } .ondas i:nth-child(4) { animation-delay: .3s; } .ondas i:nth-child(5) { animation-delay: .4s; }
+@keyframes onda { 0%, 100% { height: 6px; } 50% { height: 26px; } }
+.cuenta { font: 800 3.2rem/1 var(--display); color: var(--menta); animation: late 1s ease-in-out infinite; }
+@keyframes late { 0% { transform: scale(1.25); opacity: .4; } 30% { transform: scale(1); opacity: 1; } }
+
+/* Tarjeta de la pregunta (reglas 17 a 23): compacta, flotando sobre el video */
+.control-capa { z-index: 7; inset: 0; display: grid; place-items: end center; padding: 16px 16px 104px; background: linear-gradient(transparent 35%, rgba(14, 16, 48, .45)); }
+.control { width: min(420px, 100%); max-height: 100%; overflow: auto; background: rgba(255, 255, 255, .97); border-radius: 18px; box-shadow: 0 18px 50px rgba(14, 16, 48, .32); padding: 14px 16px 12px; display: grid; gap: 10px; animation: entra-pregunta .3s cubic-bezier(.3, 1.3, .5, 1); scrollbar-width: thin; }
+@keyframes entra-pregunta { from { transform: translateY(12px) scale(.98); } }
+.control-cab { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.fase { font: 700 .66rem/1 var(--texto); letter-spacing: .14em; text-transform: uppercase; color: var(--tinta-3); }
+.fase.debate { color: var(--coral-2); }
+.fase.cerrada { color: var(--menta-2); }
+.reloj { font: 700 .78rem/1 ui-monospace, monospace; color: var(--tinta-2); background: var(--papel-2); border-radius: 999px; padding: 4px 8px; }
+.reloj.debate { color: var(--coral-2); background: #FFEDE8; }
+.control h2 { margin: 0; font: 700 1.02rem/1.3 var(--display); letter-spacing: -.005em; }
+.opciones { display: grid; gap: 6px; }
+.opcion { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; text-align: left; border: 1.5px solid var(--linea); background: #fff; border-radius: 12px; padding: 7px 10px; font-size: .86rem; line-height: 1.3; transition: border-color .15s, background .15s; position: relative; overflow: hidden; }
+.opcion:hover:not(:disabled) { border-color: var(--tinta-3); background: var(--papel); }
+.opcion:disabled { opacity: 1; }
+.opcion .letra { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--papel-2); font-weight: 700; font-size: .7rem; color: var(--tinta-2); }
+.opcion .txt { font-weight: 600; }
+.opcion .quien { display: flex; }
+.opcion .quien .av { margin-left: -6px; width: 20px; height: 20px; font-size: .5rem; border-width: 1.5px; }
+.opcion .barrita { position: absolute; left: 0; bottom: 0; height: 2px; background: var(--cielo); opacity: .6; transition: width .5s; }
+.opcion.mia { border-color: var(--tinta); }
+.opcion.mia .letra { background: var(--tinta); color: #fff; }
+.opcion.correcta { border-color: var(--menta); background: #F2FBF7; }
+.opcion.correcta .letra { background: var(--menta); color: #fff; }
+.opcion.incorrecta.mia { border-color: #F3B4A6; background: #FFF6F3; }
+.opcion.incorrecta.mia .letra { background: var(--coral); color: #fff; }
+.control-pie { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .76rem; color: var(--tinta-3); }
+.votantes { display: flex; align-items: center; gap: 6px; }
+.votantes .av { margin-left: -5px; width: 18px; height: 18px; font-size: .45rem; border-width: 1.5px; }
+.votantes .av.no { opacity: .3; filter: grayscale(1); }
+.explicacion { margin: 0; font-size: .82rem; line-height: 1.45; color: var(--tinta-2); border-left: 2px solid var(--menta); padding: 2px 0 2px 10px; }
+.explicacion b { color: var(--tinta); }
+.btn-continuar { border: 0; background: var(--tinta); color: #fff; border-radius: 999px; padding: 5px 12px; font-weight: 700; font-size: .76rem; }
+
+/* Controles del reproductor */
+.controles { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; padding: 34px 18px 12px; background: linear-gradient(transparent, rgba(14, 16, 48, .85)); color: #fff; display: grid; gap: 8px; }
+.linea-tiempo { position: relative; height: 46px; cursor: pointer; }
+.pista { position: absolute; left: 0; right: 0; bottom: 10px; height: 6px; border-radius: 99px; background: rgba(255, 255, 255, .25); }
+.pista .avance { position: absolute; left: 0; top: 0; bottom: 0; border-radius: inherit; background: var(--coral); }
+.zona { position: absolute; bottom: 7px; height: 12px; border-radius: 4px; background: repeating-linear-gradient(-45deg, rgba(255, 203, 61, .95) 0 5px, rgba(255, 203, 61, .6) 5px 10px); box-shadow: 0 0 0 1.5px rgba(255, 203, 61, .9); }
+.zona.leve { background: rgba(255, 203, 61, .35); box-shadow: none; }
+.zona-et { position: absolute; bottom: 26px; transform: translateX(-50%); white-space: nowrap; font: 700 .66rem/1 var(--texto); letter-spacing: .06em; background: var(--sol); color: var(--tinta); padding: 4px 7px; border-radius: 6px; pointer-events: none; }
+.zona-et::after { content: ''; position: absolute; left: 50%; bottom: -4px; width: 8px; height: 8px; background: var(--sol); transform: translateX(-50%) rotate(45deg); }
+.marca-cp { position: absolute; bottom: 7px; width: 12px; height: 12px; transform: translateX(-50%) rotate(45deg); background: #fff; border: 2.5px solid var(--uva); border-radius: 3px; }
+.marca-cp.cerrada { background: var(--menta); border-color: #fff; }
+.marca-cp.debate { background: var(--coral); border-color: #fff; }
+.punto-yo { position: absolute; bottom: 6px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transform: translateX(-50%); box-shadow: 0 0 0 4px rgba(255, 255, 255, .25), 0 2px 6px rgba(0, 0, 0, .4); z-index: 3; }
+.punto-amigo { position: absolute; bottom: 22px; transform: translateX(-50%); transition: left .9s linear; z-index: 2; }
+.punto-amigo .av { width: 22px; height: 22px; font-size: .55rem; border-width: 2px; }
+.punto-amigo::after { content: ''; position: absolute; left: 50%; top: 100%; width: 2px; height: 6px; background: #fff; transform: translateX(-50%); opacity: .8; }
+.barra-ctrl { display: flex; align-items: center; gap: 12px; }
+.b-ctrl { width: 38px; height: 38px; border-radius: 50%; border: 0; background: rgba(255, 255, 255, .14); color: #fff; display: grid; place-items: center; padding: 0; }
+.b-ctrl:hover:not(:disabled) { background: rgba(255, 255, 255, .26); }
+.b-ctrl svg { width: 18px; height: 18px; }
+.btn-sec svg, .chip svg, .b-cuaderno svg { width: 16px; height: 16px; flex-shrink: 0; vertical-align: -3px; }
+.b-ctrl.grande { width: 44px; height: 44px; background: #fff; color: var(--tinta); }
+.tiempo { font: 700 .86rem/1 ui-monospace, monospace; opacity: .9; }
+.espacio { flex: 1; }
+.vol { width: 90px; accent-color: #fff; }
+.b-vel { border: 1.5px solid rgba(255, 255, 255, .4); background: none; color: #fff; border-radius: 8px; padding: 3px 8px; font-weight: 700; font-size: .78rem; }
+.b-cuaderno { border: 0; background: #fff; color: var(--tinta); border-radius: 999px; padding: .45em 1em; font-weight: 700; font-size: .84rem; display: inline-flex; gap: 6px; align-items: center; }
+.b-cuaderno.activo { background: var(--sol); }
+
+/* Aviso de sesión */
+.aviso-sesion { display: flex; align-items: center; justify-content: space-between; gap: 14px; background: var(--blanco); border: 1.5px dashed var(--linea); border-radius: var(--r-m); padding: 12px 16px; font-size: .92rem; color: var(--tinta-2); }
+.aviso-sesion b { color: var(--tinta); }
+
+/* Panel lateral */
+.lado { display: grid; gap: 16px; position: sticky; top: calc(var(--barra) + 18px); max-height: calc(100dvh - var(--barra) - 36px); overflow-y: auto; scrollbar-width: thin; padding: 2px; }
+.tarjeta { background: var(--blanco); border-radius: var(--r-l); box-shadow: var(--sombra-2); border: 1px solid rgba(230, 222, 207, .7); padding: 18px; display: grid; gap: 12px; }
+.tarjeta-cab { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.tarjeta h3 { margin: 0; font: 700 1.1rem/1.2 var(--display); }
+.sinc { font: 700 .82rem/1 var(--texto); color: var(--menta-2); background: #DDF6EC; border-radius: 999px; padding: 5px 10px; white-space: nowrap; }
+.sinc.parcial { color: var(--ambar-txt); background: var(--ambar-bg); }
+.integrantes { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.integrante { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 8px; border-radius: var(--r-m); transition: background .2s; }
+.integrante.yo { background: var(--papel); }
+.integrante .nombre { font-weight: 700; font-size: .94rem; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; line-height: 1.2; }
+.integrante .sub { font-size: .78rem; color: var(--tinta-3); }
+.integrante .sub.amb { color: var(--ambar-txt); font-weight: 700; }
+.tag { font: 700 .62rem/1 var(--texto); letter-spacing: .08em; text-transform: uppercase; padding: 3px 6px; border-radius: 6px; background: var(--papel-2); color: var(--tinta-2); }
+.tag.host { background: #EDE7FF; color: var(--uva); }
+.tag.off { background: #F1F1F4; color: var(--tinta-3); }
+.integrante.desconectado { opacity: .5; }
+.pos { font: 700 .8rem/1 ui-monospace, monospace; color: var(--tinta-2); }
+.vacio { color: var(--tinta-3); font-size: .86rem; margin: 0; }
+
+.fr-lista { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.fr-item { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: .86rem; padding: 7px 10px; border-radius: var(--r-s); background: var(--papel); }
+.fr-item.zona-si { background: var(--ambar-bg); border: 1px solid var(--ambar-borde); }
+.fr-item b { font-family: ui-monospace, monospace; }
+
+/* Cuaderno del squad (pantalla 05) */
+.lado-paneles { display: grid; gap: 16px; }
+.nb { background: #FFFDF7; border-radius: var(--r-l); box-shadow: var(--sombra-2); border: 1px solid rgba(230, 222, 207, .7); display: flex; flex-direction: column; height: min(680px, calc(100dvh - var(--barra) - 110px)); min-height: 420px; overflow: hidden; }
+.nb-cab { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 14px 16px 10px; border-bottom: 1px solid var(--linea); }
+.nb-cab h3 { margin: 0; font: 700 1.05rem/1.1 var(--display); }
+.nb-sync { display: inline-flex; align-items: center; gap: 6px; font: 700 .66rem/1 var(--texto); letter-spacing: .08em; text-transform: uppercase; color: var(--menta-2); background: #DDF6EC; padding: 5px 8px; border-radius: 999px; }
+.nb-sync.guardando { color: var(--ambar-txt); background: var(--ambar-bg); }
+.nb-sync i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.nb-herr { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 12px; border-bottom: 1px solid var(--linea); background: var(--papel); }
+.nb-herr button { border: 1px solid transparent; background: transparent; border-radius: 8px; padding: 5px 9px; font: 700 .82rem/1 var(--texto); color: var(--tinta-2); cursor: pointer; }
+.nb-herr button:hover { background: #fff; border-color: var(--linea); color: var(--tinta); }
+.nb-herr .sep { width: 1px; background: var(--linea); margin: 2px 4px; }
+.nb-herr .cap { margin-left: auto; color: var(--coral-2); }
+.nb-cuerpo { flex: 1; min-height: 0; overflow-y: auto; padding: 12px 10px 18px 4px; scrollbar-width: thin; }
+.nb-bloque { position: relative; display: grid; grid-template-columns: 22px 1fr; gap: 2px; align-items: start; padding: 3px 0; border-radius: 8px; }
+.nb-bloque.arrastrando { opacity: .4; }
+.nb-bloque.destino { box-shadow: 0 -2px 0 var(--cielo); }
+.nb-asa { cursor: grab; color: var(--tinta-3); opacity: 0; font-size: .9rem; line-height: 1.6; text-align: center; user-select: none; }
+.nb-bloque:hover .nb-asa, .nb-bloque:focus-within .nb-asa { opacity: 1; }
+.nb-txt { outline: 0; min-height: 1.5em; padding: 3px 8px; border-radius: 6px; font: 400 .95rem/1.55 var(--texto); color: var(--tinta); white-space: pre-wrap; word-break: break-word; }
+.nb-txt:focus { background: rgba(78, 157, 255, .06); }
+.nb-txt:empty::before { content: attr(data-ph); color: var(--tinta-3); }
+.nb-bloque.titulo .nb-txt { font: 700 1.35rem/1.25 var(--display); }
+.nb-bloque.codigo .nb-txt { font: 500 .84rem/1.5 ui-monospace, SFMono-Regular, monospace; background: #F1F0FA; color: #3B2F87; }
+.nb-txt code { font: 500 .85em ui-monospace, monospace; background: #F1F0FA; color: #3B2F87; padding: 1px 5px; border-radius: 5px; }
+.nb-frame { margin: 2px 8px; border-radius: 12px; overflow: hidden; border: 1px solid var(--linea); background: #fff; }
+.nb-frame img { display: block; width: 100%; cursor: pointer; }
+.nb-frame figcaption { display: flex; justify-content: space-between; gap: 8px; padding: 7px 10px; font: 600 .74rem/1.2 var(--texto); color: var(--tinta-2); }
+.nb-frame figcaption b { color: var(--coral-2); }
+.nb-autor { position: absolute; right: 6px; top: -7px; font: 700 .64rem/1 var(--texto); padding: 3px 6px; border-radius: 999px; color: #fff; background: var(--c, var(--tinta-3)); opacity: 0; transition: opacity .2s; pointer-events: none; }
+.nb-bloque:hover .nb-autor { opacity: .9; }
+.nb-bloque.otro-edita .nb-txt, .nb-bloque.otro-edita .nb-frame { box-shadow: inset 2px 0 0 var(--c); background: color-mix(in srgb, var(--c) 7%, transparent); }
+.nb-bloque.otro-edita .nb-autor { opacity: 1; }
+.nb-nuevo { display: block; width: calc(100% - 22px); margin: 6px 0 0 22px; text-align: left; border: 0; background: transparent; color: var(--tinta-3); font: 400 .92rem/1.5 var(--texto); padding: 4px 8px; border-radius: 6px; cursor: text; }
+.nb-nuevo:hover { background: var(--papel); }
+.nb-pie { padding: 9px 14px; border-top: 1px solid var(--linea); font: 600 .72rem/1.35 var(--texto); color: var(--tinta-3); background: var(--papel); }
+.nb-menu { position: absolute; z-index: 30; left: 30px; top: 100%; background: #fff; border: 1px solid var(--linea); border-radius: 12px; box-shadow: var(--sombra-2); padding: 6px; display: grid; min-width: 210px; }
+.nb-menu button { text-align: left; border: 0; background: transparent; padding: 7px 10px; border-radius: 8px; font: 600 .86rem/1.2 var(--texto); color: var(--tinta); cursor: pointer; }
+.nb-menu button small { display: block; font-weight: 400; color: var(--tinta-3); }
+.nb-menu button:hover, .nb-menu button.activo { background: var(--papel-2); }
+.argumenta { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; color: var(--tinta); }
+.auto-pausa { font: 600 .78rem/1 var(--texto); color: var(--sol); }
+
+/* Diálogos */
+dialog { border: 0; border-radius: var(--r-l); padding: 0; width: min(560px, calc(100% - 32px)); box-shadow: 0 30px 80px rgba(0, 0, 0, .3); color: var(--tinta); }
+dialog::backdrop { background: rgba(28, 30, 60, .55); backdrop-filter: blur(4px); }
+dialog form { padding: 24px; display: grid; gap: 14px; background: var(--papel); }
+dialog h2 { margin: 0; font: 700 1.4rem/1.1 var(--display); }
+
+/* Inicio: cursos, amigos e invitaciones */
+.inicio { max-width: 1240px; margin: 0 auto; padding: 32px 24px 48px; display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 26px; align-items: start; }
+.inicio h1 { font: 700 clamp(1.9rem, 3vw, 2.6rem)/1.05 var(--display); letter-spacing: -.03em; margin: 0 0 6px; }
+.inicio h1 em { font-style: italic; background: linear-gradient(transparent 62%, color-mix(in srgb, var(--sol) 75%, transparent) 62% 92%, transparent 92%); }
+.curso { background: var(--blanco); border-radius: var(--r-l); box-shadow: var(--sombra-2); border: 1px solid rgba(230, 222, 207, .7); padding: 22px; display: grid; gap: 14px; margin-top: 18px; }
+.curso h2 { margin: 0; font: 700 1.35rem/1.1 var(--display); }
+.curso > p { margin: 0; color: var(--tinta-2); font-size: .92rem; }
+.clases { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.clase { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; padding: 12px 14px; border-radius: var(--r-m); background: var(--papel); border: 1.5px solid transparent; transition: border-color .15s, background .15s; }
+.clase:hover { border-color: var(--linea); background: #fff; }
+.clase .num { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--tinta); color: #fff; font-weight: 700; font-size: .85rem; }
+.clase .tit { font-weight: 700; }
+.clase .meta { font-size: .8rem; color: var(--tinta-3); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 3px; }
+.fantasma-chip { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; font-weight: 700; color: var(--uva); background: #EFEAFF; border-radius: 999px; padding: 3px 9px 3px 4px; }
+.fantasma-chip .pila { display: flex; }
+.fantasma-chip .pila .av { margin-left: -6px; opacity: .8; }
+.fantasma-chip .pila .av:first-child { margin-left: 0; }
+.amigo { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 6px 4px; }
+.amigo .nombre { font-weight: 700; font-size: .92rem; }
+.amigo .sub { font-size: .76rem; color: var(--tinta-3); }
+.amigo .acc { display: flex; gap: 6px; }
+.lista-simple { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.invitacion { display: grid; gap: 8px; padding: 12px; border-radius: var(--r-m); background: #FFF1EE; border: 1.5px solid #FFD3C8; }
+.invitacion p { margin: 0; font-size: .9rem; }
+.form-linea { display: flex; gap: 8px; }
+.form-linea .in { padding: .55em .8em; }
+.campana { position: relative; }
+.campana .n { position: absolute; top: -5px; right: -5px; min-width: 18px; height: 18px; border-radius: 9px; background: var(--coral); color: #fff; font: 700 .66rem/18px var(--texto); text-align: center; padding: 0 4px; }
+
+/* Pestañas del panel lateral de la clase */
+.pestanas { display: flex; gap: 4px; background: var(--papel-2); border-radius: 999px; padding: 4px; position: sticky; top: 0; z-index: 2; }
+.pestanas button { flex: 1; border: 0; background: none; border-radius: 999px; padding: .5em .6em; font-weight: 700; font-size: .86rem; color: var(--tinta-2); display: inline-flex; justify-content: center; align-items: center; gap: 6px; }
+.pestanas button[aria-selected="true"] { background: var(--blanco); color: var(--tinta); box-shadow: var(--sombra-1); }
+.pestanas .n { min-width: 18px; height: 18px; border-radius: 9px; background: var(--coral); color: #fff; font: 700 .66rem/18px var(--texto); padding: 0 5px; }
+
+/* Chat de la sesión */
+.chat { background: var(--blanco); border-radius: var(--r-l); box-shadow: var(--sombra-2); border: 1px solid rgba(230, 222, 207, .7); display: grid; grid-template-rows: auto 1fr auto; height: min(640px, calc(100dvh - var(--barra) - 110px)); min-height: 380px; overflow: hidden; }
+.chat-cab { padding: 12px 16px; border-bottom: 1px solid var(--linea); font-size: .8rem; color: var(--tinta-3); }
+.chat-cab b { display: block; font: 700 1.05rem/1.2 var(--display); color: var(--tinta); }
+.chat-lista { overflow-y: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; scrollbar-width: thin; }
+.msg { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: start; }
+.msg .cuerpo { background: var(--papel); border-radius: 4px 14px 14px 14px; padding: 7px 11px; font-size: .9rem; line-height: 1.4; word-break: break-word; }
+.msg .quien { font: 700 .74rem/1 var(--texto); color: var(--tinta-2); display: flex; gap: 6px; align-items: center; margin-bottom: 3px; }
+.msg .min { font: 700 .68rem/1 ui-monospace, monospace; color: var(--cielo); background: #E3EEFF; border: 0; border-radius: 5px; padding: 2px 5px; }
+.msg.mio .cuerpo { background: #E3EEFF; }
+.msg.fantasma { opacity: .78; }
+.msg.fantasma .cuerpo { background: #F3EFFF; border: 1px dashed #CFC3FF; }
+.chat-form { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--linea); background: var(--papel); }
+.chat-form .in { padding: .55em .9em; border-radius: 999px; }
+.burbujas { left: 14px; bottom: 112px; display: grid; gap: 6px; max-width: min(360px, 60%); pointer-events: none; }
+.burbuja { display: flex; gap: 8px; align-items: center; background: rgba(14, 16, 48, .78); color: #fff; border-radius: 999px; padding: 4px 12px 4px 4px; font-size: .84rem; animation: toast .35s both; backdrop-filter: blur(4px); }
+.burbuja .av { width: 24px; height: 24px; font-size: .6rem; border-width: 2px; }
+.burbuja.fantasma { background: rgba(80, 60, 160, .72); }
+
+/* Micrófono en la barra del reproductor */
+.b-mic { position: relative; width: 40px; height: 40px; border-radius: 50%; border: 0; display: grid; place-items: center; padding: 0; background: rgba(255, 255, 255, .14); color: #fff; transition: background .15s, box-shadow .15s; }
+.b-mic svg { width: 19px; height: 19px; }
+.b-mic:hover:not(:disabled) { background: rgba(255, 255, 255, .26); }
+.b-mic.apagado { background: var(--coral); }
+.b-mic.hablando { box-shadow: 0 0 0 3px var(--menta), 0 0 0 7px rgba(34, 184, 136, .3); }
+.b-mic .etiqueta { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); white-space: nowrap; background: #fff; color: var(--tinta); font: 700 .72rem/1 var(--texto); padding: 5px 8px; border-radius: 6px; opacity: 0; pointer-events: none; transition: opacity .15s; }
+.b-mic:hover .etiqueta, .b-mic:focus-visible .etiqueta { opacity: 1; }
+.grabando { display: inline-flex; align-items: center; gap: 6px; font: 700 .72rem/1 var(--texto); color: #FFB3A3; }
+.grabando i { width: 8px; height: 8px; border-radius: 50%; background: var(--coral); animation: latido 1s infinite; }
+.b-audio { border: 1.5px solid #fff; background: none; color: #fff; border-radius: 999px; padding: 4px 10px; font-weight: 700; font-size: .76rem; }
+
+/* Fantasmas */
+.punto-amigo.fantasma .av { opacity: .6; border-style: dashed; filter: saturate(.6); }
+.punto-amigo.fantasma::after { opacity: .4; }
+.presentes .av.fantasma { opacity: .55; border-style: dashed; width: 30px; height: 30px; }
+.zona.fantasma { background: repeating-linear-gradient(-45deg, rgba(142, 112, 255, .7) 0 5px, rgba(142, 112, 255, .35) 5px 10px); box-shadow: 0 0 0 1px rgba(142, 112, 255, .8); bottom: 4px; height: 6px; }
+.marca-disc { position: absolute; bottom: 4px; width: 10px; height: 10px; transform: translateX(-50%); border-radius: 50%; background: var(--uva); border: 2px solid #fff; z-index: 1; }
+.fant-sesion { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; padding: 10px; border-radius: var(--r-m); border: 1.5px solid var(--linea); background: var(--papel); text-align: left; width: 100%; }
+.fant-sesion[aria-pressed="true"] { border-color: var(--uva); background: #F3EFFF; }
+.fant-sesion .t { font-weight: 700; font-size: .9rem; }
+.fant-sesion .s { font-size: .76rem; color: var(--tinta-3); }
+.fantasma-capa { z-index: 6; inset: 0; display: grid; place-items: center; pointer-events: none; }
+.fantasma-capa .voz-tarjeta { border: 2px dashed #CFC3FF; }
+.fantasma-capa .pila { display: flex; gap: 6px; }
+.fantasma-capa .pila .av { opacity: .55; }
+.fantasma-capa .pila .av.habla { opacity: 1; }
+.progreso { width: 220px; height: 5px; border-radius: 5px; background: var(--papel-2); overflow: hidden; }
+.progreso i { display: block; height: 100%; background: var(--uva); width: 0; }
+.votos-fantasma { display: grid; gap: 6px; padding: 9px 10px; border-radius: 12px; background: #F6F3FF; font-size: .78rem; color: var(--tinta-2); }
+.votos-fantasma b { color: var(--tinta); }
+.votos-fantasma .fila-v { display: flex; align-items: center; gap: 8px; }
+.nb-tabs { display: flex; gap: 4px; }
+.nb-tabs button { border: 0; background: var(--papel-2); border-radius: 999px; padding: 4px 10px; font: 700 .74rem/1 var(--texto); color: var(--tinta-2); }
+.nb-tabs button[aria-pressed="true"] { background: var(--tinta); color: #fff; }
+.nb-solo-lectura .nb-bloque { grid-template-columns: 1fr; }
+.amigo-check { display: grid; grid-template-columns: auto auto 1fr auto; gap: 10px; align-items: center; padding: 8px 10px; border-radius: var(--r-m); background: #fff; border: 1.5px solid var(--linea); }
+.amigo-check input { width: 18px; height: 18px; accent-color: var(--coral); }
+.toast .acc { margin-left: 10px; pointer-events: auto; background: #fff; color: var(--tinta); border: 0; border-radius: 999px; padding: 3px 10px; font-weight: 700; font-size: .8rem; }
+.toast.con-acc { pointer-events: auto; }
+
+/* Avisos flotantes */
+.avisos { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 90; display: grid; gap: 8px; justify-items: center; pointer-events: none; }
+.toast { background: var(--tinta); color: #fff; border-radius: 999px; padding: 9px 16px; font-size: .88rem; font-weight: 600; box-shadow: var(--sombra-2); animation: toast .35s cubic-bezier(.3, 1.4, .5, 1) both; }
+.toast.error { background: var(--coral-2); }
+@keyframes toast { from { opacity: 0; transform: translateY(10px); } }
+audio { display: none; }
+
+@media (max-width: 1080px) {
+  .sala, .inicio { grid-template-columns: 1fr; }
+  .lado { position: static; max-height: none; }
+}
+@media (max-width: 760px) {
+  .entrada { grid-template-columns: 1fr; padding: 24px 16px; gap: 24px; }
+  .barra { padding: 0 10px; gap: 8px; }
+  .marca span.txt { display: none; }
+  .sala { padding: 10px; }
+  .vol, .b-vel { display: none; }
+  .aviso-desfase { top: 56px; border-radius: var(--r-m); }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<header class="barra">
+  <div class="marca"><span class="puntos3" aria-hidden="true"><i style="background:var(--coral)"></i><i style="background:var(--menta)"></i><i style="background:var(--sol)"></i></span><span class="txt">Estudio <b>en grupo</b></span></div>
+  <div class="barra-acc" id="barraAcc"></div>
+</header>
+<main id="vista"></main>
+<div class="avisos" id="avisos" aria-live="polite"></div>
+<div id="audios"></div>
+
+<dialog id="dlgInvitar">
+  <form method="dialog" id="formInvitar">
+    <h2>Invitar amigos a esta clase</h2>
+    <p class="vacio" style="margin-top:-6px">Les llega un aviso ahora mismo. Si no pueden, cuando vean esta clase te encontrarán como fantasma.</p>
+    <div id="invLista" style="display:grid;gap:8px"></div>
+    <p class="error-txt" id="invErr" hidden></p>
+    <div class="fila" style="justify-content:flex-end">
+      <button type="button" class="btn btn-sec" id="invCancelar">Cancelar</button>
+      <button type="submit" class="btn btn-coral" id="invEnviar">Invitar</button>
+    </div>
+  </form>
+</dialog>
+
+<script type="module">
+// Prueba de interfaz del estudio grupal (F1 a F6) sobre el backend real:
+// rutas /api/grupo/*, Supabase Auth + Realtime (Presence y Broadcast) y LiveKit para la voz.
+// Las reglas puras de sincronía y voz son una copia en JS de lib/grupo/sincronia.ts y lib/grupo/voz.ts.
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.119.2';
+import { Room, RoomEvent, Track } from 'https://esm.sh/livekit-client@2.25.0';
+
+/* ============ Utilidades ============ */
+const $ = (sel, el = document) => el.querySelector(sel);
+const h = (tag, attrs = {}, ...kids) => {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'style') el.style.cssText = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (k === 'html') el.innerHTML = v;
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : String(k));
+  return el;
+};
+const poner = (el, ...kids) => el.replaceChildren(...kids.flat().filter(k => k != null && k !== false));
+const mmss = s => { s = Math.max(0, Math.floor(s || 0)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+const aSegundos = t => { const m = String(t).trim().match(/^(\d+):(\d{1,2})$/); return m ? +m[1] * 60 + +m[2] : Number(t); };
+const LETRAS = ['A', 'B', 'C', 'D'];
+const COLORES = ['#FF6B4D', '#22B888', '#4E9DFF', '#8E70FF', '#FF9A2E', '#E0549B'];
+const colorDe = id => COLORES[[...String(id)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7) % COLORES.length];
+const iniciales = n => (String(n || '?').trim().split(/\s+/).slice(0, 2).map(p => p[0]).join('') || '?').toUpperCase();
+const primerNombre = n => String(n || 'Alguien').trim().split(/\s+/)[0];
+function avisoAccion(txt, etiqueta, fn) {
+  const t = h('div', { class: 'toast con-acc' }, txt, h('button', { class: 'acc', onclick: () => { t.remove(); fn(); } }, etiqueta));
+  $('#avisos').append(t);
+  setTimeout(() => t.remove(), 12000);
+}
+function aviso(txt, error = false) {
+  const t = h('div', { class: 'toast' + (error ? ' error' : '') }, txt);
+  $('#avisos').append(t);
+  setTimeout(() => t.remove(), 3800);
+}
+const ICONOS = {
+  play: '<path d="M8 5.5v13l11-6.5z" fill="currentColor"/>',
+  pausa: '<path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/>',
+  atras: '<path d="M11 7l-5 5 5 5M18 7l-5 5 5 5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
+  mic: '<rect x="9" y="3" width="6" height="11.5" rx="3" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
+  micOff: '<path d="M9 9v2.5a3 3 0 0 0 5.2 2M15 10V6a3 3 0 0 0-6 0M5.5 11a6.5 6.5 0 0 0 10.8 4.9M18.5 11a6.4 6.4 0 0 1-.4 2.2M12 17.5V21M4 4l16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
+  lapiz: '<path d="M4.5 19.5l1-4.5L16 4.5l3.5 3.5L9 18.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
+  enlace: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
+  campana: '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>',
+  volver: '<path d="M14 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
+  invitar: '<circle cx="9" cy="8" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 19c.8-3.2 3.2-5 6-5s5.2 1.8 6 5M18 8v6M15 11h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'
+};
+const ico = n => { const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('aria-hidden', 'true'); s.innerHTML = ICONOS[n]; return s; };
+function avatar(p, extra = '') {
+  const el = h('span', { class: 'av ' + extra, style: `--c:${colorDe(p.userId)}`, title: p.nombre || '' });
+  if (p.avatar) el.append(h('img', { src: p.avatar, alt: '' })); else el.append(iniciales(p.nombre));
+  return el;
+}
+
+/* ============ Reglas puras (copia de lib/grupo/*.ts) ============ */
+const UMBRAL_DESFASE_S = 30;
+const mediana = v => { if (!v.length) return null; const s = [...v].sort((a, b) => a - b), m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+function calcularSincronia(lista) {
+  const r = lista.map(yo => {
+    const med = mediana(lista.filter(o => o.userId !== yo.userId).map(o => o.posicion));
+    const dif = med === null ? 0 : yo.posicion - med;
+    return { userId: yo.userId, posicion: yo.posicion, medianaResto: med, diferencia: dif, desfasado: Math.abs(dif) > UMBRAL_DESFASE_S };
+  });
+  return { integrantes: r, sincronizados: r.filter(x => !x.desfasado).length, total: r.length };
+}
+function causaDesfase(e) {
+  if (e.pausaPorVoz || e.estado === 'hablando') return 'conversando';
+  if (e.cuadernoActivo || e.estado === 'escribiendo') return 'tomando notas';
+  if (e.retrocedio) return 'repasando';
+  if (e.estado === 'pausado') return 'en pausa';
+  return null;
+}
+const VOLUMEN_HABLANDO = .15, SILENCIO_MS = 3000, CUENTA_MS = 3000;
+function reducirVoz(s, ev) {
+  switch (ev.tipo) {
+    case 'reanudar_manual': case 'pausa_manual': return { modo: 'normal' };
+    case 'mantener_pausa': return s.modo === 'pausa_voz' || s.modo === 'cuenta_regresiva' ? { modo: 'pausa_mantenida' } : s;
+    case 'oradores':
+      if (s.modo === 'pausa_mantenida') return s;
+      if (ev.hablando) return s.modo === 'normal' && !ev.reproduciendo ? s : { modo: 'pausa_voz', silencioDesde: null };
+      if (s.modo === 'pausa_voz' && s.silencioDesde === null) return { modo: 'pausa_voz', silencioDesde: ev.ahora };
+      return s;
+    case 'tick':
+      if (s.modo === 'pausa_voz' && s.silencioDesde !== null && ev.ahora - s.silencioDesde >= SILENCIO_MS) return { modo: 'cuenta_regresiva', inicio: ev.ahora };
+      if (s.modo === 'cuenta_regresiva' && ev.ahora - s.inicio >= CUENTA_MS) return { modo: 'normal' };
+      return s;
+  }
+  return s;
+}
+function efectosVoz(s, ahora) {
+  if (s.modo === 'normal') return { pausado: false, volumen: 1, cuenta: null };
+  if (s.modo === 'cuenta_regresiva') return { pausado: true, volumen: VOLUMEN_HABLANDO, cuenta: Math.max(1, Math.ceil((CUENTA_MS - (ahora - s.inicio)) / 1000)) };
+  return { pausado: true, volumen: VOLUMEN_HABLANDO, cuenta: null };
+}
+
+/* ============ Conexión: Supabase y API ============ */
+let sb = null;
+let yo = null; // { id, nombre, avatar, telemetria }
+async function configurar() {
+  const r = await fetch('/api/config/publica').then(r => r.json()).catch(() => ({}));
+  if (!r.supabaseUrl || !r.supabaseAnonKey) throw new Error('Falta configurar NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY en .env.local');
+  sb = createClient(r.supabaseUrl, r.supabaseAnonKey);
+}
+async function api(ruta, { method = 'GET', body } = {}) {
+  const { data } = await sb.auth.getSession();
+  const res = await fetch('/api' + ruta, {
+    method,
+    headers: { 'content-type': 'application/json', ...(data.session ? { authorization: 'Bearer ' + data.session.access_token } : {}) },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) { const e = new Error(json.error?.mensaje || `Error ${res.status}`); e.codigo = json.error?.codigo; e.status = res.status; throw e; }
+  return json;
+}
+async function cargarYo(user) {
+  const { data } = await sb.from('profiles').select('id, nombre, avatar, telemetria, grabar_voz').eq('id', user.id).maybeSingle();
+  yo = { id: user.id, email: user.email, nombre: data?.nombre || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Yo', avatar: data?.avatar || null, telemetria: !!data?.telemetria, grabarVoz: !!data?.grabar_voz };
+}
+
+/* ============ Barra ============ */
+function barra(...kids) { poner($('#barraAcc'), ...kids); }
+function botonSalirCuenta() {
+  return h('button', { class: 'btn-sec', onclick: async () => { await salirDeSala(); await sb.auth.signOut(); location.href = location.pathname; } }, 'Cerrar sesión');
+}
+
+/* ============ Pantalla: acceso ============ */
+function pantallaAcceso(error) {
+  barra();
+  let modo = 'entrar';
+  const err = h('p', { class: 'error-txt', hidden: !error }, error || '');
+  const nombre = h('input', { class: 'in', id: 'nom', autocomplete: 'name', placeholder: 'Cómo te verán en la sala' });
+  const campoNombre = h('div', { class: 'campo', hidden: true }, h('label', { for: 'nom' }, 'Tu nombre'), nombre);
+  const correo = h('input', { class: 'in', id: 'cor', type: 'email', autocomplete: 'email', required: true });
+  const clave = h('input', { class: 'in', id: 'cla', type: 'password', autocomplete: 'current-password', minlength: 6, required: true });
+  const tele = h('input', { type: 'checkbox', checked: true });
+  const campoTele = h('label', { class: 'check', hidden: true }, tele, h('span', {}, 'Acepto que se registren mis respuestas a las preguntas de las clases para ajustar mi perfil de aprendizaje. Puedo desactivarlo cuando quiera.'));
+  const btn = h('button', { class: 'btn btn-pri', type: 'submit' }, 'Entrar');
+  const seg = h('div', { class: 'seg', role: 'group' },
+    h('button', { type: 'button', 'aria-pressed': 'true', onclick: e => cambiar('entrar', e.target) }, 'Entrar'),
+    h('button', { type: 'button', 'aria-pressed': 'false', onclick: e => cambiar('crear', e.target) }, 'Crear cuenta'));
+  function cambiar(m, b) {
+    modo = m;
+    seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    campoNombre.hidden = campoTele.hidden = m !== 'crear';
+    btn.textContent = m === 'crear' ? 'Crear cuenta' : 'Entrar';
+  }
+  const form = h('form', { class: 'form', onsubmit: async e => {
+    e.preventDefault(); err.hidden = true; btn.disabled = true;
+    try {
+      if (modo === 'crear') {
+        const { data, error } = await sb.auth.signUp({ email: correo.value, password: clave.value, options: { data: { full_name: nombre.value.trim() || correo.value.split('@')[0] }, emailRedirectTo: location.href } });
+        if (error) throw error;
+        if (!data.session) { err.textContent = 'Revisa tu correo para confirmar la cuenta y vuelve a entrar.'; err.hidden = false; btn.disabled = false; return; }
+        sessionStorage.setItem('telemetria', tele.checked ? '1' : '0');
+      } else {
+        const { error } = await sb.auth.signInWithPassword({ email: correo.value, password: clave.value });
+        if (error) throw error;
+      }
+      await arrancar();
+    } catch (x) { err.textContent = x.message; err.hidden = false; btn.disabled = false; }
+  } },
+    h('h2', {}, 'Entra a estudiar'),
+    seg, campoNombre,
+    h('div', { class: 'campo' }, h('label', { for: 'cor' }, 'Correo'), correo),
+    h('div', { class: 'campo' }, h('label', { for: 'cla' }, 'Contraseña'), clave),
+    campoTele, err,
+    h('div', { class: 'fila' }, btn),
+    h('div', { class: 'separador' }, 'o'),
+    h('button', { type: 'button', class: 'btn btn-sec', onclick: () => sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.href } }) }, 'Continuar con Google'));
+  poner($('#vista'), h('section', { class: 'entrada' }, introSala(), form));
+}
+function introSala() {
+  return h('div', {},
+    h('p', { class: 'kicker' }, 'Prueba del estudio grupal'),
+    h('h1', {}, 'Tus cursos, ', h('em', {}, 'con tus amigos')),
+    h('p', { class: 'bajada' }, 'Si tú y tus amigos estudian en la misma plataforma, vean las clases juntos: en vivo, o en diferido con sus fantasmas.'),
+    h('ul', { class: 'lista-ideas' },
+      h('li', {}, h('span', { class: 'n', style: 'background:var(--cielo)' }, '1'), h('span', {}, h('b', {}, 'En vivo. '), 'Invitas a tus amigos a la clase: ves dónde va cada uno, hablan por voz y chatean.')),
+      h('li', {}, h('span', { class: 'n', style: 'background:var(--uva)' }, '2'), h('span', {}, h('b', {}, 'En diferido. '), 'Si ya la vieron, te acompañan como fantasmas: su avance, su chat, sus notas y la voz de sus discusiones.')),
+      h('li', {}, h('span', { class: 'n', style: 'background:var(--sol);color:var(--tinta)' }, '3'), h('span', {}, h('b', {}, 'Zonas de fricción. '), 'Donde el grupo retrocede, la línea se marca en ámbar.')),
+      h('li', {}, h('span', { class: 'n', style: 'background:var(--menta)' }, '4'), h('span', {}, h('b', {}, 'Preguntas. '), 'En momentos clave la clase se detiene: respondes sin ver a los demás y, si no coinciden, debaten 90 s.'))));
+}
+
+/* ============ Canal personal: invitaciones y amistades en vivo ============ */
+const U = { canal: null, invitaciones: [], amigos: null, enInicio: false };
+function conectarUsuario() {
+  if (U.canal) return;
+  U.canal = sb.channel(`usuario:${yo.id}`);
+  U.canal.on('broadcast', { event: '*' }, ({ event, payload: p }) => {
+    if (event === 'invitacion') {
+      if (R?.datos.sala.id === p.roomId) return;
+      avisoAccion(`${primerNombre(p.deNombre)} te invita a ver «${p.clase}» ahora`, 'Unirme', () => unirseAInvitacion(p.codigo));
+      cargarInvitaciones();
+    } else if (event === 'amistad_solicitada') {
+      avisoAccion(`${primerNombre(p.deNombre)} quiere ser tu amigo`, 'Ver', () => { if (!U.enInicio) volverAInicio(); });
+      if (U.enInicio) pintarAmigos();
+    } else if (event === 'amistad_aceptada') {
+      aviso(`${primerNombre(p.deNombre)} aceptó tu amistad`);
+      if (U.enInicio) pintarAmigos();
+    }
+  });
+  U.canal.subscribe();
+}
+async function cargarInvitaciones() {
+  try { U.invitaciones = (await api('/invitaciones')).invitaciones; } catch { U.invitaciones = []; }
+  pintarCampana();
+  if (U.enInicio) pintarInvitaciones();
+}
+function pintarCampana() {
+  const b = $('#campana'); if (!b) return;
+  const n = U.invitaciones.length;
+  poner(b, ico('campana'), n ? h('span', { class: 'n' }, String(n)) : null);
+  b.title = n ? `${n} invitación${n === 1 ? '' : 'es'} a ver una clase` : 'Sin invitaciones';
+}
+function botonCampana() {
+  return h('button', { class: 'btn-sec campana', id: 'campana', 'aria-label': 'Invitaciones', onclick: () => { if (!U.enInicio) volverAInicio(); else $('#cajaInv')?.scrollIntoView({ behavior: 'smooth' }); } });
+}
+async function unirseAInvitacion(codigo) {
+  if (R) await salirDeSala();
+  await entrarASala(codigo);
+}
+
+/* ============ Pantalla: inicio (mis cursos, amigos e invitaciones) ============ */
+async function volverAInicio() {
+  if (R) await salirDeSala();
+  history.replaceState(null, '', location.pathname);
+  pantallaInicio();
+}
+async function pantallaInicio(msg) {
+  U.enInicio = true;
+  barra(botonCampana(), h('span', { class: 'chip' }, avatar({ userId: yo.id, nombre: yo.nombre, avatar: yo.avatar }, 'chico'), yo.nombre), botonSalirCuenta());
+  poner($('#vista'), h('section', { class: 'inicio' },
+    h('div', {},
+      h('p', { class: 'kicker' }, 'Tus cursos'),
+      h('h1', {}, 'Elige una clase y ', h('em', {}, 'mírala con tus amigos')),
+      h('p', { class: 'bajada' }, 'En vivo, si los invitas ahora. O en diferido: si ya la vieron, te acompañan como fantasmas, con su chat, sus notas y la voz de lo que discutieron.'),
+      msg ? h('p', { class: 'nota' }, msg) : null,
+      h('div', { id: 'cursos' }, h('p', { class: 'vacio' }, 'Cargando cursos…'))),
+    h('aside', { style: 'display:grid;gap:16px' },
+      h('section', { class: 'tarjeta', id: 'cajaInv', hidden: true }),
+      h('section', { class: 'tarjeta', id: 'cajaAmigos' }, h('h3', {}, 'Amigos'), h('p', { class: 'vacio' }, 'Cargando…')),
+      h('section', { class: 'tarjeta', id: 'cajaPref' }))));
+  pintarPreferencias();
+  cargarInvitaciones();
+  pintarAmigos();
+  try {
+    const { cursos } = await api('/clases');
+    pintarCursos(cursos);
+  } catch (x) { poner($('#cursos'), h('p', { class: 'nota' }, 'No se pudieron cargar los cursos: ' + x.message)); }
+}
+function pintarCursos(cursos) {
+  const caja = $('#cursos'); if (!caja) return;
+  if (!cursos.length) return poner(caja, h('p', { class: 'nota' }, 'No hay cursos. Carga ', h('code', {}, 'supabase/seed.sql'), ' en tu proyecto.'));
+  poner(caja, cursos.map(c => h('section', { class: 'curso' },
+    h('div', {}, h('p', { class: 'et' }, 'Curso'), h('h2', {}, c.titulo)),
+    c.descripcion ? h('p', {}, c.descripcion) : null,
+    h('ol', { class: 'clases' }, c.clases.map((v, i) => {
+      const personas = [...new Map(v.fantasmas.flatMap(f => f.personas).map(p => [p.id, p])).values()];
+      return h('li', { class: 'clase' },
+        h('span', { class: 'num' }, String(v.orden || i + 1)),
+        h('div', {},
+          h('div', { class: 'tit' }, v.titulo),
+          h('div', { class: 'meta' }, h('span', {}, mmss(v.duracion)),
+            personas.length ? h('span', { class: 'fantasma-chip', title: 'Tus amigos ya vieron esta clase: los verás como fantasmas' },
+              h('span', { class: 'pila' }, personas.slice(0, 4).map(p => avatar({ userId: p.id, nombre: p.nombre, avatar: p.avatar }, 'chico'))),
+              `${listaNombres(personas.map(p => p.nombre))} ${personas.length === 1 ? 'la vio' : 'la vieron'}`) : null)),
+        h('button', { class: 'btn btn-pri btn-chico', onclick: e => { e.target.disabled = true; abrirClase(v.id).catch(x => { aviso(x.message, true); e.target.disabled = false; }); } }, 'Ver clase'));
+    })))));
+}
+function pintarInvitaciones() {
+  const caja = $('#cajaInv'); if (!caja) return;
+  caja.hidden = !U.invitaciones.length;
+  poner(caja, h('h3', {}, 'Te invitan ahora'),
+    U.invitaciones.map(i => h('div', { class: 'invitacion' },
+      h('p', {}, h('b', {}, primerNombre(i.deNombre)), ` te invita a ver «${i.clase}»`, i.curso ? ` · ${i.curso}` : ''),
+      h('div', { class: 'fila' },
+        h('button', { class: 'btn btn-coral btn-chico', onclick: () => unirseAInvitacion(i.codigo) }, 'Unirme'),
+        h('button', { class: 'btn-txt', onclick: async () => { await api(`/invitaciones/${i.roomId}`, { method: 'DELETE' }).catch(() => {}); cargarInvitaciones(); } }, 'Ahora no')))));
+}
+async function pintarAmigos() {
+  const caja = $('#cajaAmigos'); if (!caja) return;
+  let d;
+  try { d = await api('/amigos'); U.amigos = d.amigos; } catch (x) { return poner(caja, h('h3', {}, 'Amigos'), h('p', { class: 'nota' }, x.message)); }
+  const correo = h('input', { class: 'in', type: 'email', placeholder: 'correo@de-tu-amigo.com', required: true, 'aria-label': 'Correo de tu amigo' });
+  const err = h('p', { class: 'error-txt', hidden: true });
+  const fila = (a, ...acc) => h('li', { class: 'amigo' }, avatar({ userId: a.id, nombre: a.nombre, avatar: a.avatar }), h('div', {}, h('div', { class: 'nombre' }, a.nombre || 'Sin nombre')), h('div', { class: 'acc' }, ...acc));
+  poner(caja,
+    h('div', { class: 'tarjeta-cab' }, h('h3', {}, 'Amigos'), h('span', { class: 'sinc' }, String(d.amigos.length))),
+    d.recibidas.length ? h('div', {}, h('p', { class: 'et' }, 'Quieren ser tus amigos'),
+      h('ul', { class: 'lista-simple' }, d.recibidas.map(a => fila(a,
+        h('button', { class: 'btn btn-menta btn-chico', onclick: async () => { await api(`/amigos/${a.id}`, { method: 'POST' }).catch(x => aviso(x.message, true)); pintarAmigos(); } }, 'Aceptar'),
+        h('button', { class: 'btn-txt', onclick: async () => { await api(`/amigos/${a.id}`, { method: 'DELETE' }).catch(() => {}); pintarAmigos(); } }, 'No'))))) : null,
+    d.amigos.length ? h('ul', { class: 'lista-simple' }, d.amigos.map(a => fila(a))) : h('p', { class: 'vacio' }, 'Aún no tienes amigos aquí. Agrégalos con el correo de su cuenta.'),
+    d.enviadas.length ? h('div', {}, h('p', { class: 'et' }, 'Esperando respuesta'), h('ul', { class: 'lista-simple' }, d.enviadas.map(a => fila(a, h('span', { class: 'tag off' }, 'Pendiente'))))) : null,
+    h('form', { class: 'form-linea', onsubmit: async e => {
+      e.preventDefault(); err.hidden = true;
+      try {
+        const r = await api('/amigos', { method: 'POST', body: { correo: correo.value.trim() } });
+        aviso(r.estado === 'aceptada' ? 'Ya son amigos' : 'Solicitud enviada'); pintarAmigos();
+      } catch (x) { err.textContent = x.message; err.hidden = false; }
+    } }, correo, h('button', { class: 'btn btn-sec', type: 'submit' }, 'Agregar')),
+    err);
+}
+function pintarPreferencias() {
+  const caja = $('#cajaPref'); if (!caja) return;
+  const pref = (campo, texto) => h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: yo[campo === 'telemetria' ? 'telemetria' : 'grabarVoz'], onchange: async e => {
+    const { error } = await sb.from('profiles').update({ [campo]: e.target.checked }).eq('id', yo.id);
+    if (error) { aviso('No se pudo guardar la preferencia', true); e.target.checked = !e.target.checked; return; }
+    if (campo === 'telemetria') yo.telemetria = e.target.checked; else yo.grabarVoz = e.target.checked;
+    aviso('Preferencia guardada');
+  } }), h('span', {}, texto));
+  poner(caja, h('h3', {}, 'Privacidad'),
+    pref('telemetria', 'Usar mis respuestas a las preguntas de las clases para mi perfil de aprendizaje.'),
+    pref('grabar_voz', 'Guardar mi voz cuando discutimos en una clase, para que mis amigos la escuchen si la ven después. Sin esto, tu voz solo se oye en vivo.'));
+}
+const listaNombres = ns => { const n = ns.map(primerNombre); return n.length <= 1 ? (n[0] || '') : `${n.slice(0, -1).join(', ')} y ${n.at(-1)}`; };
+
+/* ============ Abrir una clase / entrar por invitación ============ */
+async function abrirClase(videoId) {
+  const { codigo } = await api(`/clases/${videoId}/sesion`, { method: 'POST' });
+  await abrirSala(codigo);
+}
+async function entrarASala(codigo) {
+  try {
+    await api(`/grupo/salas/${codigo}/unirse`, { method: 'POST' });
+    await abrirSala(codigo);
+  } catch (x) {
+    const txt = x.codigo === 'SALA_LLENA' ? 'Esa sesión ya tiene 5 personas.' : x.codigo === 'SALA_CERRADA' ? 'Esa sesión ya terminó. Puedes ver la clase y te acompañarán como fantasmas.' : x.status === 403 ? 'Necesitas una invitación para entrar a esa sesión.' : x.message;
+    history.replaceState(null, '', location.pathname);
+    pantallaInicio(txt);
+  }
+}
+
+/* ============ Sala ============ */
+let R = null; // estado de la sala abierta
+function nuevaSala(datos) {
+  return {
+    codigo: datos.sala.codigo, datos, canal: null,
+    presencia: new Map(), // userId -> EstadoIntegrante de quien está conectado
+    conectados: new Set(), estados: new Map(), // Presence (quién) + Broadcast "estado" (dónde va)
+    anfitrionAusenteDesde: null,
+    motivos: new Set(['manual']), // por qué mi video está detenido: manual | voz | control | espera | fantasma
+    volumen: 1, velocidad: 1, factorVoz: 1,
+    ultimaPos: 0, retrocedioHasta: 0, buscando: false,
+    esperandoA: null,
+    voz: { room: null, conectada: false, mic: false, oradores: [], estado: { modo: 'normal' } },
+    control: null, // { id, vista, timer }
+    vistos: new Set(), // checkpoints ya abiertos en esta sesión
+    cuaderno: false, escribiendo: false, nb: null, sinCaptura: false,
+    pestana: 'squad', noLeidos: 0,
+    chat: (datos.chat || []).map(m => ({ ...m })),
+    // Mi recorrido, para que mis amigos me vean como fantasma después.
+    recorrido: { iniciado: new Date().toISOString(), inicioMs: Date.now(), pendientes: [], enviando: false },
+    grab: null, // clip de voz en curso
+    fant: { sesiones: [], activa: null, reloj: 0, discusiones: [], hechas: new Set(), chatVisto: new Set(), sonando: null },
+    intervalos: []
+  };
+}
+async function abrirSala(codigo) {
+  const datos = await api(`/grupo/salas/${codigo}`);
+  await salirDeSala(false);
+  U.enInicio = false;
+  R = nuevaSala(datos);
+  history.replaceState(null, '', `${location.pathname}?sala=${datos.sala.codigo}`);
+  pintarSala();
+  conectarRealtime();
+  conectarVoz(); // regla 13: sin "pulsar para hablar"; la voz queda abierta y se puede silenciar
+  cargarFantasmas();
+  cargarInvitaciones();
+  R.intervalos.push(setInterval(publicarPresencia, 1000), setInterval(tickVoz, 250), setInterval(pintarDinamico, 500), setInterval(enviarRecorrido, 10000));
+}
+async function recargarSala() {
+  if (!R) return;
+  try { R.datos = await api(`/grupo/salas/${R.codigo}`); pintarLado(); pintarLinea(); pintarAvisoSesion(); pintarBarraSala(); }
+  catch (x) { if (x.status === 403) { aviso('Ya no estás en esta sesión', true); await salirDeSala(false); pantallaInicio(); } }
+}
+async function salirDeSala(avisarServidor = true) {
+  if (!R) return;
+  const r = R;
+  terminarClip(true);
+  pararDiscusion();
+  enviarRecorrido(true);
+  R = null;
+  r.intervalos.forEach(clearInterval);
+  if (r.control?.timer) clearInterval(r.control.timer);
+  try { await r.voz.room?.disconnect(); } catch {}
+  if (r.canal) await sb.removeChannel(r.canal);
+  if (avisarServidor) await api(`/grupo/salas/${r.codigo}/salir`, { method: 'POST' }).catch(() => {});
+}
+const esAnfitrion = () => R && R.datos.sala.anfitrion === yo.id;
+const sesionActiva = () => !!R?.datos.sesion;
+const integrante = id => R.datos.integrantes.find(i => i.userId === id)
+  || fantasmaPersona(id)
+  || { userId: id, nombre: R.presencia.get(id)?.nombre || 'Alguien', avatar: R.presencia.get(id)?.avatar || null };
+
+function pintarBarraSala() {
+  if (!R) return;
+  barra(
+    h('button', { class: 'btn-sec', onclick: volverAInicio }, ico('volver'), ' Mis cursos'),
+    h('button', { class: 'btn btn-coral btn-chico', onclick: abrirInvitar }, ico('invitar'), 'Invitar amigos'),
+    botonCampana(),
+    h('button', { class: 'btn-sec', onclick: volverAInicio }, 'Salir de la clase'));
+  pintarCampana();
+}
+
+function pintarSala() {
+  pintarBarraSala();
+  const d = R.datos;
+  // crossorigin permite capturar fotogramas al cuaderno; si el servidor del video no lo admite, se reintenta sin él.
+  const video = h('video', { id: 'video', crossorigin: 'anonymous', src: d.video.url, preload: 'metadata', playsinline: true });
+  video.addEventListener('error', () => {
+    if (!video.hasAttribute('crossorigin')) return;
+    R.sinCaptura = true; video.removeAttribute('crossorigin'); video.src = d.video.url;
+  });
+  const pestana = (id, txt) => h('button', { role: 'tab', id: `tab-${id}`, 'aria-selected': String(R.pestana === id), onclick: () => cambiarPestana(id) }, txt, id === 'chat' ? h('span', { class: 'n', id: 'chatNoLeidos', hidden: true }) : null);
+  const reproductor = h('div', { class: 'reproductor', id: 'rep' },
+    video,
+    h('div', { class: 'clic', onclick: alternarPlay }),
+    h('div', { class: 'capa presentes', id: 'presentes' }),
+    h('div', { class: 'capa estado-sala', id: 'estadoSala' }),
+    h('div', { class: 'capa aviso-desfase', id: 'avisoDesfase', hidden: true }),
+    h('div', { class: 'capa burbujas', id: 'burbujas' }),
+    h('div', { class: 'capa voz-capa', id: 'vozCapa', hidden: true }),
+    h('div', { class: 'capa fantasma-capa', id: 'fantasmaCapa', hidden: true }),
+    h('div', { class: 'capa control-capa', id: 'controlCapa', hidden: true }),
+    h('div', { class: 'controles' },
+      h('div', { class: 'linea-tiempo', id: 'linea', onclick: buscarEnLinea }),
+      h('div', { class: 'barra-ctrl' },
+        h('button', { class: 'b-ctrl grande', id: 'bPlay', 'aria-label': 'Reproducir', onclick: alternarPlay }, ico('play')),
+        h('button', { class: 'b-ctrl', 'aria-label': 'Retroceder 10 segundos', onclick: () => saltar(-10) }, ico('atras')),
+        h('span', { id: 'cajaMic', style: 'display:contents' }),
+        h('span', { class: 'tiempo', id: 'tiempo' }, `0:00 / ${mmss(d.video.duracion)}`),
+        h('span', { class: 'auto-pausa', id: 'autoPausa' }),
+        h('span', { class: 'espacio' }),
+        h('input', { class: 'vol', type: 'range', min: 0, max: 1, step: .05, value: 1, 'aria-label': 'Volumen', oninput: e => { R.volumen = +e.target.value; aplicarVolumen(); } }),
+        h('button', { class: 'b-vel', id: 'bVel', onclick: cambiarVelocidad }, '1x'),
+        h('button', { class: 'b-cuaderno', id: 'bCuaderno', onclick: alternarCuaderno }, ico('lapiz'), 'Cuaderno'))));
+  poner($('#vista'), h('section', { class: 'sala' },
+    h('div', { class: 'escenario' },
+      h('div', { class: 'titulo-clase' },
+        h('div', {}, h('p', { class: 'et' }, d.tema.titulo), h('h1', {}, d.video.titulo), d.video.licencia ? h('p', {}, `Licencia: ${d.video.licencia}`) : null)),
+      h('div', { id: 'avisoSesion' }),
+      reproductor),
+    h('aside', { class: 'lado', id: 'lado' },
+      h('div', { class: 'pestanas', role: 'tablist', 'aria-label': 'Panel de la clase' }, pestana('squad', 'Squad'), pestana('chat', 'Chat'), pestana('cuaderno', 'Cuaderno')),
+      h('div', { class: 'lado-paneles', id: 'ladoPaneles' }),
+      h('div', { id: 'ladoChat', hidden: true }),
+      h('div', { id: 'ladoCuaderno', hidden: true }))));
+
+  video.addEventListener('timeupdate', alAvanzar);
+  video.addEventListener('seeking', () => { R.buscando = true; });
+  video.addEventListener('seeked', alBuscar);
+  video.addEventListener('play', pintarPlay);
+  video.addEventListener('pause', pintarPlay);
+  video.addEventListener('loadedmetadata', pintarLinea);
+  pintarMic(); pintarAvisoSesion(); pintarLado(); pintarLinea(); pintarDinamico(); chatArmar();
+}
+function cambiarPestana(id) {
+  R.pestana = id;
+  ['squad', 'chat', 'cuaderno'].forEach(p => $(`#tab-${p}`)?.setAttribute('aria-selected', String(p === id)));
+  $('#ladoPaneles').hidden = id !== 'squad';
+  $('#ladoChat').hidden = id !== 'chat';
+  $('#ladoCuaderno').hidden = id !== 'cuaderno';
+  $('#bCuaderno')?.classList.toggle('activo', id === 'cuaderno');
+  if (id === 'chat') { R.noLeidos = 0; pintarNoLeidos(); chatPintar(true); }
+  const antes = R.cuaderno;
+  R.cuaderno = id === 'cuaderno';
+  if (R.cuaderno && !antes) abrirCuaderno();
+  if (!R.cuaderno) { R.escribiendo = false; if (R.nb) R.nb.editando = null; }
+}
+
+/* ---------- Micrófono: en la barra del reproductor, como en una llamada ---------- */
+function pintarMic() {
+  const caja = $('#cajaMic'); if (!caja || !R) return;
+  const v = R.voz;
+  const hablo = v.mic && v.oradores.includes(yo.id);
+  const etiqueta = v.conectando ? 'Conectando voz…' : !v.conectada ? 'Activar voz' : v.mic ? 'Silenciar micrófono' : 'Activar micrófono';
+  const firma = `${v.conectando}|${v.conectada}|${v.mic}|${hablo}|${v.audioBloqueado}|${!!R.grab}`;
+  if (caja.dataset.firma === firma) return;
+  caja.dataset.firma = firma;
+  poner(caja,
+    h('button', { class: 'b-mic' + (v.conectada && !v.mic ? ' apagado' : '') + (hablo ? ' hablando' : ''), id: 'bVoz', 'aria-label': etiqueta, 'aria-pressed': String(!!(v.conectada && v.mic)), disabled: v.conectando, onclick: alternarVoz },
+      ico(v.conectada && v.mic ? 'mic' : 'micOff'), h('span', { class: 'etiqueta' }, etiqueta)),
+    v.conectada && v.audioBloqueado ? h('button', { class: 'b-audio', onclick: () => v.room.startAudio().then(() => { v.audioBloqueado = false; pintarMic(); }) }, 'Escuchar al squad') : null,
+    R.grab ? h('span', { class: 'grabando', title: 'Aceptaste guardar tu voz para que tus amigos la escuchen en diferido' }, h('i'), 'Guardando tu voz') : null);
+}
+
+/* ---------- Reproductor: el video se mueve solo por mí (regla 5) ---------- */
+const videoEl = () => $('#video');
+function aplicarReproduccion() {
+  const v = videoEl(); if (!v) return;
+  if (R.motivos.size) { if (!v.paused) v.pause(); }
+  else if (v.paused) v.play().catch(() => { R.motivos.add('manual'); pintarPlay(); });
+}
+function alternarPlay() {
+  const v = videoEl(); if (!v) return;
+  if (R.control) { aviso('Primero responde la pregunta'); return; }
+  if (R.fant.sonando) { terminarDiscusion(); return; }
+  if (R.motivos.size) {
+    // Reanudar a mano cancela la espera (regla 8) y la pausa por voz (regla 15).
+    R.motivos.clear(); R.esperandoA = null;
+    R.voz.estado = reducirVoz(R.voz.estado, { tipo: 'reanudar_manual' });
+  } else {
+    R.motivos.add('manual');
+    R.voz.estado = reducirVoz(R.voz.estado, { tipo: 'pausa_manual' });
+  }
+  aplicarReproduccion(); pintarDinamico();
+}
+function pintarPlay() {
+  const b = $('#bPlay'), v = videoEl(); if (!b || !v) return;
+  poner(b, ico(v.paused ? 'play' : 'pausa')); b.setAttribute('aria-label', v.paused ? 'Reproducir' : 'Pausar');
+}
+function saltar(d) { const v = videoEl(); v.currentTime = Math.max(0, Math.min(v.duration || R.datos.video.duracion, v.currentTime + d)); }
+function cambiarVelocidad() {
+  const vel = [1, 1.25, 1.5, 2, .75]; R.velocidad = vel[(vel.indexOf(R.velocidad) + 1) % vel.length];
+  videoEl().playbackRate = R.velocidad; $('#bVel').textContent = R.velocidad + 'x';
+}
+function aplicarVolumen() { const v = videoEl(); if (v) v.volume = Math.max(0, Math.min(1, R.volumen * R.factorVoz)); }
+function duracion() { const v = videoEl(); return (v && isFinite(v.duration) && v.duration) || R.datos.video.duracion; }
+function buscarEnLinea(e) {
+  if (R.control) return;
+  const r = e.currentTarget.getBoundingClientRect();
+  videoEl().currentTime = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * duracion();
+}
+function alAvanzar() {
+  const v = videoEl(); if (!v || !R) return;
+  const t = v.currentTime;
+  // Regla 18: al llegar al minuto de una pregunta se pausa mi video y se abre. Se usa una ventana
+  // de 1,5 s después del minuto (no el cruce exacto), así no se pierde si el video se traba.
+  if (!R.buscando && sesionActiva() && !R.control && !v.paused) {
+    const cp = R.datos.checkpoints.find(c => !R.vistos.has(c.id) && t >= c.segundo && t - c.segundo < 1.5);
+    if (cp) abrirControl(cp.id);
+  }
+  if (!R.buscando) { revisarFantasmas(R.ultimaPos, t); R.ultimaPos = t; }
+  if (sesionActiva()) precargarPreguntas(t);
+  // Regla 8: la espera termina cuando la otra persona me alcanza.
+  if (R.esperandoA) {
+    const otro = R.presencia.get(R.esperandoA);
+    if (!otro) { R.esperandoA = null; R.motivos.delete('espera'); aplicarReproduccion(); }
+  }
+  $('#tiempo').textContent = `${mmss(t)} / ${mmss(duracion())}`;
+  pintarCursorLinea();
+}
+async function alBuscar() {
+  const v = videoEl(); if (!v || !R) return;
+  const desde = R.ultimaPos, hasta = v.currentTime;
+  R.buscando = false; R.ultimaPos = hasta;
+  pintarCursorLinea();
+  // Regla 10: un retroceso es un salto atrás de 5 s o más.
+  if (desde - hasta >= 5) {
+    R.retrocedioHasta = Date.now() + 8000;
+    if (sesionActiva()) {
+      try { await api(`/grupo/salas/${R.codigo}/friccion`, { method: 'POST', body: { desde, hasta } }); }
+      catch (x) { if (x.codigo !== 'SIN_SESION') console.warn(x); }
+    }
+  }
+}
+
+/* ---------- Línea de tiempo social ---------- */
+function pintarLinea() {
+  const linea = $('#linea'); if (!linea || !R) return;
+  const D = duracion(), pct = s => `${Math.max(0, Math.min(100, (s / D) * 100))}%`;
+  const zonas = R.datos.friccion || [];
+  const mayor = zonas.filter(z => z.esZona).sort((a, b) => b.retrocesos - a.retrocesos)[0];
+  poner(linea,
+    h('div', { class: 'pista' }, h('div', { class: 'avance', id: 'avance' })),
+    zonas.map(z => h('div', { class: 'zona' + (z.esZona ? '' : ' leve'), style: `left:${pct(z.ventanaInicio)};width:calc(${pct(Math.min(z.ventanaFin, D))} - ${pct(z.ventanaInicio)})`, title: `${z.retrocesos} retrocesos de ${z.integrantes} integrantes (${mmss(z.ventanaInicio)} a ${mmss(z.ventanaFin)})` })),
+    mayor ? h('div', { class: 'zona-et', style: `left:${pct((mayor.ventanaInicio + Math.min(mayor.ventanaFin, D)) / 2)}` }, `FRICCIÓN · ${mayor.retrocesos} repeticiones (${mmss(mayor.ventanaInicio)} - ${mmss(mayor.ventanaFin)})`) : null,
+    (sesionFantasma()?.friccion || []).filter(z => z.esZona).map(z => h('div', { class: 'zona fantasma', style: `left:${pct(z.ventanaInicio)};width:calc(${pct(Math.min(z.ventanaFin, D))} - ${pct(z.ventanaInicio)})`, title: `Tus amigos (fantasmas) repitieron este tramo: ${z.retrocesos} veces` })),
+    (R.fant.activa ? R.fant.discusiones : []).map(g => h('div', { class: 'marca-disc', style: `left:${pct(g.posicion)}`, title: `Discusión grabada de ${listaNombres(g.personas.map(id => integrante(id).nombre))} · ${mmss(g.posicion)}` })),
+    R.datos.checkpoints.map(c => h('div', { class: 'marca-cp ' + (c.ronda?.fase || ''), style: `left:${pct(c.segundo)}`, title: `Pregunta · ${mmss(c.segundo)}` })),
+    h('div', { id: 'amigos' }),
+    h('div', { class: 'punto-yo', id: 'puntoYo', title: 'Tú' }));
+  pintarCursorLinea(); pintarAmigosLinea();
+}
+function pintarCursorLinea() {
+  const v = videoEl(), p = $('#puntoYo'), a = $('#avance'); if (!v || !p) return;
+  const x = `${(v.currentTime / duracion()) * 100}%`; p.style.left = x; a.style.width = x;
+}
+function pintarAmigosLinea() {
+  const cont = $('#amigos'); if (!cont) return;
+  const D = duracion();
+  poner(cont,
+    fantasmasAhora().filter(p => !p.ausente).map(p =>
+      h('div', { class: 'punto-amigo fantasma', style: `left:${(Math.min(p.posicion, D) / D) * 100}%`, title: `${p.nombre} (fantasma) · ${mmss(p.posicion)}` }, avatar(p))),
+    [...R.presencia.values()].filter(p => p.userId !== yo.id).map(p =>
+      h('div', { class: 'punto-amigo', style: `left:${(Math.min(p.posicion, D) / D) * 100}%`, title: `${p.nombre} · ${mmss(p.posicion)}` }, avatar(p))));
+}
+
+/* ---------- Presence (posición una vez por segundo) ---------- */
+function miEstado() {
+  const v = videoEl();
+  const hablando = R.voz.oradores.includes(yo.id);
+  return {
+    userId: yo.id, nombre: yo.nombre, avatar: yo.avatar,
+    posicion: v ? +v.currentTime.toFixed(1) : 0,
+    estado: hablando ? 'hablando' : R.escribiendo ? 'escribiendo' : (!v || v.paused) ? 'pausado' : 'viendo',
+    cuadernoActivo: R.cuaderno,
+    pausaPorVoz: R.motivos.has('voz'),
+    retrocedio: Date.now() < R.retrocedioHasta,
+    esperandoA: R.esperandoA,
+    editando: R.nb?.editando || null,
+    enviadoEn: Date.now()
+  };
+}
+// Presence solo marca quién está conectado (un track al entrar): Supabase cierra el canal si
+// se llama a track cada segundo. La posición y el estado van por Broadcast ("estado").
+function publicarPresencia() {
+  if (!R?.canal || R.canal.state !== 'joined') return;
+  const e = miEstado(); R.estados.set(yo.id, e); recomponerPresencia(); muestraRecorrido(e);
+  R.canal.send({ type: 'broadcast', event: 'estado', payload: e }).catch(() => {});
+}
+function recomponerPresencia() {
+  const m = new Map();
+  for (const id of R.conectados) {
+    const e = R.estados.get(id);
+    if (e) m.set(id, e);
+    else { const i = R.datos.integrantes.find(x => x.userId === id); m.set(id, { userId: id, nombre: i?.nombre || 'Integrante', avatar: i?.avatar || null, posicion: 0, estado: 'pausado', cuadernoActivo: false, pausaPorVoz: false, retrocedio: false, esperandoA: null, editando: null, enviadoEn: 0 }); }
+  }
+  m.set(yo.id, R.estados.get(yo.id) || miEstado());
+  R.presencia = m;
+}
+function conectarRealtime() {
+  const canal = sb.channel(R.datos.canal, { config: { presence: { key: yo.id }, broadcast: { self: true } } });
+  R.canal = canal;
+  canal.on('presence', { event: 'sync' }, () => {
+    if (!R) return;
+    R.conectados = new Set(Object.keys(canal.presenceState()));
+    R.conectados.add(yo.id);
+    for (const id of R.estados.keys()) if (!R.conectados.has(id)) R.estados.delete(id);
+    recomponerPresencia();
+    vigilarAnfitrion();
+  });
+  canal.on('broadcast', { event: '*' }, ({ event, payload }) => alEvento(event, payload));
+  canal.subscribe(st => {
+    if (st !== 'SUBSCRIBED' || !R) return;
+    canal.track({ userId: yo.id, nombre: yo.nombre, avatar: yo.avatar }).catch(() => {});
+    publicarPresencia();
+  });
+}
+// Regla 4: si el anfitrión desaparece de Presence más de 5 s, quien lleva más tiempo pide el cambio.
+function vigilarAnfitrion() {
+  const host = R.datos.sala.anfitrion;
+  if (R.presencia.has(host)) { R.anfitrionAusenteDesde = null; return; }
+  R.anfitrionAusenteDesde ??= Date.now();
+  if (Date.now() - R.anfitrionAusenteDesde < 5000) return;
+  const conectados = [...R.presencia.keys()];
+  const masAntiguo = R.datos.integrantes.filter(i => conectados.includes(i.userId)).sort((a, b) => new Date(a.unidoEn) - new Date(b.unidoEn))[0];
+  if (masAntiguo?.userId !== yo.id) return;
+  R.anfitrionAusenteDesde = Date.now() + 30000; // no reintentar enseguida
+  api(`/grupo/salas/${R.codigo}/anfitrion`, { method: 'POST', body: { conectados } }).catch(x => console.warn(x));
+}
+
+/* ---------- Eventos del servidor (Broadcast) ---------- */
+function alEvento(evento, p) {
+  if (!R) return;
+  switch (evento) {
+    case 'estado':
+      if (p.userId === yo.id) break;
+      R.estados.set(p.userId, p);
+      if (R.conectados.has(p.userId)) recomponerPresencia();
+      break;
+    case 'integrante_entro': if (p.userId !== yo.id) aviso(`${primerNombre(p.nombre)} entró a la sala`); recargarSala(); break;
+    case 'integrante_salio': if (p.userId !== yo.id) aviso(`${primerNombre(integrante(p.userId).nombre)} salió de la sala`); recargarSala(); break;
+    case 'anfitrion_cambio': aviso(p.anfitrion === yo.id ? 'Ahora eres el anfitrión' : `${primerNombre(integrante(p.anfitrion).nombre)} es el nuevo anfitrión`); recargarSala(); break;
+    case 'sesion_iniciada': R.vistos.clear(); recargarSala(); break;
+    case 'sesion_cerrada': aviso('La sesión de estudio terminó'); cerrarControl(false); recargarSala(); break;
+    case 'zona_friccion': {
+      const z = R.datos.friccion || [], i = z.findIndex(x => x.ventanaInicio === p.ventanaInicio);
+      const antes = i >= 0 && z[i].esZona;
+      if (i >= 0) z[i] = p; else z.push(p);
+      R.datos.friccion = z.sort((a, b) => a.ventanaInicio - b.ventanaInicio);
+      if (p.esZona && !antes) aviso(`Zona de fricción entre ${mmss(p.ventanaInicio)} y ${mmss(p.ventanaFin)}`);
+      pintarLinea(); pintarLado(); break;
+    }
+    case 'voto_registrado': case 'voto_cambiado': case 'control_revelado': case 'control_cerrado':
+      if (R.control?.id === p.checkpointId) refrescarControl();
+      if (evento === 'control_revelado' || evento === 'control_cerrado') recargarSala();
+      break;
+    case 'checkpoints_actualizados': recargarSala(); break;
+    case 'chat_mensaje': chatRecibir(p); break;
+    case 'invitacion_enviada': recargarSala(); break;
+    case 'nb_bloque': if (p.de !== yo.id) nbRecibir(p.bloque); break;
+    case 'nb_borrado': if (p.de !== yo.id) nbQuitar(p.id, false); break;
+  }
+}
+
+/* ---------- Pintado periódico: presencia, sincronía, voz ---------- */
+function pintarDinamico() {
+  if (!R || !$('#rep')) return;
+  const lista = [...R.presencia.values()];
+  const sinc = calcularSincronia(lista.map(p => ({ userId: p.userId, posicion: p.posicion })));
+  R.sinc = sinc;
+  // Avatares arriba del video
+  poner($('#presentes'), lista.map(p => {
+    const s = sinc.integrantes.find(x => x.userId === p.userId);
+    return avatar(p, (R.voz.oradores.includes(p.userId) ? 'habla ' : '') + (s?.desfasado ? 'desfasado' : ''));
+  }), fantasmasAhora().filter(p => !p.ausente).map(p => {
+    const a = avatar(p, 'fantasma' + (R.fant.sonando?.hablando.has(p.userId) ? ' habla' : '')); a.title = `${p.nombre} (fantasma)`; return a;
+  }));
+  pintarListaFantasmas();
+  // Chips de estado
+  const chips = [];
+  if (sinc.total > 1) chips.push(h('span', { class: 'chip ' + (sinc.sincronizados === sinc.total ? 'ok' : 'aviso') }, h('i', { class: 'led' }), `${sinc.sincronizados}/${sinc.total} sincronizados`));
+  if (R.voz.conectada) chips.push(h('span', { class: 'chip ' + (R.voz.oradores.length ? 'voz' : 'ok') }, h('i', { class: 'led' }), R.voz.oradores.length ? 'Voz detectada' : 'Voz activa'));
+  poner($('#estadoSala'), chips);
+  pintarAvisoDesfase(sinc);
+  pintarAmigosLinea();
+  pintarIntegrantes();
+  nbPintarCoautores();
+}
+// Reglas 6 a 8: aviso ámbar sobre la persona más atrasada respecto a mí.
+function pintarAvisoDesfase(sinc) {
+  const caja = $('#avisoDesfase');
+  const v = videoEl(); const mia = v ? v.currentTime : 0;
+  const atrasado = sinc.integrantes.filter(s => s.userId !== yo.id && s.desfasado && s.diferencia < 0 && mia - s.posicion > UMBRAL_DESFASE_S).sort((a, b) => a.diferencia - b.diferencia)[0];
+  if (!atrasado || R.control) { caja.hidden = true; caja.dataset.firma = ''; return; }
+  const p = R.presencia.get(atrasado.userId);
+  const causa = causaDesfase(p);
+  const esperando = R.esperandoA === p.userId;
+  caja.hidden = false;
+  const firma = `${p.userId}|${mmss(p.posicion)}|${causa}|${esperando}`;
+  if (caja.dataset.firma === firma) return;
+  caja.dataset.firma = firma;
+  poner(caja, avatar(p),
+    h('span', { class: 'txt' }, h('b', {}, `Desincronía · ${mmss(p.posicion)}`), `${primerNombre(p.nombre)}${causa ? ' ' + causa : ' va más atrás'}`),
+    h('button', { class: 'btn btn-sol btn-chico', onclick: () => esperar(esperando ? null : p.userId) }, esperando ? 'Dejar de esperar' : 'Esperarlo'));
+}
+// Regla 8: "Esperarlo" pausa solo mi video hasta que me alcance o yo reanude.
+function esperar(id) {
+  R.esperandoA = id;
+  if (id) { R.motivos.add('espera'); aviso(`Esperando a ${primerNombre(integrante(id).nombre)}. Tu video sigue cuando te alcance.`); }
+  else R.motivos.delete('espera');
+  aplicarReproduccion(); pintarDinamico();
+}
+function revisarEspera() {
+  if (!R?.esperandoA) return;
+  const otro = R.presencia.get(R.esperandoA), v = videoEl();
+  if (!otro || !v) return;
+  if (otro.posicion >= v.currentTime) { aviso(`${primerNombre(otro.nombre)} te alcanzó`); esperar(null); }
+}
+
+/* ---------- Panel lateral ---------- */
+function pintarLado() {
+  const lado = $('#ladoPaneles'); if (!lado || !R) return;
+  const pendientes = (R.datos.invitadosPendientes || []).map(id => (U.amigos || []).find(a => a.id === id)).filter(Boolean);
+  poner(lado,
+    h('section', { class: 'tarjeta' },
+      h('div', { class: 'tarjeta-cab' }, h('h3', {}, 'En vivo'), h('span', { class: 'sinc', id: 'sincTxt' })),
+      h('ul', { class: 'integrantes', id: 'integrantes' }),
+      pendientes.length ? h('p', { class: 'vacio' }, `Invitaste a ${listaNombres(pendientes.map(a => a.nombre))}: aún no ${pendientes.length === 1 ? 'entra' : 'entran'}.`) : null,
+      R.datos.integrantes.length < R.datos.sala.maxIntegrantes ? h('button', { class: 'btn btn-sec btn-chico', style: 'justify-self:start', onclick: abrirInvitar }, ico('invitar'), ' Invitar amigos') : null),
+    h('section', { class: 'tarjeta', id: 'cajaFantasmas' }),
+    h('section', { class: 'tarjeta' },
+      h('div', { class: 'tarjeta-cab' }, h('h3', {}, 'Zonas de fricción')),
+      (R.datos.friccion || []).length
+        ? h('ul', { class: 'fr-lista' }, R.datos.friccion.map(z => h('li', { class: 'fr-item' + (z.esZona ? ' zona-si' : '') },
+            h('span', {}, h('b', {}, `${mmss(z.ventanaInicio)} - ${mmss(z.ventanaFin)}`), z.esZona ? ' · zona' : ''),
+            h('span', {}, `${z.retrocesos} retroceso${z.retrocesos === 1 ? '' : 's'} · ${z.integrantes} pers.`),
+            h('button', { class: 'btn-txt', onclick: () => { if (!R.control) videoEl().currentTime = z.ventanaInicio; } }, 'Ir'))))
+        : h('p', { class: 'vacio' }, 'Cuando dos o más retrocedan al mismo tramo, aparecerá aquí.')));
+  pintarIntegrantes();
+  pintarCajaFantasmas();
+}
+function pintarIntegrantes() {
+  const ul = $('#integrantes'); if (!ul || !R) return;
+  const sinc = R.sinc || { integrantes: [], sincronizados: 0, total: 0 };
+  const t = $('#sincTxt');
+  if (t) { t.textContent = `${sinc.sincronizados}/${sinc.total || 1} sincronizados`; t.className = 'sinc' + (sinc.sincronizados < sinc.total ? ' parcial' : ''); }
+  poner(ul, R.datos.integrantes.map(i => {
+    const p = R.presencia.get(i.userId), s = sinc.integrantes.find(x => x.userId === i.userId);
+    const habla = R.voz.oradores.includes(i.userId);
+    const causa = p && s?.desfasado ? causaDesfase(p) : null;
+    const sub = !p ? 'Desconectado' : habla ? 'Hablando' : s?.desfasado ? `Desfasado${causa ? ' · ' + causa : ''}` : ({ viendo: 'Viendo', pausado: 'En pausa', escribiendo: 'Tomando notas', hablando: 'Hablando' })[p.estado];
+    return h('li', { class: 'integrante' + (i.userId === yo.id ? ' yo' : '') + (p ? '' : ' desconectado') },
+      avatar({ ...i, nombre: i.nombre || p?.nombre }, (habla ? 'habla ' : '') + (s?.desfasado ? 'desfasado' : '')),
+      h('div', {},
+        h('div', { class: 'nombre' }, (i.nombre || p?.nombre || 'Integrante') + (i.userId === yo.id ? ' (tú)' : ''), i.userId === R.datos.sala.anfitrion ? h('span', { class: 'tag host' }, 'Anfitrión') : null),
+        h('div', { class: 'sub' + (s?.desfasado ? ' amb' : '') }, sub)),
+      h('span', { class: 'pos' }, p ? mmss(p.posicion) : ''));
+  }));
+}
+function pintarAvisoSesion() {
+  const c = $('#avisoSesion'); if (!c || !R) return;
+  // La sesión arranca sola con el primero que entra; solo falta si la sala ya se cerró.
+  if (sesionActiva()) { poner(c); return; }
+  poner(c, h('div', { class: 'aviso-sesion' },
+    h('span', {}, h('b', {}, 'La sala está cerrada. '), 'Crea una nueva para seguir estudiando.')));
+}
+
+/* ---------- Cuaderno del squad (pantalla 05): co-autoría en vivo ---------- */
+// Cada bloque se guarda por separado (PUT /cuaderno/:id) y los cambios viajan al instante por
+// Broadcast; Presence dice quién escribe en qué bloque. Todo HTML se limpia antes de pintarse.
+const NB_PERMITIDAS = new Set(['B', 'STRONG', 'I', 'EM', 'CODE', 'BR']);
+function nbLimpiar(html) {
+  const doc = new DOMParser().parseFromString(`<body>${html || ''}</body>`, 'text/html');
+  const limpiarNodo = nodo => {
+    for (const hijo of [...nodo.childNodes]) {
+      if (hijo.nodeType === Node.TEXT_NODE) continue;
+      if (hijo.nodeType !== Node.ELEMENT_NODE) { hijo.remove(); continue; }
+      if (['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'TEMPLATE'].includes(hijo.tagName)) { hijo.remove(); continue; }
+      limpiarNodo(hijo);
+      if (NB_PERMITIDAS.has(hijo.tagName)) { [...hijo.attributes].forEach(a => hijo.removeAttribute(a.name)); continue; }
+      // Bloques que mete el navegador al escribir (div, p): se vuelven salto de línea.
+      if (['DIV', 'P'].includes(hijo.tagName) && hijo.previousSibling) hijo.before(doc.createElement('br'));
+      hijo.replaceWith(...hijo.childNodes);
+    }
+  };
+  limpiarNodo(doc.body);
+  return doc.body.innerHTML;
+}
+const NB_TIPOS = {
+  titulo: { et: 'Título', ayuda: 'Encabezado grande', ph: 'Título' },
+  texto: { et: 'Texto', ayuda: 'Una nota normal', ph: "Escribe una nota aquí o presiona '/' para comandos..." },
+  codigo: { et: 'Código', ayuda: 'Bloque monoespaciado', ph: 'Código' }
+};
+function nbEstado() {
+  return { cargado: false, bloques: new Map(), editando: null, timers: new Map(), envios: new Map(), pendientes: 0, menu: null };
+}
+const nbOrdenados = () => [...R.nb.bloques.values()].sort((a, b) => a.orden - b.orden);
+
+function alternarCuaderno() { cambiarPestana(R.pestana === 'cuaderno' ? 'squad' : 'cuaderno'); }
+async function abrirCuaderno() {
+  R.nb ??= nbEstado();
+  if (!$('#ladoCuaderno').firstChild) nbArmar();
+  nbPintarTabs();
+  if (!R.nb.cargado) {
+    try {
+      const { bloques } = await api(`/grupo/salas/${R.codigo}/cuaderno`);
+      for (const b of bloques) if (!R.nb.bloques.has(b.id)) R.nb.bloques.set(b.id, b);
+      R.nb.cargado = true;
+    } catch (x) { aviso('No se pudo abrir el cuaderno: ' + x.message, true); }
+  }
+  nbPintar();
+}
+// Pestañas del cuaderno: el nuestro (editable) o el de los fantasmas (solo lectura).
+function nbPintarTabs() {
+  const tabs = $('#nbTabs'); if (!tabs || !R) return;
+  const s = sesionFantasma();
+  if (!s?.cuaderno.length) { poner(tabs); nbVerFantasma(false); return; }
+  const ver = !!R.nb?.verFantasma;
+  poner(tabs,
+    h('button', { type: 'button', 'aria-pressed': String(!ver), onclick: () => nbVerFantasma(false) }, 'Nuestro'),
+    h('button', { type: 'button', 'aria-pressed': String(ver), onclick: () => nbVerFantasma(true) }, `De ${listaNombres(s.participantes.map(p => p.nombre))}`));
+}
+function nbVerFantasma(si) {
+  if (!R?.nb) return;
+  R.nb.verFantasma = si;
+  $('#nbCuerpo').hidden = si; $('.nb-herr').hidden = si;
+  const caja = $('#nbFantasma'); caja.hidden = !si;
+  if (si) {
+    const s = sesionFantasma();
+    poner(caja, (s?.cuaderno || []).map(b => {
+      const autor = fantasmaPersona(b.actualizadoPor || b.autor);
+      const el = h('div', { class: `nb-bloque ${b.tipo}` },
+        b.tipo === 'fotograma'
+          ? h('figure', { class: 'nb-frame' }, h('img', { src: b.imagen, alt: `Fotograma en ${mmss(b.segundo)}`, title: 'Ir a este momento', onclick: () => { if (!R.control && b.segundo != null) videoEl().currentTime = b.segundo; } }), h('figcaption', {}, h('span', {}, h('b', {}, 'Fotograma'), ` · ${mmss(b.segundo)}`), h('span', {}, autor ? primerNombre(autor.nombre) : '')))
+          : h('div', { class: 'nb-txt', html: nbLimpiar(b.html) }),
+        h('span', { class: 'nb-autor', style: 'opacity:.85' }, autor ? `${primerNombre(autor.nombre)} · fantasma` : 'fantasma'));
+      el.style.setProperty('--c', colorDe(b.actualizadoPor || b.autor));
+      return el;
+    }));
+  }
+  nbPintarTabs();
+}
+function nbArmar() {
+  const herr = (txt, titulo, fn, cls = '') => h('button', { type: 'button', class: cls, title: titulo, onmousedown: e => e.preventDefault(), onclick: fn }, txt);
+  poner($('#ladoCuaderno'), h('section', { class: 'nb', 'aria-label': 'Cuaderno del squad' },
+    h('div', { class: 'nb-cab' }, h('h3', {}, 'Cuaderno del squad'), h('div', { class: 'nb-tabs', id: 'nbTabs' }), h('span', { class: 'nb-sync', id: 'nbSync' }, h('i'), 'En vivo')),
+    h('div', { class: 'nb-herr', role: 'toolbar', 'aria-label': 'Formato' },
+      herr(h('b', {}, 'B'), 'Negrita (Ctrl+B)', () => document.execCommand('bold')),
+      herr(h('i', {}, 'I'), 'Cursiva (Ctrl+I)', () => document.execCommand('italic')),
+      herr('H1', 'Título', () => nbCambiarTipoActual('titulo')),
+      herr('</>', 'Bloque de código', () => nbCambiarTipoActual('codigo')),
+      h('span', { class: 'sep' }),
+      herr('Capturar frame', 'Pega el fotograma actual del video', () => nbCapturar(), 'cap')),
+    h('div', { class: 'nb-cuerpo', id: 'nbCuerpo' }),
+    h('div', { class: 'nb-cuerpo nb-solo-lectura', id: 'nbFantasma', hidden: true }),
+    h('div', { class: 'nb-pie', id: 'nbPie' })));
+}
+// Reconciliación: crea lo que falta, quita lo borrado y ordena sin mover el bloque con foco.
+function nbPintar() {
+  const cuerpo = $('#nbCuerpo'); if (!cuerpo || !R?.nb) return;
+  const lista = nbOrdenados();
+  const ids = new Set(lista.map(b => b.id));
+  cuerpo.querySelectorAll('.nb-bloque').forEach(el => { if (!ids.has(el.dataset.id)) el.remove(); });
+  let previo = null;
+  for (const b of lista) {
+    let el = cuerpo.querySelector(`.nb-bloque[data-id="${b.id}"]`);
+    if (!el || el.dataset.tipo !== b.tipo) { const nuevo = nbElemento(b); el ? el.replaceWith(nuevo) : cuerpo.append(nuevo); el = nuevo; }
+    else nbActualizarElemento(el, b);
+    const debeIr = previo ? previo.nextElementSibling : cuerpo.firstElementChild;
+    if (debeIr !== el && !el.contains(document.activeElement)) previo ? previo.after(el) : cuerpo.prepend(el);
+    previo = el;
+  }
+  let nuevo = cuerpo.querySelector('.nb-nuevo');
+  if (!nuevo) nuevo = h('button', { type: 'button', class: 'nb-nuevo', onclick: () => nbCrear('texto', null) }, lista.length ? '+ Nueva nota' : "+ Escribe una nota aquí o presiona '/' para comandos...");
+  cuerpo.append(nuevo);
+  nbPintarPie(); nbPintarCoautores();
+}
+function nbElemento(b) {
+  const el = h('div', { class: `nb-bloque ${b.tipo}`, 'data-id': b.id, 'data-tipo': b.tipo });
+  const asa = h('span', { class: 'nb-asa', draggable: 'true', title: 'Arrastra para mover', 'aria-hidden': 'true' }, '⠿');
+  asa.addEventListener('dragstart', e => { e.dataTransfer.setData('text/nb', b.id); e.dataTransfer.effectAllowed = 'move'; el.classList.add('arrastrando'); });
+  asa.addEventListener('dragend', () => el.classList.remove('arrastrando'));
+  el.addEventListener('dragover', e => { if (e.dataTransfer.types.includes('text/nb')) { e.preventDefault(); el.classList.add('destino'); } });
+  el.addEventListener('dragleave', () => el.classList.remove('destino'));
+  el.addEventListener('drop', e => { e.preventDefault(); el.classList.remove('destino'); nbMover(e.dataTransfer.getData('text/nb'), b.id); });
+  let contenido;
+  if (b.tipo === 'fotograma') {
+    contenido = h('figure', { class: 'nb-frame', tabindex: '0', onfocus: () => nbEnfocar(b.id), onblur: nbDesenfocar, onkeydown: e => { if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); nbQuitar(b.id, true); } } },
+      h('img', { alt: `Fotograma del video en ${mmss(b.segundo)}`, title: 'Ir a este momento del video', onclick: () => { if (!R.control && b.segundo != null) videoEl().currentTime = b.segundo; } }),
+      h('figcaption', {}, h('span', {}, h('b', {}, 'Fotograma'), ` · ${mmss(b.segundo)}`), h('span', { class: 'quien-frame' })));
+  } else {
+    contenido = h('div', { class: 'nb-txt', contenteditable: b.tipo === 'codigo' ? 'plaintext-only' : 'true', spellcheck: b.tipo === 'codigo' ? 'false' : 'true', 'data-ph': NB_TIPOS[b.tipo].ph,
+      onfocus: () => nbEnfocar(b.id), onblur: nbDesenfocar, oninput: () => nbEditado(b.id), onkeydown: e => nbTeclas(e, b.id) });
+  }
+  el.append(asa, contenido, h('span', { class: 'nb-autor' }));
+  nbActualizarElemento(el, b);
+  return el;
+}
+function nbActualizarElemento(el, b) {
+  if (b.tipo === 'fotograma') {
+    const img = el.querySelector('img'); if (img.getAttribute('src') !== b.imagen) img.src = b.imagen;
+    el.querySelector('.quien-frame').textContent = `Adjuntado por ${b.autor === yo.id ? 'ti' : primerNombre(integrante(b.autor).nombre)}`;
+  } else {
+    const txt = el.querySelector('.nb-txt');
+    // No se pisa lo que estoy escribiendo yo en este bloque.
+    if (document.activeElement !== txt) { const limpio = nbLimpiar(b.html); if (txt.innerHTML !== limpio) txt.innerHTML = limpio; }
+  }
+  const autor = b.actualizadoPor || b.autor;
+  const et = el.querySelector('.nb-autor');
+  et.textContent = autor === yo.id ? `${primerNombre(yo.nombre)} (Tú)` : primerNombre(integrante(autor).nombre);
+  el.style.setProperty('--c', colorDe(autor));
+}
+function nbPintarPie() {
+  const pie = $('#nbPie'); if (!pie || !R?.nb) return;
+  const ids = new Set(); R.nb.bloques.forEach(b => { ids.add(b.autor); if (b.actualizadoPor) ids.add(b.actualizadoPor); });
+  const nombres = [...ids].map(id => id === yo.id ? primerNombre(yo.nombre) : primerNombre(integrante(id).nombre));
+  pie.textContent = `${nombres.length ? 'Co-autores: ' + nombres.join(', ') + ' · ' : ''}Guardado automático en tiempo real`;
+  const sync = $('#nbSync');
+  if (sync) { sync.classList.toggle('guardando', R.nb.pendientes > 0); sync.lastChild.textContent = R.nb.pendientes > 0 ? 'Guardando…' : 'En vivo'; }
+}
+// Quién escribe en qué bloque (Presence): su color y su nombre sobre el bloque.
+function nbPintarCoautores() {
+  const cuerpo = $('#nbCuerpo'); if (!cuerpo || !R) return;
+  const editores = new Map();
+  for (const p of R.presencia.values()) if (p.userId !== yo.id && p.editando) editores.set(p.editando, p);
+  cuerpo.querySelectorAll('.nb-bloque').forEach(el => {
+    const p = editores.get(el.dataset.id);
+    el.classList.toggle('otro-edita', !!p);
+    if (p) { el.style.setProperty('--c', colorDe(p.userId)); el.querySelector('.nb-autor').textContent = `${primerNombre(p.nombre)} escribiendo`; }
+    else { const b = R.nb?.bloques.get(el.dataset.id); if (b) nbActualizarElemento(el, b); }
+  });
+}
+function nbEnfocar(id) { R.nb.editando = id; R.escribiendo = true; publicarPresencia(); }
+function nbDesenfocar() { setTimeout(() => { if (!R?.nb) return; if (!$('#nbCuerpo')?.contains(document.activeElement)) { R.nb.editando = null; R.escribiendo = false; publicarPresencia(); } }, 0); }
+
+function nbOrdenTras(id) {
+  const lista = nbOrdenados(), i = id ? lista.findIndex(b => b.id === id) : lista.length - 1;
+  if (i < 0) return (lista.at(-1)?.orden ?? 0) + 1;
+  const a = lista[i].orden, sig = lista[i + 1];
+  return sig ? (a + sig.orden) / 2 : a + 1;
+}
+function nbCrear(tipo, trasId, extra = {}) {
+  const b = { id: crypto.randomUUID(), orden: nbOrdenTras(trasId), tipo, html: '', imagen: null, segundo: null, autor: yo.id, actualizadoPor: yo.id, ...extra };
+  R.nb.bloques.set(b.id, b);
+  nbPintar();
+  nbEmitir(b); nbGuardar(b.id, 0);
+  if (tipo !== 'fotograma') nbFoco(b.id);
+  return b;
+}
+function nbFoco(id, alFinal = false) {
+  const el = $(`#nbCuerpo .nb-bloque[data-id="${id}"] .nb-txt, #nbCuerpo .nb-bloque[data-id="${id}"] .nb-frame`); if (!el) return;
+  el.focus();
+  if (alFinal && el.isContentEditable) { const r = document.createRange(); r.selectNodeContents(el); r.collapse(false); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+}
+function nbEditado(id) {
+  const b = R.nb.bloques.get(id), el = $(`#nbCuerpo .nb-bloque[data-id="${id}"] .nb-txt`); if (!b || !el) return;
+  const texto = el.innerText;
+  if (texto === '/' && b.tipo !== 'codigo') { nbMenu(id); return; }
+  nbCerrarMenu();
+  b.html = nbLimpiar(el.innerHTML); b.actualizadoPor = yo.id;
+  nbEmitir(b); nbGuardar(id);
+}
+// Envío en vivo a los demás (máx. ~6 por segundo por bloque).
+function nbEmitir(b) {
+  const ultimo = R.nb.envios.get(b.id) || 0, ahora = Date.now();
+  const enviar = () => { R.nb.envios.set(b.id, Date.now()); R.canal?.send({ type: 'broadcast', event: 'nb_bloque', payload: { de: yo.id, bloque: R.nb.bloques.get(b.id) || b } }); };
+  if (ahora - ultimo > 160) return enviar();
+  clearTimeout(R.nb.timers.get('e' + b.id));
+  R.nb.timers.set('e' + b.id, setTimeout(enviar, 160));
+}
+// Guardado automático: espera a que se deje de escribir un momento.
+function nbGuardar(id, espera = 700) {
+  const t = R.nb.timers.get(id);
+  if (t) clearTimeout(t); else R.nb.pendientes++;
+  nbPintarPie();
+  const r = R;
+  R.nb.timers.set(id, setTimeout(async () => {
+    r.nb.timers.delete(id);
+    const b = r.nb.bloques.get(id);
+    try { if (b) await api(`/grupo/salas/${r.codigo}/cuaderno/${id}`, { method: 'PUT', body: { orden: b.orden, tipo: b.tipo, html: b.html, imagen: b.imagen, segundo: b.segundo } }); }
+    catch (x) { aviso('No se guardó la nota: ' + x.message, true); }
+    finally { r.nb.pendientes = Math.max(0, r.nb.pendientes - 1); if (R === r) nbPintarPie(); }
+  }, espera));
+}
+function nbRecibir(b) {
+  if (!R?.nb) { R && (R.nb = nbEstado()); }
+  R.nb.bloques.set(b.id, b);
+  if (R.cuaderno) nbPintar();
+}
+function nbQuitar(id, propio) {
+  if (!R?.nb?.bloques.has(id)) return;
+  const lista = nbOrdenados(), i = lista.findIndex(b => b.id === id);
+  R.nb.bloques.delete(id);
+  clearTimeout(R.nb.timers.get(id)); if (R.nb.timers.delete(id)) R.nb.pendientes = Math.max(0, R.nb.pendientes - 1);
+  if (R.cuaderno) nbPintar();
+  if (propio) {
+    R.canal?.send({ type: 'broadcast', event: 'nb_borrado', payload: { de: yo.id, id } });
+    api(`/grupo/salas/${R.codigo}/cuaderno/${id}`, { method: 'DELETE' }).catch(x => aviso(x.message, true));
+    const anterior = lista[i - 1]; if (anterior) nbFoco(anterior.id, true);
+  }
+}
+function nbMover(origen, destino) {
+  if (!origen || origen === destino) return;
+  const lista = nbOrdenados().filter(b => b.id !== origen), i = lista.findIndex(b => b.id === destino);
+  const b = R.nb.bloques.get(origen); if (!b || i < 0) return;
+  b.orden = i === 0 ? lista[0].orden - 1 : (lista[i - 1].orden + lista[i].orden) / 2; // queda antes del destino
+  b.actualizadoPor = yo.id;
+  nbPintar(); nbEmitir(b); nbGuardar(b.id, 0);
+}
+function nbCambiarTipo(id, tipo) {
+  const b = R.nb.bloques.get(id); if (!b || b.tipo === 'fotograma') return;
+  b.tipo = b.tipo === tipo ? 'texto' : tipo;
+  if (b.tipo === 'codigo') b.html = nbLimpiar(b.html.replace(/<(?!br)[^>]+>/g, ''));
+  b.actualizadoPor = yo.id;
+  nbPintar(); nbEmitir(b); nbGuardar(id); nbFoco(id, true);
+}
+function nbCambiarTipoActual(tipo) {
+  const id = R.nb?.editando;
+  if (id && R.nb.bloques.get(id)?.tipo !== 'fotograma') nbCambiarTipo(id, tipo);
+  else nbCrear(tipo, id);
+}
+function nbTeclas(e, id) {
+  const b = R.nb.bloques.get(id), el = e.currentTarget;
+  if (R.nb.menu?.id === id && ['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(e.key)) { e.preventDefault(); nbTeclasMenu(e.key); return; }
+  if (e.key === 'Enter' && !e.shiftKey && b.tipo !== 'codigo') { e.preventDefault(); nbCrear('texto', id); return; }
+  if (e.key === 'Backspace' && el.innerText.replace(/\n/g, '') === '' && nbOrdenados().length > 0) { e.preventDefault(); nbQuitar(id, true); return; }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'e') { e.preventDefault(); nbCambiarTipo(id, 'codigo'); }
+}
+// Menú de comandos "/"
+const NB_COMANDOS = [
+  { tipo: 'titulo', ...NB_TIPOS.titulo }, { tipo: 'texto', ...NB_TIPOS.texto, ayuda: 'Una nota normal' }, { tipo: 'codigo', ...NB_TIPOS.codigo },
+  { tipo: 'fotograma', et: 'Capturar frame', ayuda: 'Fotograma actual del video' }
+];
+function nbMenu(id) {
+  nbCerrarMenu();
+  const el = $(`#nbCuerpo .nb-bloque[data-id="${id}"]`); if (!el) return;
+  R.nb.menu = { id, sel: 0, el: h('div', { class: 'nb-menu', role: 'menu' }) };
+  el.append(R.nb.menu.el); nbPintarMenu();
+}
+function nbPintarMenu() {
+  const m = R.nb.menu; if (!m) return;
+  poner(m.el, NB_COMANDOS.map((c, i) => h('button', { type: 'button', role: 'menuitem', class: i === m.sel ? 'activo' : '', onmousedown: e => e.preventDefault(), onclick: () => nbElegir(i) }, c.et, h('small', {}, c.ayuda))));
+}
+function nbTeclasMenu(tecla) {
+  const m = R.nb.menu;
+  if (tecla === 'Escape') return nbCerrarMenu();
+  if (tecla === 'Enter') return nbElegir(m.sel);
+  m.sel = (m.sel + (tecla === 'ArrowDown' ? 1 : NB_COMANDOS.length - 1)) % NB_COMANDOS.length; nbPintarMenu();
+}
+function nbElegir(i) {
+  const m = R.nb.menu; if (!m) return;
+  const c = NB_COMANDOS[i], b = R.nb.bloques.get(m.id);
+  nbCerrarMenu();
+  const txt = $(`#nbCuerpo .nb-bloque[data-id="${m.id}"] .nb-txt`); if (txt) txt.textContent = '';
+  if (!b) return;
+  b.html = '';
+  if (c.tipo === 'fotograma') { nbCapturar(m.id, true); return; }
+  b.tipo = c.tipo; b.actualizadoPor = yo.id;
+  nbPintar(); nbEmitir(b); nbGuardar(b.id); nbFoco(b.id);
+}
+function nbCerrarMenu() { R?.nb?.menu?.el.remove(); if (R?.nb) R.nb.menu = null; }
+// Captura del fotograma actual (480 px, JPEG) como bloque del cuaderno.
+function nbCapturar(reemplazarId = null, reemplazar = false) {
+  const v = videoEl();
+  if (!v || !v.videoWidth) { aviso('El video aún no tiene imagen para capturar', true); return; }
+  if (R.sinCaptura) { aviso('Este video no permite capturar fotogramas (CORS del servidor)', true); return; }
+  const ancho = Math.min(480, v.videoWidth), alto = Math.round(ancho * v.videoHeight / v.videoWidth);
+  const canvas = h('canvas', { width: ancho, height: alto });
+  canvas.getContext('2d').drawImage(v, 0, 0, ancho, alto);
+  let imagen;
+  try { imagen = canvas.toDataURL('image/jpeg', .72); } catch { aviso('Este video no permite capturar fotogramas', true); return; }
+  const extra = { imagen, segundo: Math.round(v.currentTime * 10) / 10 };
+  if (reemplazar && reemplazarId && R.nb.bloques.has(reemplazarId)) {
+    const b = R.nb.bloques.get(reemplazarId);
+    Object.assign(b, { tipo: 'fotograma', html: '', ...extra, actualizadoPor: yo.id });
+    nbPintar(); nbEmitir(b); nbGuardar(b.id, 0);
+  } else nbCrear('fotograma', R.nb.editando, extra);
+  aviso(`Fotograma ${mmss(extra.segundo)} pegado en el cuaderno`);
+}
+
+/* ---------- Voz con LiveKit (reglas 13 a 16) ---------- */
+async function alternarVoz() {
+  if (!R) return;
+  const v = R.voz;
+  if (!v.conectada) return conectarVoz(true);
+  v.mic = !v.mic;
+  await v.room.localParticipant.setMicrophoneEnabled(v.mic).catch(x => aviso(x.message, true));
+  pintarMic();
+}
+async function conectarVoz(manual = false) {
+  const r = R, v = r?.voz; if (!v || v.conectada || v.conectando) return;
+  v.conectando = true; pintarMic();
+  try {
+    const { token, url } = await api('/voz/token', { method: 'POST', body: { codigo: r.codigo } });
+    const room = new Room({ adaptiveStream: true, dynacast: true });
+    room.on(RoomEvent.TrackSubscribed, (track, _pub, participante) => {
+      if (track.kind !== Track.Kind.Audio) return;
+      const el = track.attach(); el.dataset.p = participante.identity; $('#audios').append(el);
+    });
+    room.on(RoomEvent.TrackUnsubscribed, track => track.detach().forEach(el => el.remove()));
+    room.on(RoomEvent.ActiveSpeakersChanged, hablantes => { if (R === r) v.oradores = hablantes.map(p => p.identity); });
+    room.on(RoomEvent.AudioPlaybackStatusChanged, () => { v.audioBloqueado = !room.canPlaybackAudio; if (R === r) pintarMic(); });
+    room.on(RoomEvent.Disconnected, () => { v.conectada = false; v.oradores = []; if (R === r) pintarMic(); });
+    await room.connect(url, token);
+    if (R !== r) { room.disconnect(); return; }
+    v.room = room; v.conectada = true;
+    v.audioBloqueado = !room.canPlaybackAudio;
+    try { await room.localParticipant.setMicrophoneEnabled(true); v.mic = true; }
+    catch { v.mic = false; aviso('Sin permiso de micrófono: escuchas al squad, pero no te oyen', true); }
+    if (manual) aviso('Conectado a la voz del squad');
+  } catch (x) { if (manual) aviso('No se pudo conectar la voz: ' + x.message, true); }
+  finally { v.conectando = false; if (R === r) pintarMic(); }
+}
+// Cada 250 ms: alimenta la máquina de estados con "alguien habla" y aplica los efectos al video.
+function tickVoz() {
+  if (!R) return;
+  revisarEspera();
+  tickFantasmas(250);
+  revisarGrabacion();
+  pintarMic();
+  const ahora = Date.now(), v = videoEl();
+  let s = R.voz.estado;
+  if (R.voz.conectada) s = reducirVoz(s, { tipo: 'oradores', hablando: R.voz.oradores.length > 0, reproduciendo: !!v && !v.paused, ahora });
+  s = reducirVoz(s, { tipo: 'tick', ahora });
+  R.voz.estado = s;
+  const ef = efectosVoz(s, ahora);
+  // Desvanecimiento del volumen hacia el objetivo (pausa suave).
+  R.factorVoz += (ef.volumen - R.factorVoz) * .5; if (Math.abs(ef.volumen - R.factorVoz) < .02) R.factorVoz = ef.volumen;
+  aplicarVolumen();
+  const antes = R.motivos.has('voz');
+  if (ef.pausado && !antes && R.factorVoz <= VOLUMEN_HABLANDO + .05) { R.motivos.add('voz'); aplicarReproduccion(); }
+  if (!ef.pausado && antes) { R.motivos.delete('voz'); aplicarReproduccion(); }
+  $('#rep')?.classList.toggle('atenuado', ef.pausado);
+  const ap = $('#autoPausa'); if (ap) ap.textContent = ef.pausado && !R.control ? (s.modo === 'pausa_mantenida' ? '(Pausa mantenida)' : '(Auto-Pausa por Voz)') : '';
+  pintarVoz(s, ef);
+}
+function pintarVoz(s, ef) {
+  const capa = $('#vozCapa'); if (!capa) return;
+  if (s.modo === 'normal' || R.control) { capa.hidden = true; return; }
+  capa.hidden = false;
+  const quien = R.voz.oradores[0];
+  const p = quien ? integrante(quien) : null;
+  const nombre = p ? (quien === yo.id ? 'Tú' : primerNombre(p.nombre)) : null;
+  let tarjeta;
+  if (s.modo === 'pausa_mantenida') {
+    tarjeta = h('div', { class: 'voz-tarjeta' }, h('p', { class: 'et' }, 'Pausa mantenida'), h('h3', {}, 'El video sigue cuando lo reanudes'),
+      h('button', { class: 'btn btn-pri btn-chico', onclick: alternarPlay }, 'Reanudar'));
+  } else if (s.modo === 'cuenta_regresiva') {
+    tarjeta = h('div', { class: 'voz-tarjeta' }, h('p', { class: 'et' }, 'Reanudando'), h('div', { class: 'cuenta', key: ef.cuenta }, String(ef.cuenta)),
+      h('button', { class: 'btn btn-sec btn-chico', onclick: () => { R.voz.estado = reducirVoz(R.voz.estado, { tipo: 'mantener_pausa' }); } }, 'Mantener pausa'));
+  } else {
+    tarjeta = h('div', { class: 'voz-tarjeta' },
+      p ? avatar(p, 'habla') : null,
+      h('h3', {}, nombre ? `${nombre} en micrófono` : 'Conversando'),
+      p ? h('div', { class: 'ondas' }, h('i'), h('i'), h('i'), h('i'), h('i')) : h('p', {}, 'Reanuda tras 3 s de silencio'),
+      h('p', {}, 'Video al 15 % · pausa suave · sin grabación ni transcripción'),
+      h('button', { class: 'btn btn-sec btn-chico', onclick: () => { R.voz.estado = reducirVoz(R.voz.estado, { tipo: 'mantener_pausa' }); } }, 'Mantener pausa'));
+  }
+  // Evita reconstruir la tarjeta si no cambió (para no reiniciar animaciones).
+  const firma = `${s.modo}|${quien}|${ef.cuenta}`;
+  if (capa.dataset.firma !== firma) { capa.dataset.firma = firma; poner(capa, tarjeta); }
+}
+
+/* ---------- Puntos de control y debate (reglas 17 a 23) ---------- */
+// La pregunta se pide unos segundos antes de su minuto, para abrirla al instante al llegar.
+function precargarPreguntas(t) {
+  R.precarga ??= new Map();
+  for (const c of R.datos.checkpoints) {
+    if (R.vistos.has(c.id) || R.precarga.has(c.id) || c.segundo - t > 25 || c.segundo < t) continue;
+    R.precarga.set(c.id, null);
+    const r = R;
+    api(`/grupo/salas/${r.codigo}/checkpoints/${c.id}/ronda`).then(v => r.precarga.set(c.id, v)).catch(() => r.precarga.delete(c.id));
+  }
+}
+async function abrirControl(id) {
+  R.vistos.add(id);
+  const lista = R.precarga?.get(id) || null;
+  R.control = { id, vista: lista, timer: null };
+  R.motivos.add('control'); aplicarReproduccion();
+  if (lista) { $('#controlCapa').hidden = false; pintarControl(); }
+  R.control.timer = setInterval(relojControl, 1000);
+  await refrescarControl(); // confirma el estado (otros pudieron votar ya); sin mensaje de carga
+}
+async function refrescarControl() {
+  if (!R?.control) return;
+  try { R.control.vista = await api(`/grupo/salas/${R.codigo}/checkpoints/${R.control.id}/ronda`); $('#controlCapa').hidden = false; pintarControl(); }
+  catch (x) { aviso(x.message, true); if (x.codigo === 'SIN_SESION' || x.status === 404) cerrarControl(true); }
+}
+async function votar(opcion) {
+  const c = R.control; if (!c?.vista || c.enviando != null) return;
+  // Se marca al instante; la respuesta del servidor confirma (o revierte) el voto.
+  c.enviando = opcion; pintarControl();
+  try { c.vista = await api(`/grupo/salas/${R.codigo}/checkpoints/${c.id}/voto`, { method: 'POST', body: { opcion } }); }
+  catch (x) { aviso(x.message, true); }
+  finally { c.enviando = null; if (R?.control === c) { pintarControl(); if (!c.vista) refrescarControl(); } }
+}
+async function cerrarDebate() {
+  try { R.control.vista = await api(`/grupo/salas/${R.codigo}/checkpoints/${R.control.id}/cerrar`, { method: 'POST' }); pintarControl(); }
+  catch (x) { aviso(x.message, true); }
+}
+function cerrarControl(reanudar = true) {
+  if (!R?.control) return;
+  if (R.fant.sonando?.enControl) pararDiscusion();
+  clearInterval(R.control.timer); R.control = null;
+  $('#controlCapa').hidden = true; poner($('#controlCapa'));
+  R.motivos.delete('control');
+  if (reanudar) R.motivos.delete('manual');
+  aplicarReproduccion(); pintarDinamico();
+}
+const restante = iso => iso ? Math.max(0, Math.ceil((new Date(iso).getTime() - Date.now()) / 1000)) : null;
+let pidiendo = false;
+async function relojControl() {
+  const c = R?.control; if (!c?.vista) return;
+  const v = c.vista;
+  const fin = v.fase === 'votacion' ? v.revelarEn : v.fase === 'debate' ? v.debateHasta : null;
+  const r = restante(fin);
+  const rel = $('#relojTxt');
+  if (rel && r !== null) rel.textContent = mmss(r);
+  // Cuando vence un plazo, se pide el estado y el servidor aplica la transición.
+  if (v.fase === 'debate') { const d = $('#debateVoz'); const firma = R.voz.oradores[0] || ''; if (d && d.dataset.firma !== firma) { d.dataset.firma = firma; poner(d, textoDebate(v)); } }
+  if (r === 0 && !pidiendo) { pidiendo = true; await refrescarControl(); pidiendo = false; }
+  if (v.fase === 'cerrada' && c.cierreAuto && Date.now() >= c.cierreAuto) cerrarControl(true);
+}
+function textoDebate(v) {
+  const quien = R.voz.oradores[0];
+  if (quien) return h('span', { class: 'argumenta' }, avatar(integrante(quien), 'chico habla'), ` ${quien === yo.id ? 'Tú argumentando' : primerNombre(integrante(quien).nombre) + ' argumentando'} (voz en vivo)`);
+  return v.miVoto ? 'No coincidieron: defiendan su respuesta por voz y cámbienla si los convencen.' : 'No respondiste a tiempo: puedes escuchar el debate.';
+}
+function pintarControl() {
+  const c = R.control, v = c?.vista; if (!v) return;
+  const cp = v.checkpoint;
+  const mio = c.enviando ?? (v.miVoto ? (v.miVoto.final ?? v.miVoto.inicial) : null);
+  const pude = v.fase === 'votacion' || (v.fase === 'debate' && v.miVoto);
+  const votosPorOpcion = op => (v.votos || []).filter(x => (x.final ?? x.inicial) === op);
+  const totalVotos = (v.votos || []).length || 1;
+  const fin = v.fase === 'votacion' ? v.revelarEn : v.fase === 'debate' ? v.debateHasta : null;
+  const r = restante(fin);
+  const reloj = fin ? h('span', { class: 'reloj ' + v.fase, id: 'relojTxt', title: v.fase === 'debate' ? 'Tiempo de debate' : 'Tiempo para responder' }, mmss(r)) : null;
+  const etiquetaFase = { votacion: 'Pregunta', debate: 'Debate', cerrada: 'Respuesta' }[v.fase];
+
+  const opciones = cp.opciones.map((txt, i) => {
+    const quienes = votosPorOpcion(i);
+    const cls = ['opcion'];
+    if (mio === i) cls.push('mia');
+    if (v.fase === 'cerrada') cls.push(i === v.correcta ? 'correcta' : 'incorrecta');
+    return h('button', { class: cls.join(' '), disabled: !pude || v.fase === 'cerrada' || c.enviando != null, onclick: () => votar(i) },
+      h('span', { class: 'letra' }, LETRAS[i]),
+      h('span', { class: 'txt' }, txt),
+      h('span', { class: 'quien' }, quienes.map(q => avatar(integrante(q.userId), 'chico'))),
+      v.votos && v.integrantes > 1 ? h('span', { class: 'barrita', style: `width:${(quienes.length / totalVotos) * 100}%` }) : null);
+  });
+
+  let pie;
+  if (v.fase === 'votacion') {
+    pie = h('div', { class: 'control-pie' },
+      v.integrantes > 1 ? h('div', { class: 'votantes' }, R.datos.integrantes.map(i => avatar(i, 'chico ' + (v.votantes.includes(i.userId) ? '' : 'no'))), h('span', {}, `${v.votantes.length}/${v.integrantes} respondieron`)) : h('span'),
+      v.integrantes > 1 ? h('span', {}, v.miVoto ? 'Puedes cambiarla hasta que respondan todos' : 'Nadie ve tu respuesta hasta que todos respondan') : null);
+  } else if (v.fase === 'debate') {
+    pie = h('div', { class: 'control-pie' },
+      h('span', { id: 'debateVoz' }, textoDebate(v)),
+      esAnfitrion() ? h('button', { class: 'btn-txt', style: 'font-size:.76rem', onclick: cerrarDebate }, 'Terminar debate') : null);
+  } else {
+    if (c.cierreAuto === undefined) c.cierreAuto = Date.now() + (sesionFantasma() ? 15000 : 7000);
+    pie = h('div', { style: 'display:grid;gap:8px' },
+      v.explicacion ? h('p', { class: 'explicacion' }, mio !== null && mio !== v.correcta ? [h('b', {}, `Era la ${LETRAS[v.correcta]}. `), v.explicacion] : v.explicacion) : null,
+      bloqueFantasmaControl(c, v),
+      h('div', { class: 'control-pie' }, h('span', {}, 'La clase sigue en unos segundos'), h('button', { class: 'btn-continuar', onclick: () => cerrarControl(true) }, 'Continuar')));
+  }
+
+  // Se reutiliza la tarjeta para que la animación de entrada ocurra una sola vez (sin parpadeo).
+  const capa = $('#controlCapa');
+  let tarjeta = capa.querySelector('.control');
+  if (!tarjeta) { tarjeta = h('div', { class: 'control', role: 'dialog', 'aria-label': 'Pregunta' }); poner(capa, tarjeta); }
+  poner(tarjeta,
+    h('div', { class: 'control-cab' }, h('span', { class: 'fase ' + v.fase }, etiquetaFase), reloj),
+    h('h2', {}, cp.pregunta),
+    h('div', { class: 'opciones' }, opciones),
+    pie);
+}
+
+/* ---------- Invitar amigos a esta clase (en vivo) ---------- */
+async function abrirInvitar() {
+  const dlg = $('#dlgInvitar'), lista = $('#invLista'), err = $('#invErr');
+  err.hidden = true;
+  poner(lista, h('p', { class: 'vacio' }, 'Cargando amigos…'));
+  dlg.showModal();
+  try { U.amigos = (await api('/amigos')).amigos; } catch (x) { poner(lista, h('p', { class: 'nota' }, x.message)); return; }
+  const dentro = new Set(R.datos.integrantes.map(i => i.userId));
+  const pendientes = new Set(R.datos.invitadosPendientes || []);
+  poner(lista, U.amigos.length ? U.amigos.map(a => h('label', { class: 'amigo-check' },
+    h('input', { type: 'checkbox', value: a.id, disabled: dentro.has(a.id) }),
+    avatar({ userId: a.id, nombre: a.nombre, avatar: a.avatar }),
+    h('span', { style: 'font-weight:700' }, a.nombre),
+    dentro.has(a.id) ? h('span', { class: 'tag' }, 'Ya está') : pendientes.has(a.id) ? h('span', { class: 'tag off' }, 'Invitado') : null))
+    : h('p', { class: 'nota' }, 'Aún no tienes amigos. Agrégalos desde Mis cursos con su correo.'));
+  $('#invCancelar').onclick = () => dlg.close();
+  $('#formInvitar').onsubmit = async e => {
+    e.preventDefault();
+    const ids = [...lista.querySelectorAll('input:checked:not(:disabled)')].map(x => x.value);
+    if (!ids.length) { err.textContent = 'Elige al menos un amigo'; err.hidden = false; return; }
+    $('#invEnviar').disabled = true;
+    try { await api(`/grupo/salas/${R.codigo}/invitar`, { method: 'POST', body: { amigos: ids } }); dlg.close(); aviso('Invitación enviada'); recargarSala(); }
+    catch (x) { err.textContent = x.message; err.hidden = false; }
+    finally { $('#invEnviar').disabled = false; }
+  };
+}
+
+/* ---------- Chat de la sesión ---------- */
+function chatArmar() {
+  const input = h('input', { class: 'in', id: 'chatTexto', maxlength: 500, placeholder: 'Escribe al squad…', autocomplete: 'off', 'aria-label': 'Mensaje' });
+  poner($('#ladoChat'), h('section', { class: 'chat' },
+    h('div', { class: 'chat-cab' }, h('b', {}, 'Chat de la clase'), 'Cada mensaje queda en su minuto del video: quien vea la clase después lo leerá ahí.'),
+    h('div', { class: 'chat-lista', id: 'chatLista', 'aria-live': 'polite' }),
+    h('form', { class: 'chat-form', onsubmit: async e => {
+      e.preventDefault();
+      const texto = input.value.trim(); if (!texto) return;
+      input.value = '';
+      try { const { mensaje } = await api(`/grupo/salas/${R.codigo}/chat`, { method: 'POST', body: { texto, posicion: videoEl()?.currentTime || 0 } }); chatRecibir(mensaje); }
+      catch (x) { aviso(x.message, true); input.value = texto; }
+    } }, input, h('button', { class: 'btn btn-pri btn-chico', type: 'submit' }, 'Enviar'))));
+  chatPintar(true);
+}
+function chatRecibir(m, fantasma = false) {
+  if (!R || R.chat.some(x => x.id === m.id)) return;
+  R.chat.push({ ...m, fantasma });
+  if (R.pestana !== 'chat' && m.userId !== yo.id) { R.noLeidos++; pintarNoLeidos(); }
+  if (m.userId !== yo.id) burbuja(m, fantasma);
+  chatPintar();
+}
+function chatPintar(alFinal = false) {
+  const lista = $('#chatLista'); if (!lista || !R) return;
+  const abajo = alFinal || lista.scrollHeight - lista.scrollTop - lista.clientHeight < 40;
+  poner(lista, R.chat.length ? R.chat.map(m => {
+    const p = m.userId === yo.id ? { userId: yo.id, nombre: yo.nombre, avatar: yo.avatar } : integrante(m.userId);
+    return h('div', { class: 'msg' + (m.userId === yo.id ? ' mio' : '') + (m.fantasma ? ' fantasma' : '') },
+      avatar(p, 'chico'),
+      h('div', {},
+        h('div', { class: 'quien' }, m.userId === yo.id ? 'Tú' : primerNombre(p.nombre), m.fantasma ? h('span', { class: 'tag off' }, 'fantasma') : null,
+          h('button', { class: 'min', title: 'Ir a este minuto', onclick: () => { if (!R.control) videoEl().currentTime = m.posicion; } }, mmss(m.posicion))),
+        h('div', { class: 'cuerpo' }, m.texto)));
+  }) : h('p', { class: 'vacio' }, 'Nadie ha escrito todavía.'));
+  if (abajo) lista.scrollTop = lista.scrollHeight;
+}
+function pintarNoLeidos() { const n = $('#chatNoLeidos'); if (n) { n.hidden = !R.noLeidos; n.textContent = String(R.noLeidos); } }
+// Mensaje flotante sobre el video, como en una transmisión en vivo.
+function burbuja(m, fantasma) {
+  const caja = $('#burbujas'); if (!caja) return;
+  const p = integrante(m.userId);
+  const b = h('div', { class: 'burbuja' + (fantasma ? ' fantasma' : '') }, avatar(p, 'chico'), h('span', {}, h('b', {}, primerNombre(p.nombre) + ': '), m.texto.length > 90 ? m.texto.slice(0, 90) + '…' : m.texto));
+  caja.append(b);
+  while (caja.children.length > 3) caja.firstChild.remove();
+  setTimeout(() => b.remove(), 6000);
+}
+
+/* ---------- Mi recorrido (lo que verán mis amigos como fantasma) ---------- */
+const CODIGO_ESTADO = { viendo: 0, pausado: 1, escribiendo: 2, hablando: 3 };
+function muestraRecorrido(e) {
+  if (!R || !sesionActiva()) return;
+  R.recorrido.pendientes.push([Date.now() - R.recorrido.inicioMs, Math.round(e.posicion * 10) / 10, CODIGO_ESTADO[e.estado] ?? 1]);
+}
+async function enviarRecorrido(alSalir = false) {
+  const r = R?.recorrido; if (!r || r.enviando || !r.pendientes.length) return;
+  const lote = r.pendientes.splice(0, 120);
+  r.enviando = true;
+  try {
+    const { data } = await sb.auth.getSession();
+    await fetch(`/api/grupo/salas/${R.codigo}/recorrido`, {
+      method: 'POST', keepalive: alSalir,
+      headers: { 'content-type': 'application/json', authorization: 'Bearer ' + data.session?.access_token },
+      body: JSON.stringify({ iniciado: r.iniciado, muestras: lote })
+    });
+  } catch { r.pendientes.unshift(...lote); }
+  finally { r.enviando = false; }
+}
+
+/* ---------- Mi voz en las discusiones (solo si acepté guardarla) ---------- */
+// Se graba solo mi propio micrófono mientras hablo (más 1,5 s), y se sube como clip con el
+// minuto del video. Quien vea la clase después escucha esos clips juntos, en el mismo orden.
+function revisarGrabacion() {
+  if (!R) return;
+  const v = R.voz, hablo = v.conectada && v.mic && v.oradores.includes(yo.id), ahora = Date.now();
+  if (!yo.grabarVoz || !v.conectada || !v.mic || typeof MediaRecorder === 'undefined') { if (R.grab) terminarClip(); return; }
+  if (hablo) {
+    if (!R.grab) empezarClip();
+    if (R.grab) R.grab.ultimaVoz = ahora;
+  }
+  if (R.grab && (ahora - R.grab.ultimaVoz > 1500 || ahora - R.grab.inicioMs > 60000)) terminarClip();
+}
+function empezarClip() {
+  const pista = R.voz.room?.localParticipant.getTrackPublication(Track.Source.Microphone)?.track?.mediaStreamTrack;
+  if (!pista) return;
+  const tipo = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'].find(t => MediaRecorder.isTypeSupported(t));
+  if (!tipo) return;
+  const rec = new MediaRecorder(new MediaStream([pista]), { mimeType: tipo, audioBitsPerSecond: 32000 });
+  const g = { rec, partes: [], tipo: tipo.split(';')[0], inicioMs: Date.now(), ultimaVoz: Date.now(), inicio: new Date().toISOString(),
+    posicion: R.control ? (R.datos.checkpoints.find(c => c.id === R.control.id)?.segundo ?? videoEl().currentTime) : videoEl().currentTime,
+    checkpointId: R.control?.id || null, codigo: R.codigo };
+  rec.ondataavailable = e => { if (e.data.size) g.partes.push(e.data); };
+  rec.onstop = () => subirClip(g);
+  rec.start(1000);
+  R.grab = g; pintarMic();
+}
+function terminarClip(descartar = false) {
+  const g = R?.grab; if (!g) return;
+  R.grab = null;
+  g.duracionMs = Date.now() - g.inicioMs;
+  if (descartar) g.descartar = true;
+  try { g.rec.stop(); } catch {}
+  pintarMic();
+}
+async function subirClip(g) {
+  if (g.descartar || g.duracionMs < 800 || !g.partes.length) return;
+  try {
+    const r = await api(`/grupo/salas/${g.codigo}/voz/clip`, { method: 'POST', body: { posicion: g.posicion, inicio: g.inicio, duracionMs: Math.min(g.duracionMs, 600000), checkpointId: g.checkpointId, tipo: g.tipo } });
+    const { error } = await sb.storage.from(r.bucket).uploadToSignedUrl(r.ruta, r.token, new Blob(g.partes, { type: g.tipo }), { contentType: g.tipo });
+    if (error) throw error;
+  } catch (x) { console.warn('No se guardó el clip de voz', x); }
+}
+
+/* ---------- Fantasmas: ver la clase con quienes ya la vieron ---------- */
+async function cargarFantasmas() {
+  const r = R; if (!r) return;
+  try {
+    const { sesiones } = await api(`/clases/${r.datos.video.id}/fantasmas?excluir=${r.datos.sesion?.id || ''}`);
+    if (R !== r) return;
+    r.fant.sesiones = sesiones;
+    if (sesiones.length) elegirFantasma(sesiones[0].sessionId, false);
+    else pintarCajaFantasmas();
+  } catch (x) { console.warn('Sin fantasmas', x); }
+}
+const sesionFantasma = () => R?.fant.sesiones.find(s => s.sessionId === R.fant.activa) || null;
+function fantasmaPersona(id) {
+  for (const s of R?.fant.sesiones || []) { const p = s.participantes.find(x => x.userId === id); if (p) return p; }
+  return null;
+}
+function elegirFantasma(sessionId, avisar = true) {
+  const f = R.fant;
+  pararDiscusion();
+  f.activa = sessionId; f.reloj = 0; f.hechas = new Set(); f.chatVisto = new Set(); f.discusiones = [];
+  R.chat = R.chat.filter(m => !m.fantasma); chatPintar();
+  const s = sesionFantasma();
+  if (s) {
+    const t0 = Math.min(...s.participantes.map(p => Date.parse(p.iniciado)));
+    f.t0 = t0;
+    s.participantes.forEach(p => { p.base = Date.parse(p.iniciado) - t0; });
+    f.discusiones = agruparClips(s.clips.filter(c => !c.checkpointId));
+    if (avisar) aviso(`Verás la clase con ${listaNombres(s.participantes.map(p => p.nombre))} como fantasmas`);
+  }
+  pintarCajaFantasmas(); pintarLinea(); nbPintarTabs();
+}
+// Clips que se solapan (o casi) en el tiempo son una misma discusión.
+function agruparClips(clips) {
+  const orden = [...clips].sort((a, b) => Date.parse(a.inicio) - Date.parse(b.inicio));
+  const grupos = [];
+  for (const c of orden) {
+    const ini = Date.parse(c.inicio), fin = ini + c.duracionMs, g = grupos.at(-1);
+    if (g && ini <= g.fin + 4000) { g.clips.push(c); g.fin = Math.max(g.fin, fin); g.posicion = Math.min(g.posicion, c.posicion); }
+    else grupos.push({ id: c.id, inicio: ini, fin, posicion: c.posicion, clips: [c] });
+  }
+  return grupos.map(g => ({ ...g, duracion: g.fin - g.inicio, personas: [...new Set(g.clips.map(c => c.userId))] }));
+}
+// Posición de un fantasma con el reloj de la sesión (ms desde que empezó el primero).
+function posFantasma(p, reloj) {
+  const t = reloj - p.base, m = p.muestras;
+  if (t < 0 || !m.length) return null;
+  if (t > m.at(-1)[0] + 15000) return { posicion: m.at(-1)[1], estado: 1, termino: true };
+  let lo = 0, hi = m.length - 1;
+  while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (m[mid][0] <= t) lo = mid; else hi = mid - 1; }
+  const a = m[lo], b = m[lo + 1];
+  let posicion = a[1];
+  if (b && a[2] === 0 && b[1] >= a[1] && b[1] - a[1] < 5 && b[0] > a[0]) posicion = a[1] + (b[1] - a[1]) * (t - a[0]) / (b[0] - a[0]);
+  return { posicion, estado: a[2], termino: false };
+}
+// El reloj de los fantasmas corre mientras yo veo la clase (o escucho su discusión).
+function tickFantasmas(dt) {
+  const f = R?.fant; if (!f?.activa) return;
+  const v = videoEl();
+  if ((v && !v.paused) || f.sonando) f.reloj += dt;
+}
+function fantasmasAhora() {
+  const s = sesionFantasma(); if (!s) return [];
+  return s.participantes.map(p => ({ ...p, ...(posFantasma(p, R.fant.reloj) || { posicion: 0, estado: 1, ausente: true }) }));
+}
+const ESTADO_FANTASMA = ['viendo', 'en pausa', 'tomando notas', 'hablando'];
+function pintarCajaFantasmas() {
+  const caja = $('#cajaFantasmas'); if (!caja || !R) return;
+  const f = R.fant;
+  if (!f.sesiones.length) {
+    poner(caja, h('h3', {}, 'Fantasmas'), h('p', { class: 'vacio' }, 'Ninguno de tus amigos ha visto esta clase todavía. Cuando la vean, aparecerán aquí; y tú serás su fantasma si la ven después de ti.'));
+    return;
+  }
+  const s = sesionFantasma();
+  const fecha = iso => new Date(iso).toLocaleDateString('es', { day: 'numeric', month: 'short' });
+  poner(caja,
+    h('div', { class: 'tarjeta-cab' }, h('h3', {}, 'Fantasmas'), s ? h('button', { class: 'btn-txt', onclick: () => { f.activa = null; pararDiscusion(); R.chat = R.chat.filter(m => !m.fantasma); chatPintar(); pintarCajaFantasmas(); pintarLinea(); nbPintarTabs(); } }, 'Ocultar') : null),
+    h('p', { class: 'vacio' }, 'Tus amigos que ya vieron esta clase avanzan contigo. Sus mensajes aparecen en su minuto y, donde discutieron, escucharás sus voces.'),
+    f.sesiones.map(x => h('button', { class: 'fant-sesion', 'aria-pressed': String(x.sessionId === f.activa), onclick: () => elegirFantasma(x.sessionId) },
+      h('span', { class: 'fantasma-chip' }, h('span', { class: 'pila' }, x.participantes.slice(0, 4).map(p => avatar(p, 'chico')))),
+      h('span', {}, h('div', { class: 't' }, listaNombres(x.participantes.map(p => p.nombre))),
+        h('div', { class: 's' }, [fecha(x.fecha), x.chat.length ? `${x.chat.length} mensaje${x.chat.length === 1 ? '' : 's'}` : null, (n => n ? `${n} ${n === 1 ? 'discusión' : 'discusiones'} con voz` : null)(agruparClips(x.clips.filter(c => !c.checkpointId)).length), x.cuaderno.length ? 'cuaderno' : null].filter(Boolean).join(' · '))))),
+    s ? h('ul', { class: 'integrantes', id: 'fantasmasLista' }) : null);
+  pintarListaFantasmas();
+}
+function pintarListaFantasmas() {
+  const ul = $('#fantasmasLista'); if (!ul || !R) return;
+  poner(ul, fantasmasAhora().map(p => h('li', { class: 'integrante', style: 'opacity:.8' },
+    avatar(p, 'fantasma'),
+    h('div', {}, h('div', { class: 'nombre' }, p.nombre, h('span', { class: 'tag off' }, 'fantasma')),
+      h('div', { class: 'sub' }, p.ausente ? 'Todavía no empieza' : p.termino ? 'Terminó aquí' : ESTADO_FANTASMA[p.estado] || '')),
+    h('span', { class: 'pos' }, p.ausente ? '' : mmss(p.posicion)))));
+}
+// Al pasar por el minuto de algo que hicieron los fantasmas: su mensaje o su discusión.
+function revisarFantasmas(desde, hasta) {
+  const s = sesionFantasma(); if (!s || R.control || hasta - desde > 2 || hasta < desde) return;
+  for (const m of s.chat) if (!R.fant.chatVisto.has(m.id) && m.posicion > desde - .01 && m.posicion <= hasta) { R.fant.chatVisto.add(m.id); chatRecibir(m, true); }
+  if (R.fant.sonando) return;
+  const d = R.fant.discusiones.find(g => !R.fant.hechas.has(g.id) && g.posicion > desde - .01 && g.posicion <= hasta + .25);
+  if (d) reproducirDiscusion(d);
+}
+// Reproduce los clips de una discusión, cada uno a su tiempo. Mi video espera (como la auto-pausa por voz).
+function reproducirDiscusion(g, enControl = false) {
+  pararDiscusion();
+  const f = R.fant;
+  f.hechas.add(g.id);
+  const audios = g.clips.map(c => ({ c, a: new Audio(c.url), desfase: Date.parse(c.inicio) - g.inicio }));
+  const son = { g, audios, timers: [], inicio: Date.now(), enControl, hablando: new Set() };
+  f.sonando = son;
+  if (!enControl) { R.motivos.add('fantasma'); aplicarReproduccion(); }
+  for (const x of audios) {
+    x.a.volume = Math.max(.2, R.volumen);
+    x.a.onplay = () => { son.hablando.add(x.c.userId); pintarDiscusion(); };
+    x.a.onended = x.a.onerror = () => { son.hablando.delete(x.c.userId); pintarDiscusion(); };
+    son.timers.push(setTimeout(() => x.a.play().catch(() => {}), x.desfase));
+  }
+  son.timers.push(setTimeout(() => terminarDiscusion(), g.duracion + 900));
+  son.timers.push(setInterval(pintarDiscusion, 200));
+  pintarDiscusion();
+}
+function pararDiscusion() {
+  const son = R?.fant?.sonando; if (!son) return;
+  son.timers.forEach(t => { clearTimeout(t); clearInterval(t); });
+  son.audios.forEach(x => { try { x.a.pause(); } catch {} });
+  R.fant.sonando = null;
+  $('#fantasmaCapa') && ($('#fantasmaCapa').hidden = true);
+}
+function terminarDiscusion() {
+  const son = R?.fant?.sonando; if (!son) return;
+  pararDiscusion();
+  if (!son.enControl) { R.motivos.delete('fantasma'); aplicarReproduccion(); }
+  else if (R.control) { R.control.cierreAuto = Date.now() + 6000; pintarControl(); }
+}
+function pintarDiscusion() {
+  const son = R?.fant.sonando, capa = $('#fantasmaCapa'); if (!capa) return;
+  if (!son || son.enControl) { capa.hidden = true; if (son?.enControl) pintarControlFantasma(); return; }
+  capa.hidden = false;
+  const avance = Math.min(1, (Date.now() - son.inicio) / Math.max(1, son.g.duracion));
+  const habla = [...son.hablando][0];
+  const firma = `${habla}`;
+  if (capa.dataset.firma !== firma || !capa.firstChild) {
+    capa.dataset.firma = firma;
+    poner(capa, h('div', { class: 'voz-tarjeta' },
+      h('p', { class: 'et' }, 'Fantasmas · discusión grabada'),
+      h('div', { class: 'pila' }, son.g.personas.map(id => avatar(integrante(id), son.hablando.has(id) ? 'habla' : ''))),
+      h('h3', {}, habla ? `${primerNombre(integrante(habla).nombre)} está hablando` : `Lo que discutieron ${listaNombres(son.g.personas.map(id => integrante(id).nombre))}`),
+      h('div', { class: 'progreso' }, h('i', { id: 'progDisc' })),
+      h('p', {}, `Grabado en ${mmss(son.g.posicion)} · tu video sigue al terminar`),
+      h('button', { class: 'btn btn-sec btn-chico', onclick: terminarDiscusion }, 'Saltar')));
+  }
+  const barra = $('#progDisc'); if (barra) barra.style.width = `${avance * 100}%`;
+}
+// En la tarjeta del punto de control: cómo votaron los fantasmas y su debate grabado.
+async function cargarVotosFantasma(c) {
+  const s = sesionFantasma(); if (!s || c.fantasmas !== undefined) return;
+  c.fantasmas = null;
+  try {
+    const { rondas } = await api(`/clases/${R.datos.video.id}/fantasmas/votos?checkpoint=${c.id}&sesiones=${s.sessionId}`);
+    c.fantasmas = rondas.find(r => r.sessionId === s.sessionId) || { votos: [] };
+  } catch { c.fantasmas = { votos: [] }; }
+  if (R?.control === c) pintarControl();
+}
+function bloqueFantasmaControl(c, v) {
+  const s = sesionFantasma(); if (!s || v.fase !== 'cerrada') return null;
+  if (c.fantasmas === undefined) { cargarVotosFantasma(c); return null; }
+  const debate = agruparClips(s.clips.filter(x => x.checkpointId === c.id))[0];
+  const votos = c.fantasmas?.votos || [];
+  if (!votos.length && !debate) return null;
+  const son = R.fant.sonando;
+  return h('div', { class: 'votos-fantasma', id: 'votosFantasma' },
+    h('b', {}, `Así respondieron ${listaNombres(s.participantes.map(p => p.nombre))}`),
+    votos.map(x => h('div', { class: 'fila-v' }, avatar(integrante(x.userId), 'chico fantasma'),
+      h('span', {}, `${primerNombre(integrante(x.userId).nombre)}: `, h('b', {}, LETRAS[x.inicial]), x.final !== x.inicial ? [' → ', h('b', {}, LETRAS[x.final])] : null, x.final === v.correcta ? ' · acertó' : ' · no acertó'))),
+    debate ? h('button', { class: 'btn btn-sec btn-chico', style: 'justify-self:start', onclick: () => {
+      if (son?.enControl) { terminarDiscusion(); return; }
+      c.cierreAuto = null; reproducirDiscusion(debate, true); pintarControl();
+    } }, son?.enControl ? 'Detener' : `Escuchar su debate (${mmss(debate.duracion / 1000)})`) : null);
+}
+function pintarControlFantasma() {
+  const b = $('#votosFantasma button'); const son = R?.fant.sonando;
+  if (b && son?.enControl) b.textContent = son.hablando.size ? `Detener · habla ${primerNombre(integrante([...son.hablando][0]).nombre)}` : 'Detener';
+}
+
+/* ============ Arranque ============ */
+async function arrancar() {
+  const { data } = await sb.auth.getSession();
+  if (!data.session) return pantallaAcceso();
+  await cargarYo(data.session.user);
+  // Preferencia de telemetría elegida al crear la cuenta (regla 35).
+  const pref = sessionStorage.getItem('telemetria');
+  if (pref !== null) { sessionStorage.removeItem('telemetria'); await sb.from('profiles').update({ telemetria: pref === '1' }).eq('id', yo.id); yo.telemetria = pref === '1'; }
+  conectarUsuario();
+  const q = new URLSearchParams(location.search);
+  if (q.get('sala')) return entrarASala(q.get('sala').toUpperCase());
+  if (q.get('clase')) return abrirClase(q.get('clase')).catch(x => pantallaInicio(x.message));
+  pantallaInicio();
+}
+window.addEventListener('beforeunload', () => { if (R) { enviarRecorrido(true); terminarClip(true); } R?.voz.room?.disconnect(); });
+try {
+  await configurar();
+  sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT') { yo = null; } });
+  await arrancar();
+} catch (x) {
+  poner($('#vista'), h('section', { class: 'entrada' }, introSala(), h('div', { class: 'form' }, h('h2', {}, 'No se pudo iniciar'), h('p', { class: 'nota' }, x.message))));
+}
+</script>
+</body>
+</html>
