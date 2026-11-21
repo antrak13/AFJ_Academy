@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clase · Aprendines</title>
+<meta name="description" content="Enséñale a tu aprendín: mientras aprende, evoluciona y escribe sus fichas.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Caveat:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="css/aprendin.css">
+<link rel="stylesheet" href="css/taller.css">
+<link rel="stylesheet" href="css/fichas.css">
+<link rel="stylesheet" href="css/clase.css">
+<link rel="stylesheet" href="css/prueba.css">
+</head>
+<body class="pag-clase">
+<header class="barra">
+  <a class="marca" href="taller.html" aria-label="Aprendines: volver al taller"><span class="marca-av" id="marcaAv"></span><span>Aprendines</span></a>
+  <nav class="nav" aria-label="Secciones"><a href="taller.html">Taller</a><a href="clase.html" aria-current="page">Clase</a><a href="fichas.html">Fichas</a></nav>
+  <p class="lema" id="lema">Enséñale y míralo <b>evolucionar</b>.</p>
+  <div class="barra-acc">
+    <span class="estado-ia" id="estadoIA">Buscando la IA…</span>
+    <button class="btn btn-chico" id="btnVoz" type="button" aria-pressed="false" title="Que el aprendín hable en voz alta">Voz: no</button>
+    <button class="btn btn-chico" id="btnReiniciar" type="button">Empezar de nuevo</button>
+  </div>
+</header>
+
+<main class="clase" id="clase" hidden>
+  <section class="cl-escenario" aria-label="Tu aprendín">
+    <div class="foco cl-foco" id="foco">
+      <div class="estrella" id="estrella"></div>
+      <div class="piso" aria-hidden="true"></div>
+      <div class="cl-evo" id="evo" aria-hidden="true"><b id="evoTxt">¡Evolucionó!</b></div>
+    </div>
+    <div class="cl-placa"><h1 id="nombre"></h1><span id="deDonde"></span></div>
+    <ol class="cl-fases" id="fases" aria-label="Fases de evolución"></ol>
+    <p class="cl-fase-txt" id="faseTxt"></p>
+    <div class="cl-ahora">
+      <span class="cl-ahora-tit" id="ahoraTit">Ahora le enseñas</span>
+      <p class="cl-concepto" id="concepto"></p>
+      <button class="btn btn-chico" id="btnPista" type="button" aria-expanded="false" aria-controls="pista">¿Cómo se lo explico?</button>
+      <p class="cl-pista" id="pista" hidden></p>
+      <button class="btn btn-crear cl-btn-prueba" id="btnPrueba" type="button" hidden>Hacer la prueba juntos</button>
+    </div>
+    <details class="cl-mision"><summary>Su misión</summary><p id="mision"></p></details>
+  </section>
+
+  <section class="cl-chat" aria-label="Clase">
+    <div class="cl-mensajes" id="mensajes" role="log" aria-live="polite" aria-relevant="additions"></div>
+    <form class="cl-escribir" id="formMsg" autocomplete="off">
+      <label class="solo-lector" for="msg">Tu explicación</label>
+      <textarea id="msg" rows="1" maxlength="600" placeholder="Explícale con tus palabras…"></textarea>
+      <button class="cl-mic" id="btnMic" type="button" aria-label="Dictar con la voz" title="Dictar con la voz" hidden>🎤</button>
+      <button class="btn btn-crear cl-enviar" id="btnEnviar" type="submit">Enseñar</button>
+    </form>
+  </section>
+
+  <aside class="cl-cuaderno" aria-label="Cuaderno de fichas">
+    <div class="cl-cuad-tit"><h2>Sus fichas</h2><span id="cuentaFichas">0 de 4</span></div>
+    <p class="nota" id="notaFichas">Cada vez que entiende un paso, escribe una ficha con lo que le enseñaste.</p>
+    <div class="cl-fichas" id="fichas"></div>
+    <details class="cl-medicion" id="medicion">
+      <summary>Lo que midió la IA</summary>
+      <p class="nota">Mientras conversan, la IA evalúa cada explicación sin ponerte nota. Así se ve dónde te trabaste.</p>
+      <div id="medicionLista"></div>
+    </details>
+  </aside>
+</main>
+
+<section class="cl-vacio" id="vacio" hidden>
+  <div class="tarjeta">
+    <h2>Todavía no tienes un aprendín</h2>
+    <p>Créalo en el taller con lo que te gusta y el tema que le vas a enseñar.</p>
+    <div class="cl-vacio-acc"><a class="btn btn-crear" href="taller.html">Ir al taller</a><button class="btn" id="btnEjemplo" type="button">Probar con uno de ejemplo</button></div>
+  </div>
+</section>
+
+<div class="prueba" id="prueba" hidden>
+  <div class="pr-caja" role="dialog" aria-modal="true" aria-labelledby="prTitulo">
+    <header class="pr-cab">
+      <div class="pr-tit"><small>La prueba de la misión · juntos</small><h2 id="prTitulo">La prueba</h2></div>
+      <ol class="pr-progreso" id="prProgreso" aria-label="Preguntas"></ol>
+      <span class="pr-equipo" id="prEquipo"></span>
+      <button class="pr-cerrar" id="prCerrar" type="button" aria-label="Salir de la prueba (se guarda)">✕</button>
+    </header>
+    <div class="pr-cuerpo">
+      <div class="pr-apr">
+        <div class="pr-globo" id="prGlobo" aria-live="polite"></div>
+        <div class="pr-av" id="prAv"></div>
+        <span class="pr-nombre" id="prNombre"></span>
+      </div>
+      <div class="pr-zona" id="prZona"></div>
+    </div>
+  </div>
+</div>
+
+<div class="nacimiento cl-final" id="final" hidden>
+  <div class="nac-caja" role="dialog" aria-modal="true" aria-labelledby="finTit">
+    <p class="nac-titulo" id="finTit">¡Misión cumplida!</p>
+    <div class="nac-escena"><div class="nac-aprendin" id="finAprendin"></div></div>
+    <p class="nac-sub" id="finSub"></p>
+    <div class="nac-acciones"><button class="btn btn-crear" id="finFichas" type="button">Ver sus fichas</button><a class="btn" href="taller.html">Crear otro aprendín</a></div>
+  </div>
+</div>
+
+<script type="module" src="js/clase.js"></script>
+</body>
+</html>
