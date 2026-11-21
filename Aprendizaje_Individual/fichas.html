@@ -7,36 +7,84 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Caveat:wght@600&family=Nunito:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="css/aprendin.css">
 <link rel="stylesheet" href="css/taller.css">
 <link rel="stylesheet" href="css/fichas.css">
-<style>
-  .galeria { columns: 360px; column-gap: 20px; padding: 8px clamp(16px, 4vw, 40px) 48px; }
-  .galeria .ficha-ap { break-inside: avoid; margin-bottom: 20px; }
-  .intro { padding: 0 clamp(16px, 4vw, 40px); max-width: 70ch; color: var(--tinta-2); font-weight: 600; }
-  .tipo { display: inline-block; margin: 0 0 6px; font: 800 .72rem var(--display); text-transform: uppercase; letter-spacing: .06em; color: var(--tinta-2); }
-</style>
 </head>
 <body>
 <header class="barra">
-  <a class="marca" href="taller.html"><span>Aprendines</span></a>
+  <a class="marca" href="taller.html" aria-label="Aprendines: taller"><span class="marca-av" id="marcaAv"></span><span>Aprendines</span></a>
   <nav class="nav" aria-label="Secciones"><a href="taller.html">Taller</a><a href="clase.html">Clase</a><a href="fichas.html" aria-current="page">Fichas</a></nav>
-  <p class="lema">Fichas: lo que tu aprendín anota cuando <b>entiende</b>.</p>
+  <p class="lema">Fichas visuales que <b>se adaptan</b> mientras aprendes.</p>
+  <div class="barra-acc"><span class="estado-ia" id="estadoIA">Buscando la IA…</span></div>
 </header>
-<p class="intro">Cuando le enseñas bien un paso del tema, tu aprendín escribe su ficha. La IA elige el visual que mejor explica la idea entre 13 tipos y le pone los datos de su mundo; el código lo dibuja y lo anima. Estas son fichas de ejemplo, una por tipo.</p>
-<main class="galeria" id="galeria"></main>
-<script type="module">
-  import { EJEMPLOS } from './js/fichas-ejemplo.js';
-  import { limpiarFicha, htmlFicha } from './js/fichas.js';
-  import { svgAprendin } from './js/aprendin.js';
-  import { MUNDOS } from './js/mundos.js';
-  import { tonos } from './js/color.js';
-  import { activarFichas } from './js/fichas-dom.js';
-  const g = document.getElementById('galeria');
-  EJEMPLOS.forEach((e, i) => {
-    const m = MUNDOS[i % MUNDOS.length], f = limpiarFicha(e.ficha);
-    g.insertAdjacentHTML('beforeend', htmlFicha(f, { numero: (i % 4) + 1, fase: e.fase, mundo: e.mundo, tono: tonos(m.look.color), avatar: svgAprendin(m.look, { emocion: 'orgulloso' }) }));
-  });
-  activarFichas(g);
-</script>
+
+<main class="fi-pag">
+  <section class="tarjeta crear fi-inicio" id="tarjetaInicio" aria-labelledby="tInicio">
+    <div class="tarjeta-tit">
+      <h1 id="tInicio">Estudia con fichas adaptativas</h1>
+    </div>
+    <p class="nota">Escribe qué tema quieres entender y qué te gusta. La IA genera una ficha con el visual animado que mejor lo explica (entre 13 tipos, cuando aplica) y cada nueva ficha se adapta a tu reacción.</p>
+
+    <div class="fi-apr-ban" id="bannerAprendin" hidden>
+      <span class="mini" id="aprMini" aria-hidden="true"></span>
+      <span id="aprDesc"></span>
+      <button class="btn btn-chico" id="btnUsarAprendin" type="button">Usar este tema y mundo</button>
+    </div>
+
+    <form id="formEstudio" class="form-crear" autocomplete="off">
+      <div class="pregunta">
+        <label for="temaEstudio">¿Qué quieres aprender?</label>
+        <input id="temaEstudio" maxlength="80" placeholder="Ej.: fracciones, porcentajes, la fotosíntesis" required>
+        <div class="sugerencias" id="sugTemas" aria-label="Ideas de temas"></div>
+      </div>
+      <div class="pregunta">
+        <label for="gustosEstudio">Tus gustos o mundo</label>
+        <input id="gustosEstudio" maxlength="120" placeholder="Ej.: fútbol, anime, cocinar, videojuegos">
+        <div class="sugerencias" id="sugGustos" aria-label="Ideas de gustos"></div>
+      </div>
+      <fieldset class="fi-niveles">
+        <legend class="campo-nombre">¿Cuánto sabes del tema?</legend>
+        <label><input type="radio" name="nivelEstudio" value="cero"><span>Empiezo de cero</span></label>
+        <label><input type="radio" name="nivelEstudio" value="algo" checked><span>Sé algo</span></label>
+        <label><input type="radio" name="nivelEstudio" value="bastante"><span>Sé bastante</span></label>
+      </fieldset>
+      <button class="btn btn-crear" id="btnGenerar" type="submit">Generar primera ficha</button>
+    </form>
+  </section>
+
+  <section class="fi-estudio" id="estudioActivo" hidden aria-label="Tu sesión de fichas adaptativas">
+    <div class="fi-barra-adap">
+      <div class="fi-barra-info">
+        <b id="estTema"></b>
+        <span class="fi-meta">Mundo: <em id="estMundo"></em> · <em id="estNivel"></em> · <em id="estCuenta"></em></span>
+        <div class="fi-tipos-usados" id="estTipos" aria-label="Tipos visuales usados"></div>
+      </div>
+      <div class="fi-barra-acc">
+        <button class="btn" id="btnNuevoTema" type="button">Cambiar tema</button>
+        <a class="btn btn-fuerte fi-ir-clase" id="btnIrClase" href="clase.html">Enseñarle a tu aprendín →</a>
+      </div>
+    </div>
+
+    <div class="fi-cargando" id="estudioCargando" hidden>
+      <p class="cargando">Armando tu ficha adaptada con el mejor diseño visual…</p>
+    </div>
+
+    <div class="fi-feed" id="estudioLista"></div>
+  </section>
+
+  <section class="fi-sec" id="secClase" hidden aria-labelledby="claseTit">
+    <h2 id="claseTit">Fichas de tu clase</h2>
+    <div class="galeria" id="claseGaleria"></div>
+  </section>
+
+  <section class="fi-sec" aria-labelledby="tEjemplos">
+    <h2 id="tEjemplos">Ejemplos de los 13 tipos de visual</h2>
+    <p class="intro">Cuando le enseñas bien un paso del tema o estudias con fichas, la IA elige el visual que mejor explica la idea entre estos 13 tipos y el código lo dibuja y anima.</p>
+    <div class="galeria" id="galeria"></div>
+  </section>
+</main>
+
+<script type="module" src="js/fichas-estudio.js"></script>
 </body>
 </html>

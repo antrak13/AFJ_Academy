@@ -69,6 +69,20 @@ export function esquemaFicha() {
   };
 }
 
+export function esquemaFichaInicio() {
+  const base = esquemaFicha();
+  const s = d => ({ type: 'string', description: d });
+  return {
+    type: 'object',
+    properties: {
+      ...base.properties,
+      subtema: s('Qué parte específica del tema cubre esta ficha, máximo 5 palabras'),
+      adaptacion: s('Una oración corta explicando por qué elegiste este enfoque y visual para el estudiante')
+    },
+    required: [...base.required, 'subtema', 'adaptacion']
+  };
+}
+
 /* ================= Limpieza ================= */
 const txt = (v, max) => String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
 const num = (v, def = 0) => { const x = Number(v); return Number.isFinite(x) ? x : def; };
@@ -115,6 +129,13 @@ export function limpiarFicha(r = {}) {
     titulo: txt(r.titulo, 60) || 'Lo que aprendí', icono: emoji(r.icono) || '✨', idea: txt(r.idea, 260), visual: vis,
     ejemplo: { situacion: txt(e.situacion, 220), pasos: (Array.isArray(e.pasos) ? e.pasos : []).map(p => txt(p, 110)).filter(Boolean).slice(0, 4), resultado: txt(e.resultado, 100) },
     cuidado: txt(r.cuidado, 200), de_ti: txt(r.de_ti, 160).replace(/^[«"“']+|[»"”']+$/g, '').trim()
+  };
+}
+export function limpiarFichaInicio(r = {}) {
+  return {
+    ...limpiarFicha(r),
+    subtema: txt(r.subtema, 60) || txt(r.titulo, 60) || 'Concepto clave',
+    adaptacion: txt(r.adaptacion, 180)
   };
 }
 function visualTieneDatos(v) {
@@ -257,17 +278,20 @@ export function htmlVisual(v) {
   return `<figure class="vis vis-${v.tipo}">${v.titulo ? `<figcaption>${esc(v.titulo)}</figcaption>` : ''}${dib}<button class="vis-otra" type="button" aria-label="Ver la animación otra vez" title="Ver otra vez">↻</button></figure>`;
 }
 
-// ctx: { numero, fase, mundo, avatar (HTML del aprendín), tono: { base, claro, oscuro } }
+// ctx: { numero, fase, mundo, avatar (HTML del aprendín), tono: { base, claro, oscuro }, citaDe, adaptacion, pieHtml }
 export function htmlFicha(f, ctx = {}) {
   const t = ctx.tono || { base: '#6C63FF', claro: '#EFEDFF', oscuro: '#4B43D1' };
   const e = f.ejemplo || {};
+  const adap = ctx.adaptacion || f.adaptacion;
   return `<article class="ficha-ap" style="--c:${t.base};--c-claro:${t.claro};--c-osc:${t.oscuro}">
 <header class="fi-cab"><span class="fi-ico" aria-hidden="true">${esc(f.icono)}</span><div class="fi-tit"><small>Ficha ${ctx.numero || ''}${ctx.fase ? ` · ${esc(ctx.fase)}` : ''}</small><h3>${esc(f.titulo)}</h3></div>${ctx.avatar ? `<span class="fi-av">${ctx.avatar}</span>` : ''}</header>
+${adap ? `<p class="fi-adapta"><b>Adaptada para ti:</b> ${esc(adap)}</p>` : ''}
 ${f.idea ? `<p class="fi-idea">${esc(f.idea)}</p>` : ''}
 ${htmlVisual(f.visual)}
 ${e.situacion ? `<section class="fi-ejemplo"><h4>Ejemplo${ctx.mundo ? ` en ${esc(ctx.mundo.charAt(0).toLowerCase() + ctx.mundo.slice(1))}` : ''}</h4><p>${esc(e.situacion)}</p>${e.pasos?.length ? `<ol>${e.pasos.map(p => `<li>${esc(p)}</li>`).join('')}</ol>` : ''}${e.resultado ? `<p class="fi-res">${esc(e.resultado)}</p>` : ''}</section>` : ''}
 ${f.cuidado ? `<aside class="fi-cuidado"><b>¡Ojo!</b> ${esc(f.cuidado)}</aside>` : ''}
-${f.de_ti ? `<blockquote class="fi-deti"><p>«${esc(f.de_ti)}»</p><cite>Lo que me enseñaste</cite></blockquote>` : ''}
+${f.de_ti ? `<blockquote class="fi-deti"><p>«${esc(f.de_ti)}»</p><cite>${esc(ctx.citaDe || 'Lo que me enseñaste')}</cite></blockquote>` : ''}
+${ctx.pieHtml || ''}
 </article>`;
 }
 
@@ -281,4 +305,62 @@ export function fichaLocal(concepto, mensajes = []) {
     visual: { tipo: 'pasos', titulo: 'Cómo me lo explicaste', items: frases.slice(0, 4).map(f => ({ texto: f.split(' ').slice(0, 6).join(' ') + (f.split(' ').length > 6 ? '…' : ''), detalle: f.split(' ').length > 6 ? f.slice(0, 100) : '' })) },
     ejemplo: {}, cuidado: '', de_ti: mejor.slice(0, 150)
   });
+}
+
+// Ficha adaptativa sin IA: elige un diseño visual distinto según el tema, el nivel y la reacción anterior.
+const normTxt = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+export function fichaInicioLocal({ tema = '', gustos = '', nivel = 'algo', reaccion = 'inicio', nota = '', historial = [] } = {}) {
+  const t = txt(tema, 80) || 'el tema', g = txt(gustos, 120) || 'tu día a día';
+  const nt = normTxt(t), ng = normTxt(g), paso = historial.filter(x => x.reaccion === 'entendio').length + (reaccion === 'entendio' ? 2 : 1);
+  const ultimoTipo = historial.at(-1)?.tipo;
+  const mundo = g.split(/,|;| y /)[0]?.trim() || 'tu mundo';
+  const esFrac = /fracci/.test(nt), esPorc = /porcent/.test(nt), esEcu = /ecuaci|algebra|despej/.test(nt), esFoto = /fotosint|planta/.test(nt);
+  const esNeg = /negativ|entero|recta/.test(nt), esLin = /lineal|funcion|pendiente/.test(nt);
+
+  const objMundo = /futbol|messi|gol/.test(ng) ? 'cancha' : /anime|dragon|goku|naruto|luffy/.test(ng) ? 'entrenamiento' : /cocin|abuela|comida/.test(ng) ? 'cocina' : /minecraft|bloque|juego/.test(ng) ? 'partida' : mundo;
+  const elegir = (cand) => cand.find(c => c.visual.tipo !== ultimoTipo) || cand[0];
+
+  if (esFrac) {
+    const base = [
+      { titulo: 'Qué es una fracción', subtema: 'Partes iguales', icono: '🍕', idea: 'Abajo va en cuántas partes iguales se divide el total; arriba cuántas partes tomas.', visual: { tipo: 'fraccion', titulo: `Reparto en ${objMundo}`, fracciones: [{ num: 1, den: 4, etiqueta: 'Tu parte' }, { num: 3, den: 4, etiqueta: 'Lo que queda' }], operacion: 'compara', forma: 'pizza' }, ejemplo: { situacion: `En ${objMundo}, divides algo en 4 partes iguales y usas 1.`, pasos: ['Total de partes iguales: 4 (abajo)', 'Partes que tomas: 1 (arriba)'], resultado: '1/4 del total' }, cuidado: 'Si las partes no son del mismo tamaño, no es una fracción justa.', de_ti: 'Abajo dice en cuánto cortas; arriba cuánto agarras.' },
+      { titulo: 'Fracciones equivalentes', subtema: 'Misma cantidad', icono: '⚖️', idea: 'Dos fracciones valen lo mismo si multiplicas o divides arriba y abajo por el mismo número.', visual: { tipo: 'fraccion', titulo: '1/2 es igual que 2/4', fracciones: [{ num: 1, den: 2, etiqueta: 'Mitad' }, { num: 2, den: 4, etiqueta: 'Dos cuartos' }], operacion: 'igual', forma: 'barra' }, ejemplo: { situacion: `En ${objMundo}, comparas 1/2 con 2/4.`, pasos: ['1 × 2 = 2 y 2 × 2 = 4', 'Ocupan exactamente el mismo espacio'], resultado: 'Son iguales: 1/2 = 2/4' }, cuidado: 'Números más grandes no hacen mayor la fracción: 2/4 no es mayor que 1/2.', de_ti: 'Si multiplicas arriba y abajo por igual, el tamaño no cambia.' },
+      { titulo: 'Sumar fracciones', subtema: 'Mismo denominador', icono: '➕', idea: 'Solo puedes sumar pedazos del mismo tamaño: primero iguala el denominador y suma solo arriba.', visual: { tipo: 'fraccion', titulo: 'Un medio más un cuarto', fracciones: [{ num: 1, den: 2, etiqueta: 'Primero' }, { num: 1, den: 4, etiqueta: 'Después' }, { num: 3, den: 4 }], operacion: 'suma', forma: 'pizza' }, ejemplo: { situacion: `Usas 1/2 en la mañana y 1/4 en la tarde en ${objMundo}.`, pasos: ['Convierte 1/2 en 2/4', 'Suma arriba: 2/4 + 1/4'], resultado: '3/4 en total' }, cuidado: 'No sumes abajo con abajo (1/2 + 1/4 no es 2/6).', de_ti: 'Primero iguala los pedazos; luego suma arriba.' }
+    ];
+    const simple = { titulo: 'Error vs acierto en fracciones', subtema: 'Aclarando la base', icono: '🔍', idea: 'El denominador no se suma y las partes siempre deben ser iguales.', visual: { tipo: 'comparar', titulo: 'Cómo pensarlo bien', izquierda: { titulo: 'Confusión común', icono: '❌', puntos: ['Sumar arriba y abajo: 1/2 + 1/4 = 2/6', 'Cortar pedazos desiguales'] }, derecha: { titulo: 'Regla real', icono: '✅', puntos: ['Igualar tamaños: 2/4 + 1/4 = 3/4', 'Todas las partes miden igual'] } }, ejemplo: { situacion: `Piensa en barras iguales dentro de ${objMundo}.`, pasos: ['Corta ambas barras en 4', 'Cuenta los cuartos pintados'], resultado: '3 cuartos = 3/4' }, cuidado: 'El número de abajo solo nombra el tamaño del pedazo.', de_ti: 'Mismo tamaño primero, suma arriba después.' };
+    const f = reaccion === 'duda' ? simple : base[Math.min(base.length - 1, (nivel === 'bastante' ? 2 : nivel === 'algo' ? 1 : 0) + (paso - 1)) % base.length];
+    return limpiarFichaInicio({ ...f, adaptacion: motivoLocal(reaccion, nivel, f.visual.tipo, nota) });
+  }
+  if (esPorc) {
+    const f = elegir([
+      { titulo: 'Qué es un porcentaje', subtema: 'Por cada cien', icono: '📊', idea: 'Un porcentaje compara una parte contra un total de 100. 50 % es la mitad; 25 % es un cuarto.', visual: { tipo: 'torta', titulo: `Reparto de tiempo en ${objMundo}`, unidad: '%', items: [{ texto: 'Práctica', valor: 50, icono: '🔥' }, { texto: 'Táctica', valor: 25, icono: '🧠' }, { texto: 'Descanso', valor: 25, icono: '💧' }] }, ejemplo: { situacion: `Si dedicas el 25 % de 100 minutos a táctica en ${objMundo}, ¿cuánto es?`, pasos: ['25 % = 25 de cada 100', '1/4 de 100 = 25'], resultado: '25 minutos' }, cuidado: 'El 25 % no siempre es 25: depende de cuánto sea el total.', de_ti: 'Por ciento significa de cada cien.' },
+      { titulo: 'Comparar porcentajes', subtema: 'Aplicado a totales', icono: '📈', idea: 'Para sacar un porcentaje de cualquier cantidad, multiplica por el porcentaje y divide entre 100.', visual: { tipo: 'barras', titulo: 'Descuentos comparados', unidad: '%', items: [{ texto: '10 %', valor: 10, icono: '🏷️' }, { texto: '25 %', valor: 25, icono: '✨' }, { texto: '50 %', valor: 50, icono: '⚡' }] }, ejemplo: { situacion: `Algo de ${objMundo} cuesta 80 y tiene 25 % de descuento.`, pasos: ['80 × 25 = 2000', '2000 ÷ 100 = 20'], resultado: 'Rebaja de 20 (pagas 60)' }, cuidado: 'No restes 25 directo al precio: primero calcula el 25 % del precio.', de_ti: 'Multiplica por el porcentaje y divide entre 100.' }
+    ]);
+    return limpiarFichaInicio({ ...f, adaptacion: motivoLocal(reaccion, nivel, f.visual.tipo, nota) });
+  }
+  if (esEcu || esLin || esNeg || esFoto) {
+    const f = esEcu
+      ? { titulo: 'Despejar paso a paso', subtema: 'Orden inverso', icono: '🧩', idea: 'Para hallar x, deshaces las operaciones desde la más lejana hacia x, aplicando lo mismo a ambos lados.', visual: { tipo: 'ecuacion', titulo: 'Resolver 2x + 4 = 14', lineas: [{ expresion: '2x + 4 = 14' }, { expresion: '2x = 14 − 4', nota: 'Resto 4 a ambos lados' }, { expresion: '2x = 10' }, { expresion: 'x = 10 ÷ 2', nota: 'Divido entre 2' }, { expresion: 'x = 5' }] }, ejemplo: { situacion: `En ${objMundo}, 2 rondas iguales más 4 puntos extras suman 14.`, pasos: ['Quita los 4 extras: quedan 10', 'Divide en 2 rondas iguales'], resultado: '5 puntos por ronda' }, cuidado: 'No dividas antes de quitar lo que suma o resta suelto.', de_ti: 'Lo último que entró sale primero.' }
+      : esNeg ? { titulo: 'Moverse con negativos', subtema: 'Recta numérica', icono: '🧭', idea: 'Sumar mueve a la derecha y restar a la izquierda. La distancia entre dos números se cuenta por pasos.', visual: { tipo: 'recta', titulo: 'De −3 a +5', min: -5, max: 7, marcas: [{ valor: -3, texto: 'Inicio' }, { valor: 5, texto: 'Meta' }], saltos: true }, ejemplo: { situacion: `En ${objMundo}, pasas de −3 puntos a +5 puntos.`, pasos: ['De −3 a 0 hay 3 pasos', 'De 0 a 5 hay 5 pasos más'], resultado: 'Subiste 8 en total' }, cuidado: 'No restes 5 − 3: ir desde abajo de cero suma esa distancia.', de_ti: 'Cuenta los saltos en la recta.' }
+      : esLin ? { titulo: 'Cómo crece una recta', subtema: 'Pendiente e inicio', icono: '📈', idea: 'Una función lineal y = mx + b parte de b y cambia siempre lo mismo (m) en cada paso.', visual: { tipo: 'grafico', titulo: `Avance en ${objMundo}`, ejeX: 'Pasos', ejeY: 'Total', puntos: [{ x: 0, y: 2, texto: 'Inicio' }, { x: 1, y: 5 }, { x: 2, y: 8 }, { x: 3, y: 11 }, { x: 4, y: 14 }] }, ejemplo: { situacion: `Empiezas con 2 puntos y ganas 3 por ronda.`, pasos: ['Ronda 0: 2', 'Ronda 4: 3 × 4 + 2 = 14'], resultado: '14 puntos' }, cuidado: 'No olvides sumar el punto de inicio cuando x vale 0.', de_ti: 'Inicio más cambio constante.' }
+      : { titulo: 'La receta de la fotosíntesis', subtema: 'Entradas y salidas', icono: '🌱', idea: 'La planta combina agua, dióxido de carbono y luz solar para fabricar glucosa y liberar oxígeno.', visual: { tipo: 'ciclo', titulo: 'Energía en la planta', centro: 'Luz solar', items: [{ texto: 'Agua por raíz', icono: '💧' }, { texto: 'CO₂ del aire', icono: '🍃' }, { texto: 'Glucosa', icono: '🍬' }, { texto: 'Oxígeno', icono: '🌬️' }] }, ejemplo: { situacion: `Piensa en una cocina dentro de ${objMundo}: ingredientes entran, energía sale.`, pasos: ['Entran agua + CO₂ + luz', 'Salen azúcar + oxígeno'], resultado: 'Alimento propio y aire limpio' }, cuidado: 'Las plantas no comen tierra: fabrican su propio alimento con luz.', de_ti: 'Agua, aire y luz hacen azúcar.' };
+    return limpiarFichaInicio({ ...f, adaptacion: motivoLocal(reaccion, nivel, f.visual.tipo, nota) });
+  }
+
+  // Tema genérico adaptable con variación de diseño visual
+  const variantes = [
+    { titulo: `Bases de ${t}`, subtema: 'Mapa de ideas', icono: '🧠', idea: `Para dominar ${t}, primero distingue sus partes clave y cómo se conectan entre sí.`, visual: { tipo: 'partes', titulo: t, centro: t, items: [{ texto: 'Idea base', detalle: 'Qué es y para qué sirve', icono: '💡' }, { texto: 'Regla clave', detalle: 'Qué la hace funcionar', icono: '⚙️' }, { texto: 'En tu mundo', detalle: `Cómo aparece en ${objMundo}`, icono: '🎯' }, { texto: 'Trampa típica', detalle: 'Qué conviene vigilar', icono: '⚠️' }] }, ejemplo: { situacion: `Imagina aplicar ${t} en una situación real de ${objMundo}.`, pasos: ['Identifica qué dato tienes', 'Aplica la regla central paso a paso'], resultado: `Resuelves el caso de ${objMundo} con claridad` }, cuidado: `Memorizar palabras sueltas de ${t} sin un ejemplo concreto hace que se olvide rápido.`, de_ti: 'Entender qué hace cada parte vale más que repetir definiciones.' },
+    { titulo: `Paso a paso en ${t}`, subtema: 'Procedimiento guiado', icono: '🪜', idea: `Resolver un problema de ${t} se vuelve sencillo cuando sigues un orden claro de principio a fin.`, visual: { tipo: 'pasos', titulo: `Cómo abordar ${t}`, items: [{ texto: 'Ubica el objetivo', detalle: 'Qué te piden encontrar o explicar', icono: '🎯' }, { texto: 'Elige la regla', detalle: 'Qué principio conecta los datos', icono: '🔑' }, { texto: 'Prueba en pequeño', detalle: `Haz un caso simple de ${objMundo}`, icono: '🧪' }, { texto: 'Verifica el sentido', detalle: 'Comprueba si el resultado es lógico', icono: '✅' }] }, ejemplo: { situacion: `Un reto rápido de ${t} dentro de ${objMundo}.`, pasos: ['Separa lo que sabes de lo que falta', 'Aplica la regla en un caso corto'], resultado: 'Resultado comprobado' }, cuidado: 'Saltarse el primer paso lleva a usar una regla que no corresponde.', de_ti: 'Primero entiende qué buscas; después haz las cuentas o pasos.' },
+    { titulo: `Error vs acierto en ${t}`, subtema: 'Aclarar confusiones', icono: '🔍', idea: `La forma más rápida de destrabar ${t} es comparar el error común frente a cómo funciona de verdad.`, visual: { tipo: 'comparar', titulo: `En ${t}`, izquierda: { titulo: 'Lo que confunde', icono: '❌', puntos: ['Aplicar reglas de memoria sin revisar el caso', nota ? `Duda: ${nota.slice(0, 48)}` : 'Saltar directo al resultado'] }, derecha: { titulo: 'Cómo pensarlo bien', icono: '✅', puntos: [`Probar con un ejemplo de ${objMundo}`, 'Comprobar por qué funciona cada paso'] } }, ejemplo: { situacion: `Vuelve a mirar ${t} desde cero con algo cotidiano de ${objMundo}.`, pasos: ['Explica el porqué en una frase', 'Compara un caso fácil con otro'], resultado: 'La duda desaparece' }, cuidado: 'Si algo no cierra, vuelve al ejemplo más chico posible.', de_ti: 'Cuando entiendes el porqué, el truco sobra.' },
+    { titulo: `Resumen rápido de ${t}`, subtema: 'Tabla comparativa', icono: '📋', idea: `Ordenar los casos de ${t} en una tabla ayuda a elegir el método correcto de un vistazo.`, visual: { tipo: 'tabla', titulo: `Cuándo usar cada idea en ${t}`, columnas: ['Situación', 'Qué revisar', 'Clave'], filas: [['Inicio', 'Idea central', 'Ejemplo simple'], ['Práctica', 'Pasos en orden', 'Verificar sentido'], ['Reto', 'Casos borde', `Aplicar en ${objMundo}`]] }, ejemplo: { situacion: `Caso desafiante de ${t} ambientado en ${objMundo}.`, pasos: ['Identifica en qué fila encaja', 'Aplica la clave y comprueba'], resultado: 'Caso resuelto sin adivinar' }, cuidado: 'Revisa qué cambia entre un caso básico y un reto.', de_ti: 'Mirar la estructura ahorra errores.' }
+  ];
+  const idx = (paso - 1) % variantes.length;
+  const f = reaccion === 'duda' ? variantes[2] : reaccion === 'reto' ? variantes[3] : elegir([...variantes.slice(idx), ...variantes.slice(0, idx)]);
+  return limpiarFichaInicio({ ...f, adaptacion: motivoLocal(reaccion, nivel, f.visual.tipo, nota) });
+}
+function motivoLocal(reaccion, nivel, tipo, nota) {
+  if (reaccion === 'duda') return `Simplificamos el concepto${nota ? ' respondiendo tu duda' : ''} con un visual «${tipo}».`;
+  if (reaccion === 'ejemplo') return `Mismo tema con un ejemplo nuevo de tu mundo usando «${tipo}».`;
+  if (reaccion === 'reto') return `Subimos la exigencia a un reto práctico con visual «${tipo}».`;
+  if (reaccion === 'entendio') return `Avanzamos al siguiente paso y variamos el diseño a «${tipo}».`;
+  return `Ficha inicial ajustada a nivel «${nivel}» con visual «${tipo}».`;
 }

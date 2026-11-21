@@ -183,3 +183,45 @@
 @media (prefers-reduced-motion: reduce) {
   .vis-anim [style*="--i"], .vis-anim .v-trazo, .vis-anim .v-giro, .vis-anim .v-col-b i, .vis-anim .v-seg, .vis-anim .v-llena, .vis-anim .v-punto, .vis-anim .v-ilista i { animation: none !important; }
 }
+
+/* ---------- Página de fichas adaptativas ---------- */
+.fi-pag { padding: 4px clamp(16px, 4vw, 40px) 48px; display: grid; gap: 26px; }
+.fi-inicio { max-width: 960px; width: 100%; margin: 0 auto; }
+.fi-inicio h1 { font-size: 1.4rem; }
+.fi-apr-ban { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: #fff; border: 2px solid var(--linea); border-radius: var(--r-m); padding: 8px 12px; margin-top: 10px; }
+.fi-apr-ban .mini { width: 42px; flex: none; }
+.fi-apr-ban span:not(.mini) { flex: 1; min-width: 180px; font-size: .92rem; }
+.fi-niveles { border: 0; padding: 0; margin: 0; grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.fi-niveles legend { float: left; margin-right: 6px; padding: 0; }
+.fi-niveles label { cursor: pointer; }
+.fi-niveles input { position: absolute; opacity: 0; pointer-events: none; }
+.fi-niveles span { display: inline-block; border: 1.5px solid var(--linea); background: #fff; border-radius: 999px; padding: 5px 12px; font-weight: 800; font-size: .86rem; color: var(--tinta-2); }
+.fi-niveles input:checked + span { background: var(--tinta); border-color: var(--tinta); color: #fff; }
+.fi-niveles input:focus-visible + span { outline: 3px solid var(--indigo); outline-offset: 2px; }
+
+.fi-estudio { max-width: 760px; width: 100%; margin: 0 auto; display: grid; gap: 16px; }
+.fi-barra-adap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; background: #fff; border-radius: var(--r-l); padding: 14px 18px; box-shadow: var(--sombra-1); }
+.fi-barra-info { display: grid; gap: 4px; }
+.fi-barra-info b { font: 800 1.2rem/1.15 var(--display); }
+.fi-meta { font-size: .88rem; color: var(--tinta-2); font-weight: 700; }
+.fi-meta em { font-style: normal; }
+.fi-tipos-usados { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px; }
+.fi-tipo-chip { font: 800 .74rem var(--display); text-transform: uppercase; letter-spacing: .04em; background: #EFEDFF; color: var(--indigo-2); padding: 2px 8px; border-radius: 999px; }
+.fi-barra-acc { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.fi-ir-clase { text-decoration: none; }
+.fi-cargando { background: #fff; border: 2px dashed var(--linea); border-radius: var(--r-l); padding: 16px 18px; box-shadow: var(--sombra-1); }
+.fi-feed { display: grid; gap: 20px; }
+
+.fi-adapta { margin-block: 0; font-size: .86rem; font-weight: 700; color: var(--c-osc); background: var(--c-claro); border-radius: 10px; padding: 6px 10px; }
+.fi-adapta-acc { display: grid; gap: 8px; padding-top: 10px; border-top: 2px dashed var(--linea); }
+.fi-nota-duda { width: 100%; }
+.fi-reacciones { display: flex; flex-wrap: wrap; gap: 6px; }
+.fi-reaccion-res { margin-block: 0; font-size: .88rem; color: var(--tinta-2); background: #F7F5FF; border-radius: 10px; padding: 6px 10px; }
+
+.fi-sec { display: grid; gap: 10px; }
+.fi-sec h2 { font-size: 1.2rem; }
+.fi-sec .intro { margin: 0; max-width: 72ch; color: var(--tinta-2); font-weight: 600; }
+.galeria { columns: 360px; column-gap: 20px; }
+.galeria .ficha-ap { break-inside: avoid; margin-bottom: 20px; }
+.barra-acc { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.btn-chico { padding: 6px 12px; font-size: .84rem; }
