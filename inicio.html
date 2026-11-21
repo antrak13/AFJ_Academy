@@ -224,6 +224,226 @@
       box-shadow: 0 0 0 2px rgba(52, 168, 83, 0.2);
     }
 
+    /* Slot Perfil de Usuario en Header */
+    .user-profile-wrapper {
+      position: relative;
+    }
+
+    .user-header-profile {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 12px 4px 5px;
+      border-radius: 999px;
+      background: rgba(255, 253, 249, 0.95);
+      border: 1px solid var(--border-soft);
+      color: var(--ink-navy);
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(44, 54, 74, 0.05);
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .user-header-profile:hover {
+      background: #FFFFFF;
+      border-color: rgba(217, 119, 6, 0.4);
+      box-shadow: 0 4px 14px rgba(44, 54, 74, 0.1);
+      transform: translateY(-1px);
+    }
+
+    .user-header-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #F59E0B, #EA580C);
+      color: #FFFFFF;
+      font-weight: 700;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(234, 88, 12, 0.3);
+      text-transform: uppercase;
+      font-family: 'Cabinet Grotesk', sans-serif;
+    }
+
+    .user-header-info {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+      line-height: 1.15;
+    }
+
+    .user-header-name {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--ink-navy);
+    }
+
+    .user-header-badge {
+      font-size: 0.65rem;
+      color: var(--ink-muted);
+      max-width: 140px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .dropdown-chevron {
+      color: var(--ink-muted);
+      transition: transform 0.2s ease;
+    }
+
+    .user-profile-wrapper.open .dropdown-chevron {
+      transform: rotate(180deg);
+    }
+
+    .profile-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 260px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-soft);
+      border-radius: 16px;
+      box-shadow: 0 12px 32px rgba(44, 54, 74, 0.15), 0 2px 6px rgba(44, 54, 74, 0.05);
+      padding: 14px;
+      z-index: 100;
+      display: none;
+      animation: fadeInDown 0.2s ease forwards;
+    }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .user-profile-wrapper.open .profile-dropdown {
+      display: block;
+    }
+
+    .profile-dropdown-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #F1EAD9;
+    }
+
+    .dropdown-avatar-lg {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #F59E0B, #EA580C);
+      color: #FFFFFF;
+      font-weight: 700;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 3px 8px rgba(234, 88, 12, 0.25);
+      font-family: 'Cabinet Grotesk', sans-serif;
+    }
+
+    .dropdown-name {
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: var(--ink-navy);
+    }
+
+    .dropdown-email {
+      font-size: 0.72rem;
+      color: var(--ink-muted);
+      word-break: break-all;
+    }
+
+    .profile-dropdown-body {
+      padding: 10px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .dropdown-detail-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.73rem;
+    }
+
+    .detail-label {
+      color: var(--ink-muted);
+    }
+
+    .detail-val {
+      color: var(--ink-navy);
+      font-weight: 600;
+      text-align: right;
+      max-width: 150px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .profile-dropdown-footer {
+      padding-top: 10px;
+      border-top: 1px solid #F1EAD9;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .dropdown-action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      padding: 7px 10px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .switch-acc {
+      background: #FDF9F0;
+      border-color: #EFE4D0;
+      color: var(--ink-navy);
+    }
+    .switch-acc:hover {
+      background: #F8EED8;
+    }
+
+    .logout-btn {
+      background: #FFF1F0;
+      border-color: #FDD8D5;
+      color: #DC2626;
+    }
+    .logout-btn:hover {
+      background: #FEE2E2;
+    }
+
+    .login-nav-btn {
+      background: linear-gradient(135deg, #E65100, #F57C00);
+      color: #FFFFFF !important;
+      border: none;
+      box-shadow: 0 3px 10px rgba(230, 81, 0, 0.25);
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .login-nav-btn:hover {
+      background: linear-gradient(135deg, #D84315, #E65100);
+      transform: translateY(-1px);
+      box-shadow: 0 5px 14px rgba(230, 81, 0, 0.35);
+      color: #FFFFFF;
+    }
+
     /* Contenedor Principal */
     main {
       position: relative;
@@ -665,6 +885,7 @@
         <span class="status-dot"></span>
         Computación lista
       </div>
+      <div id="userHeaderSlot"></div>
     </div>
   </header>
 
@@ -1200,9 +1421,130 @@
       requestAnimationFrame(animarAprendines);
     }
 
+    /* ==============================================================
+       GESTIÓN DEL PERFIL DE USUARIO EN CABECERA
+       ============================================================== */
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function renderUserHeader() {
+      const slot = document.getElementById('userHeaderSlot');
+      if (!slot) return;
+      
+      let user = null;
+      try {
+        const raw = localStorage.getItem('afj_current_user');
+        if (raw) user = JSON.parse(raw);
+      } catch (e) {
+        console.error('Error al leer afj_current_user:', e);
+      }
+
+      if (user && user.username) {
+        const initial = (user.username || 'U').charAt(0).toUpperCase();
+        const roleLabel = user.role === 'universitario' ? 'Universitario' : 'Estudiante';
+        const centerName = user.institution || '';
+        const badgeText = centerName ? `${roleLabel} · ${centerName}` : (user.career ? `${roleLabel} · ${user.career}` : roleLabel);
+        const locParts = [user.city, user.country].filter(Boolean);
+        const locationText = locParts.length > 0 ? locParts.join(', ') : 'No especificada';
+
+        slot.innerHTML = `
+          <div class="user-profile-wrapper" id="userProfileWrapper">
+            <div class="user-header-profile" id="userProfileBtn" title="Ver perfil de ${escapeHtml(user.username)}">
+              <div class="user-header-avatar">${initial}</div>
+              <div class="user-header-info">
+                <span class="user-header-name">${escapeHtml(user.username)}</span>
+                <span class="user-header-badge">${escapeHtml(badgeText)}</span>
+              </div>
+              <svg class="dropdown-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+            <div class="profile-dropdown" id="profileDropdown">
+              <div class="profile-dropdown-head">
+                <div class="dropdown-avatar-lg">${initial}</div>
+                <div class="dropdown-meta">
+                  <div class="dropdown-name">${escapeHtml(user.username)}</div>
+                  <div class="dropdown-email">${escapeHtml(user.email || '')}</div>
+                </div>
+              </div>
+              <div class="profile-dropdown-body">
+                <div class="dropdown-detail-item">
+                  <span class="detail-label">Rol:</span>
+                  <span class="detail-val">${roleLabel}</span>
+                </div>
+                ${centerName ? `
+                <div class="dropdown-detail-item">
+                  <span class="detail-label">${user.role === 'universitario' ? 'Universidad:' : 'Colegio:'}</span>
+                  <span class="detail-val" title="${escapeHtml(centerName)}">${escapeHtml(centerName)}</span>
+                </div>` : ''}
+                ${user.career ? `
+                <div class="dropdown-detail-item">
+                  <span class="detail-label">Carrera:</span>
+                  <span class="detail-val" title="${escapeHtml(user.career)}">${escapeHtml(user.career)}</span>
+                </div>` : ''}
+                <div class="dropdown-detail-item">
+                  <span class="detail-label">Ubicación:</span>
+                  <span class="detail-val" title="${escapeHtml(locationText)}">${escapeHtml(locationText)}</span>
+                </div>
+              </div>
+              <div class="profile-dropdown-footer">
+                <a href="login.html" class="dropdown-action-btn switch-acc">Cambiar cuenta</a>
+                <button class="dropdown-action-btn logout-btn" id="logoutBtn">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                  Cerrar sesión
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const wrapper = document.getElementById('userProfileWrapper');
+        const profileBtn = document.getElementById('userProfileBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        if (profileBtn && wrapper) {
+          profileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            wrapper.classList.toggle('open');
+          });
+        }
+
+        if (logoutBtn) {
+          logoutBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            localStorage.removeItem('afj_current_user');
+            renderUserHeader();
+          });
+        }
+
+        // Cerrar menú al hacer clic fuera
+        document.addEventListener('click', (e) => {
+          if (wrapper && !wrapper.contains(e.target)) {
+            wrapper.classList.remove('open');
+          }
+        });
+
+      } else {
+        slot.innerHTML = `
+          <a href="login.html" class="pill-btn login-nav-btn" title="Iniciar sesión o registrarse">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+            Iniciar Sesión
+          </a>
+        `;
+      }
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       startIntroSequence();
       initAprendinesManager();
+      renderUserHeader();
     });
   </script>
 </body>
