@@ -9,7 +9,7 @@ import { activarFichas, animar } from './fichas-dom.js';
 import { DEMO } from './demo-aprendin.js';
 import { crearPrueba } from './prueba.js';
 import { demoClase } from './demo-clase.js';
-import { cargarEstudio, guardarEstudio, solicitarFichaInicio, renderizarFichaEstudio, historialDe } from './fichas-apoyo.js';
+import { cargarEstudio, guardarEstudio, solicitarFichaInicio, renderizarFichaEstudio, historialDe, registrarEventoVisual, calcularCalibracion, renderizarPanelCalibracion } from './fichas-apoyo.js';
 
 const $ = s => document.querySelector(s);
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -57,7 +57,7 @@ function empezar() {
   estrella?.destruir();
   estrella = crearAprendin({ look: look(), emocion: 'feliz' });
   $('#estrella').replaceChildren(estrella.el);
-  pintarFases(); pintarAhora(); pintarChat(); pintarFichas(); pintarMedicion(); pintarApoyoLista();
+  pintarFases(); pintarAhora(); pintarChat(); pintarFichas(); pintarMedicion(); pintarApoyoLista(); pintarCalibracionClase();
   for (const [p, f] of Object.entries(C.fichas)) if (f.estado !== 'lista') pedirFicha(Number(p));   // quedó a medias al recargar
   if (C.paso >= PASOS) prueba.preparar();
   if (!C.chat.length) arrancar();
@@ -93,6 +93,7 @@ function pintarAhora() {
   $('#concepto').textContent = fin ? `${A.nombre} ya es ${A.fases[PASOS].titulo}.` : A.fases[C.paso].concepto;
   $('#btnPista').hidden = fin;
   $('#btnApoyo').hidden = fin;
+  if ($('#btnApoyoChat')) $('#btnApoyoChat').hidden = fin;
   $('#pista').textContent = C.pista || pistaBase();
   const pr = C.prueba, bp = $('#btnPrueba');
   bp.hidden = !fin;
@@ -115,6 +116,61 @@ function burbuja(m) {
     if (m.ficha) { el.classList.add('cl-sis-link'); el.addEventListener('click', () => document.getElementById(`ficha-${m.ficha}`)?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'start' })); }
     return el;
   }
+  if (m.de === 'apoyo') {
+    const item = buscarApoyoPorId(m.idApoyo);
+    if (!item) { el.hidden = true; return el; }
+    el.className = 'cl-msg-apoyo';
+    el.id = `apoyo-msg-${item.id}`;
+    const todas = fichasEstudioTema();
+    const idx = Math.max(0, todas.findIndex(f => f.id === item.id || (f.datos.titulo === item.datos.titulo && f.datos.visual.tipo === item.datos.visual.tipo)));
+    const esUltima = idx === todas.length - 1;
+    const concepto = A.fases[Math.min(PASOS, m.paso || C.paso)]?.concepto || A.tema;
+    const col = !!m.colapsada;
+    el.innerHTML = `<div class="cl-apoyo-chat-cab">
+      <span>📖 <b>Ficha · Paso ${m.paso || C.paso}:</b> ${esc(concepto)}</span>
+      <div class="cl-apoyo-chat-acc">
+        <button type="button" class="btn btn-chico cl-apoyo-toggle" aria-expanded="${!col}">${col ? 'Ver ficha' : 'Ocultar'}</button>
+        <button type="button" class="btn btn-chico btn-fuerte cl-apoyo-ir">Explicarle ↓</button>
+      </div>
+    </div>
+    <div class="cl-apoyo-chat-cuerpo"${col ? ' hidden' : ''}></div>`;
+    const cuerpo = el.querySelector('.cl-apoyo-chat-cuerpo');
+    cuerpo.innerHTML = renderizarFichaEstudio(item, idx, {
+      esUltima: esUltima && item.reaccion !== 'entendio',
+      gustos: A.gustos || A.mundo,
+      avatar: svgAprendin(look(), { emocion: 'curioso' }),
+      tono: tonos(look().color),
+      placeholder: 'Opcional: ¿qué parte de este paso no entiendes?'
+    });
+    if (esUltima && item.reaccion === 'entendio') {
+      cuerpo.insertAdjacentHTML('beforeend', `<div class="cl-apoyo-otra-wrap"><span class="fi-reaccion-res">✓ Ya lo entendiste (${esc(item.datos.visual.tipo)}) — explícaselo a ${esc(A.nombre)} abajo</span><button type="button" class="btn btn-chico cl-apoyo-otra">Otra ficha</button></div>`);
+      cuerpo.querySelector('.cl-apoyo-otra')?.addEventListener('click', () => { if (!cargandoApoyo) pedirApoyo('ejemplo'); });
+    }
+    el.querySelector('.cl-apoyo-toggle').addEventListener('click', e => {
+      m.colapsada = !m.colapsada;
+      cuerpo.hidden = m.colapsada;
+      e.currentTarget.textContent = m.colapsada ? 'Ver ficha' : 'Ocultar';
+      e.currentTarget.setAttribute('aria-expanded', String(!m.colapsada));
+      guardar();
+    });
+    el.querySelector('.cl-apoyo-ir').addEventListener('click', () => { if (C.paso <= PASOS) msg.focus(); });
+    cuerpo.querySelectorAll('.fi-reaccion-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (cargandoApoyo) return;
+        const r = btn.dataset.reaccion, nota = cuerpo.querySelector('.fi-nota-duda')?.value.trim() || '';
+        marcarReaccionApoyo(item.id, r, nota);
+        registrarEventoVisual(item.datos.visual.tipo, r);
+        pintarCalibracionClase();
+        if (r === 'entendio') {
+          pintarChat();
+          if (C.paso <= PASOS) msg.focus();
+        } else {
+          pedirApoyo(r, nota);
+        }
+      });
+    });
+    return el;
+  }
   el.className = `cl-msg cl-${m.de}`;
   if (m.de === 'apr') {
     el.innerHTML = `<span class="cl-av" aria-hidden="true">${svgAprendin(A.fases[Math.min(PASOS, (m.fase ?? 0))].look, { emocion: m.emo || 'neutral' })}</span><div class="cl-globo"><b class="solo-lector">${esc(A.nombre)}:</b> <span class="cl-txt"></span>${m.intento ? `<span class="cl-intento" aria-label="Su intento">${esc(m.intento)}</span>` : ''}</div>`;
@@ -125,9 +181,23 @@ function burbuja(m) {
   }
   return el;
 }
-function pintarChat() { cajaMsg.replaceChildren(...C.chat.map(burbuja)); bajar(); }
+function pintarChat() {
+  cajaMsg.replaceChildren(...C.chat.map(burbuja));
+  activarFichas(cajaMsg);
+  const vis = [...cajaMsg.querySelectorAll('.cl-msg-apoyo .vis')].at(-1);
+  if (vis) animar(vis);
+  bajar();
+}
 const bajar = () => { cajaMsg.scrollTop = cajaMsg.scrollHeight; };
-function agregar(m) { C.chat.push(m); guardar(); const el = burbuja(m); cajaMsg.append(el); bajar(); return el; }
+function agregar(m) {
+  C.chat.push(m); guardar();
+  const el = burbuja(m); cajaMsg.append(el);
+  if (m.de === 'apoyo') {
+    activarFichas(el);
+    const vis = el.querySelector('.vis'); if (vis) animar(vis);
+  }
+  bajar(); return el;
+}
 
 // El aprendín habla: tipea el texto, mueve la boca y (si está activado) lo dice en voz alta.
 async function decir(texto, emo = 'neutral', extra = {}) {
@@ -171,7 +241,7 @@ $('#formMsg').addEventListener('submit', async e => {
   const t0 = performance.now();
   try {
     if (!ia) throw new Error('sin IA');
-    const historial = C.chat.filter(m => m.paso === paso && m.de !== 'sis').slice(0, -1).map(m => ({ de: m.de, texto: m.texto }));
+    const historial = C.chat.filter(m => m.paso === paso && (m.de === 'apr' || m.de === 'yo')).slice(0, -1).map(m => ({ de: m.de, texto: m.texto }));
     const r = await fetch('/api/turno', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aprendin: resumenAprendin(A), paso, aprendido: aprendido(), historial, mensaje: texto, turnos }) });
     const j = await r.json(); if (!j.ok) throw new Error(j.error || r.status);
     t = j.turno;
@@ -185,7 +255,13 @@ $('#formMsg').addEventListener('submit', async e => {
   if (t.pista) { C.pista = t.pista; $('#pista').textContent = t.pista; }
   if (t.estado === 'error') estrella.equivocarse();
   await decir(t.dice, t.emocion, t.intento ? { intento: t.intento } : {});
-  if (t.estado === 'entendio') await subirDeFase(paso, t);
+  if (t.estado === 'entendio') {
+    if (!C.apoyoContadoPaso?.[paso] && C.apoyoVistosPaso?.[paso]?.length) {
+      [...new Set(C.apoyoVistosPaso[paso])].forEach(tp => registrarEventoVisual(tp, 'exito_clase'));
+      (C.apoyoContadoPaso ||= {})[paso] = true; guardar(); pintarCalibracionClase();
+    }
+    await subirDeFase(paso, t);
+  }
   bloquear(false); if (C.paso <= PASOS) msg.focus();
 });
 const aprendido = () => Object.entries(C.fichas).filter(([, f]) => f.datos).map(([p, f]) => `Paso ${p}: ${f.datos.titulo}. ${f.datos.idea}`);
@@ -216,7 +292,7 @@ async function subirDeFase(paso, t) {
 /* ---------- Fichas ---------- */
 async function pedirFicha(paso) {
   C.fichas[paso] = { estado: 'escribiendo' }; guardar(); pintarFichas();
-  const historial = C.chat.filter(m => m.paso === paso && m.de !== 'sis').map(m => ({ de: m.de, texto: m.texto }));
+  const historial = C.chat.filter(m => m.paso === paso && (m.de === 'apr' || m.de === 'yo')).map(m => ({ de: m.de, texto: m.texto }));
   let datos;
   try {
     if (!ia) throw new Error('sin IA');
@@ -304,42 +380,180 @@ function vozAlta(texto) {
   speechSynthesis.speak(u);
 }
 $('#btnVoz').addEventListener('click', e => { hablarVoz = !hablarVoz; e.currentTarget.setAttribute('aria-pressed', String(hablarVoz)); e.currentTarget.textContent = `Voz: ${hablarVoz ? 'sí' : 'no'}`; if (!hablarVoz) speechSynthesis?.cancel(); });
+const mic = $('#btnMic'), micEstado = $('#micEstado');
 const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
-if (Rec) {
-  const mic = $('#btnMic'); mic.hidden = false;
-  let rec = null;
-  mic.addEventListener('click', () => {
-    if (rec) { rec.stop(); return; }
-    rec = new Rec(); rec.lang = 'es-419'; rec.interimResults = true;
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+const tieneAudio = !!(navigator.mediaDevices?.getUserMedia && AudioCtx);
+let preferirWav = !Rec, estadoMicTimer = null;
+navigator.brave?.isBrave?.().then(si => { if (si) preferirWav = true; }).catch(() => {});
+
+function setMicEstado(txt, tipo = '') {
+  if (!micEstado) return;
+  clearTimeout(estadoMicTimer);
+  micEstado.textContent = txt;
+  micEstado.className = 'cl-mic-estado' + (tipo ? ` ${tipo}` : '');
+  if (tipo === 'ok') estadoMicTimer = setTimeout(() => { if (micEstado.classList.contains('ok')) setMicEstado(''); }, 3200);
+}
+function agregarTextoDictado(texto) {
+  const limpio = String(texto || '').trim();
+  if (!limpio) return;
+  const prefijo = msg.value.trim() ? msg.value.trimEnd() + ' ' : '';
+  msg.value = prefijo + limpio;
+  msg.dispatchEvent(new Event('input'));
+  msg.focus();
+}
+function codificarWav16k(chunks, srOrigen) {
+  const total = chunks.reduce((s, c) => s + c.length, 0);
+  const unido = new Float32Array(total);
+  let off = 0; for (const c of chunks) { unido.set(c, off); off += c.length; }
+  const sr = 16000, ratio = srOrigen / sr;
+  const n = Math.max(1, Math.round(unido.length / ratio));
+  const buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+  const wr = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  wr(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); wr(8, 'WAVEfmt '); v.setUint32(16, 16, true);
+  v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true);
+  v.setUint16(32, 2, true); v.setUint16(34, 16, true); wr(36, 'data'); v.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) {
+    const pos = i * ratio, idx = Math.floor(pos), f = pos - idx;
+    const s = unido[idx] + ((unido[idx + 1] ?? unido[idx]) - unido[idx]) * f;
+    v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, s)) * 0x7fff, true);
+  }
+  return buf;
+}
+function bytesABase64(buf) {
+  const u8 = new Uint8Array(buf); let bin = '';
+  for (let i = 0; i < u8.length; i += 0x8000) bin += String.fromCharCode(...u8.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+
+if (mic && (Rec || tieneAudio)) {
+  mic.hidden = false;
+  let rec = null, grab = null;
+
+  async function detenerWav() {
+    if (!grab) return;
+    const g = grab; grab = null;
+    clearInterval(g.reloj); clearTimeout(g.tope);
+    g.proc.disconnect(); g.mute.disconnect(); g.src.disconnect();
+    g.stream.getTracks().forEach(t => t.stop());
+    await g.ctx.close().catch(() => {});
+    mic.classList.remove('grabando'); mic.setAttribute('aria-pressed', 'false');
+    if (g.muestras < g.sr * 0.25 || g.maxAmp < 0.002) {
+      setMicEstado('No escuché voz clara; habla más cerca del micrófono.', 'err'); return;
+    }
+    if (!ia) { setMicEstado('Activa el servidor con IA para transcribir tu voz.', 'err'); return; }
+    mic.disabled = true; setMicEstado('✨ Transcribiendo tu voz…');
+    try {
+      const wav = codificarWav16k(g.chunks, g.sr);
+      const r = await fetch('/api/transcribir', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ audioBase64: bytesABase64(wav), idioma: navigator.language || 'es' }) });
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.error || r.status);
+      if (!j.texto) setMicEstado('No entendí palabras claras; intenta hablar más fuerte.', 'err');
+      else { agregarTextoDictado(j.texto); setMicEstado('✓ Voz transcrita', 'ok'); }
+    } catch (e) {
+      setMicEstado(`No pude transcribir el audio (${e.message}).`, 'err');
+    } finally { mic.disabled = false; }
+  }
+
+  async function iniciarWav() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const ctx = new AudioCtx({ sampleRate: 16000 });
+      const src = ctx.createMediaStreamSource(stream), proc = ctx.createScriptProcessor(4096, 1, 1), mute = ctx.createGain();
+      mute.gain.value = 0; src.connect(proc); proc.connect(mute); mute.connect(ctx.destination);
+      const state = { stream, ctx, src, proc, mute, sr: ctx.sampleRate, chunks: [], muestras: 0, maxAmp: 0, segs: 0 };
+      proc.onaudioprocess = e => {
+        const d = e.inputBuffer.getChannelData(0), cp = new Float32Array(d);
+        for (let i = 0; i < cp.length; i++) { const a = Math.abs(cp[i]); if (a > state.maxAmp) state.maxAmp = a; }
+        state.chunks.push(cp); state.muestras += cp.length;
+      };
+      state.reloj = setInterval(() => { state.segs++; setMicEstado(`🎙️ Grabando (${state.segs}s)… toca 🎤 para transcribir`, 'grabando'); }, 1000);
+      state.tope = setTimeout(() => detenerWav(), 30000);
+      grab = state;
+      mic.classList.add('grabando'); mic.setAttribute('aria-pressed', 'true');
+      setMicEstado('🎙️ Grabando… toca 🎤 otra vez para transcribir', 'grabando');
+    } catch (e) {
+      mic.classList.remove('grabando'); mic.setAttribute('aria-pressed', 'false');
+      const m = e.name === 'NotAllowedError' ? 'Permiso de micrófono denegado.' : e.name === 'NotFoundError' ? 'No se encontró ningún micrófono.' : `Error de micrófono (${e.message}).`;
+      setMicEstado(m, 'err');
+    }
+  }
+
+  function iniciarNativo() {
+    rec = new Rec();
+    rec.lang = navigator.language?.startsWith('es') ? navigator.language : 'es-ES';
+    rec.continuous = true; rec.interimResults = true;
+    let huboTexto = false, errorRed = false;
     const antes = msg.value ? msg.value.trim() + ' ' : '';
-    rec.onresult = e => { msg.value = antes + [...e.results].map(r => r[0].transcript).join(''); msg.dispatchEvent(new Event('input')); };
-    rec.onend = () => { rec = null; mic.classList.remove('grabando'); msg.focus(); };
-    rec.onerror = () => { rec = null; mic.classList.remove('grabando'); };
-    mic.classList.add('grabando'); rec.start();
+    rec.onresult = e => {
+      huboTexto = true;
+      msg.value = antes + [...e.results].map(r => r[0].transcript).join('');
+      msg.dispatchEvent(new Event('input'));
+    };
+    rec.onerror = e => {
+      if ((e.error === 'network' || e.error === 'service-not-allowed') && !huboTexto && tieneAudio) {
+        errorRed = true; preferirWav = true; rec = null;
+        mic.classList.remove('grabando'); mic.setAttribute('aria-pressed', 'false');
+        iniciarWav(); return;
+      }
+      const errs = { 'not-allowed': 'Permiso de micrófono denegado.', 'audio-capture': 'No se detectó micrófono.', 'no-speech': 'No escuché voz; intenta hablar más cerca.', network: 'Tu navegador bloquea el dictado online.' };
+      setMicEstado(errs[e.error] || `Error de dictado (${e.error}).`, 'err');
+    };
+    rec.onend = () => {
+      if (errorRed) return;
+      rec = null; mic.classList.remove('grabando'); mic.setAttribute('aria-pressed', 'false');
+      if (huboTexto) setMicEstado('✓ Dictado listo', 'ok');
+      msg.focus();
+    };
+    mic.classList.add('grabando'); mic.setAttribute('aria-pressed', 'true');
+    setMicEstado('🎙️ Escuchando… toca 🎤 para parar', 'grabando');
+    try { rec.start(); } catch (e) { rec = null; mic.classList.remove('grabando'); mic.setAttribute('aria-pressed', 'false'); if (tieneAudio) { preferirWav = true; iniciarWav(); } else setMicEstado(e.message, 'err'); }
+  }
+
+  mic.addEventListener('click', () => {
+    if (grab) { detenerWav(); return; }
+    if (rec) { rec.stop(); return; }
+    if (preferirWav && tieneAudio) iniciarWav();
+    else if (Rec) iniciarNativo();
+    else iniciarWav();
   });
 }
 
-/* ---------- Fichas de apoyo para estudiar durante la clase ---------- */
+/* ---------- Fichas de apoyo dentro del chat + calibración ---------- */
 let cargandoApoyo = false;
+const idUnicoApoyo = () => `ap-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 function fichasEstudioTema() {
   const s = cargarEstudio();
   const prev = s && s.tema?.toLowerCase() === A.tema.toLowerCase() ? s.fichas : [];
   const clase = C.apoyo || [];
   const mismo = (a, b) => a.datos.titulo === b.datos.titulo && a.datos.visual.tipo === b.datos.visual.tipo;
-  return [...prev.filter(pf => !clase.some(cf => mismo(pf, cf))), ...clase];
+  return [...prev.filter(pf => !clase.some(cf => mismo(pf, cf))), ...clase].map((it, i) => it.id ? it : { ...it, id: `prev-${i}` });
+}
+function buscarApoyoPorId(id) {
+  return (C.apoyo || []).find(f => f.id === id) || fichasEstudioTema().find(f => f.id === id);
+}
+function registrarVistaPaso(paso, tipo) {
+  if (!tipo || paso > PASOS) return;
+  const v = (C.apoyoVistosPaso ||= {})[paso] ||= [];
+  if (!v.includes(tipo)) { v.push(tipo); guardar(); }
 }
 function guardarApoyo(item) {
-  (C.apoyo ||= []).push(item); guardar();
+  if (!item.id) item.id = idUnicoApoyo();
+  (C.apoyo ||= []).push(item);
+  registrarVistaPaso(item.paso || C.paso, item.datos.visual.tipo);
   const s = cargarEstudio();
   if (s && s.tema?.toLowerCase() === A.tema.toLowerCase()) { s.fichas.push(item); guardarEstudio(s); }
   else guardarEstudio({ activo: true, tema: A.tema, gustos: A.gustos || A.mundo, nivel: 'algo', usaAprendin: true, fichas: [...(C.apoyo || [])] });
-  pintarApoyoLista();
+  pintarApoyoLista(); pintarCalibracionClase();
+  return item;
 }
-function marcarReaccionApoyo(r, nota) {
-  if (C.apoyo?.length) { const u = C.apoyo.at(-1); u.reaccion = r; u.nota = nota; guardar(); }
+function marcarReaccionApoyo(id, r, nota) {
+  const target = (C.apoyo || []).find(f => f.id === id) || C.apoyo?.at(-1);
+  if (target) { target.reaccion = r; target.nota = nota; guardar(); }
   const s = cargarEstudio();
   if (s?.fichas?.length && s.tema?.toLowerCase() === A.tema.toLowerCase()) {
-    const u = s.fichas.at(-1); u.reaccion = r; u.nota = nota; guardarEstudio(s);
+    const st = (id && s.fichas.find(f => f.id === id)) || s.fichas.at(-1);
+    if (st) { st.reaccion = r; st.nota = nota; guardarEstudio(s); }
   }
 }
 function pintarApoyoLista() {
@@ -352,67 +566,67 @@ function pintarApoyoLista() {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'cl-apoyo-mini';
     b.innerHTML = `<span>${esc(it.datos.icono)} ${esc(it.datos.titulo)}</span><small>${esc(it.datos.visual.tipo)}</small>`;
-    b.addEventListener('click', () => abrirApoyo(false));
+    b.addEventListener('click', () => mostrarApoyoEnChat(it));
     lista.append(b);
   });
 }
-function pintarApoyoModal() {
-  const caja = $('#apoyoLista'); caja.replaceChildren();
-  const todas = fichasEstudioTema();
-  const av = svgAprendin(look(), { emocion: 'curioso' }), tono = tonos(look().color);
-  [...todas].reverse().forEach((item, revIdx) => {
-    const idx = todas.length - 1 - revIdx, esUltima = idx === todas.length - 1;
-    const wrap = document.createElement('div');
-    wrap.className = 'cl-ficha' + (esUltima ? ' cl-nueva' : '');
-    wrap.innerHTML = renderizarFichaEstudio(item, idx, { esUltima, gustos: A.gustos || A.mundo, avatar: av, tono, placeholder: 'Opcional: ¿qué parte de este paso no entiendes?' });
-    caja.append(wrap);
-  });
-  caja.querySelectorAll('.fi-reaccion-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (cargandoApoyo) return;
-      const r = btn.dataset.reaccion, nota = caja.querySelector('#notaDuda')?.value.trim() || '';
-      marcarReaccionApoyo(r, nota);
-      pedirApoyo(r, nota);
-    });
-  });
-  activarFichas(caja);
-  const vis = caja.querySelector('.vis'); if (vis) animar(vis);
+function pintarCalibracionClase() {
+  const cont = $('#calibracionClase');
+  if (!cont) return;
+  renderizarPanelCalibracion(cont, { historial: historialDe(fichasEstudioTema()), compacto: true, alCambiar: () => pintarCalibracionClase() });
+}
+function mostrarApoyoEnChat(item) {
+  let guardado = (C.apoyo || []).find(f => f.id === item.id || (f.datos.titulo === item.datos.titulo && f.datos.visual.tipo === item.datos.visual.tipo));
+  if (!guardado) guardado = guardarApoyo({ ...item, paso: item.paso || Math.min(PASOS, C.paso) });
+  registrarVistaPaso(C.paso, guardado.datos.visual.tipo);
+  const existente = C.chat.find(m => m.de === 'apoyo' && m.idApoyo === guardado.id);
+  if (existente) {
+    existente.colapsada = false; guardar(); pintarChat();
+    document.getElementById(`apoyo-msg-${guardado.id}`)?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'nearest' });
+  } else {
+    agregar({ de: 'apoyo', idApoyo: guardado.id, paso: guardado.paso || C.paso });
+  }
 }
 async function pedirApoyo(reaccion, nota = '') {
   if (cargandoApoyo || C.paso > PASOS) return;
   cargandoApoyo = true;
-  $('#apoyoCargando').hidden = false;
-  document.querySelectorAll('#apoyoLista .fi-reaccion-btn').forEach(b => { b.disabled = true; });
-  const objetivo = A.fases[C.paso]?.concepto || '';
-  const { datos, fuente } = await solicitarFichaInicio({
-    ia, tema: A.tema, gustos: A.gustos || A.mundo, nivel: reaccion === 'inicio' ? 'cero' : 'algo',
-    reaccion, nota, objetivo, aprendin: A, historial: historialDe(fichasEstudioTema())
-  });
-  guardarApoyo({ paso: C.paso, datos, fuente, reaccionOrigen: reaccion, reaccion: null, nota });
-  cargandoApoyo = false;
-  $('#apoyoCargando').hidden = true;
-  pintarApoyoModal();
+  document.querySelectorAll('#mensajes .fi-reaccion-btn, #btnApoyo, #btnApoyoChat').forEach(b => { if (b) b.disabled = true; });
+  const avCarga = document.createElement('div');
+  avCarga.className = 'cl-apoyo-cargando';
+  avCarga.innerHTML = '<p class="cargando">Armando una ficha visual adaptada para este paso…</p>';
+  cajaMsg.append(avCarga); bajar();
+  try {
+    const pasoActual = C.paso, objetivo = A.fases[pasoActual]?.concepto || '';
+    const historial = historialDe(fichasEstudioTema());
+    const { datos, fuente } = await solicitarFichaInicio({
+      ia, tema: A.tema, gustos: A.gustos || A.mundo, nivel: reaccion === 'inicio' ? 'cero' : 'algo',
+      reaccion, nota, objetivo, aprendin: A, historial, calibracion: calcularCalibracion(historial)
+    });
+    const item = guardarApoyo({ id: idUnicoApoyo(), paso: pasoActual, datos, fuente, reaccionOrigen: reaccion, reaccion: null, nota });
+    avCarga.remove();
+    agregar({ de: 'apoyo', idApoyo: item.id, paso: pasoActual });
+  } catch {
+    avCarga.remove();
+  } finally {
+    cargandoApoyo = false;
+    document.querySelectorAll('#mensajes .fi-reaccion-btn, #btnApoyo, #btnApoyoChat').forEach(b => { if (b) b.disabled = false; });
+  }
 }
-function abrirApoyo(autoGenerar = true) {
-  const pasoActual = Math.min(PASOS, C.paso);
-  const concepto = A.fases[pasoActual]?.concepto || A.tema;
-  $('#apoyoTit').textContent = `${pasoActual}. ${concepto}`;
-  $('#apoyoSub').textContent = `Para entenderlo antes de explicarle a ${A.nombre}`;
-  $('#apoyo').hidden = false; document.body.classList.add('con-prueba');
-  const todas = fichasEstudioTema();
-  const hayDelPaso = todas.some(f => f.paso === pasoActual);
-  pintarApoyoModal();
-  if (autoGenerar && !hayDelPaso && C.paso <= PASOS) pedirApoyo('inicio');
-  $('#apoyoCerrar').focus();
+function abrirApoyoEnChat() {
+  if (!A || C.paso > PASOS) return;
+  const pasoActual = C.paso;
+  const enChat = [...C.chat].reverse().find(m => m.de === 'apoyo' && m.paso === pasoActual);
+  if (enChat) {
+    enChat.colapsada = false; guardar(); pintarChat();
+    document.getElementById(`apoyo-msg-${enChat.idApoyo}`)?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'nearest' });
+    return;
+  }
+  const previa = fichasEstudioTema().find(f => f.paso === pasoActual);
+  if (previa) mostrarApoyoEnChat(previa);
+  else pedirApoyo('inicio');
 }
-function cerrarApoyo(enfocarChat = false) {
-  $('#apoyo').hidden = true; document.body.classList.remove('con-prueba');
-  if (enfocarChat && C.paso <= PASOS) $('#msg').focus();
-}
-$('#btnApoyo').addEventListener('click', () => abrirApoyo(true));
-$('#apoyoCerrar').addEventListener('click', () => cerrarApoyo(false));
-$('#apoyoExplicar').addEventListener('click', () => cerrarApoyo(true));
-$('#apoyo').addEventListener('keydown', e => { if (e.key === 'Escape') cerrarApoyo(false); });
+$('#btnApoyo')?.addEventListener('click', () => abrirApoyoEnChat());
+$('#btnApoyoChat')?.addEventListener('click', () => abrirApoyoEnChat());
 
 /* ---------- Reiniciar y ejemplo ---------- */
 $('#btnReiniciar').addEventListener('click', () => {

@@ -218,6 +218,26 @@
 .fi-reacciones { display: flex; flex-wrap: wrap; gap: 6px; }
 .fi-reaccion-res { margin-block: 0; font-size: .88rem; color: var(--tinta-2); background: #F7F5FF; border-radius: 10px; padding: 6px 10px; }
 
+.fi-cal-full { grid-column: 1 / -1; }
+.fi-cal { background: #fff; border-radius: var(--r-m); border: 1.5px solid var(--linea); padding: 10px 14px; }
+.fi-cal summary { cursor: pointer; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; font: 800 .92rem var(--display); list-style-position: inside; }
+.fi-cal summary small { font: 700 .78rem var(--texto); color: var(--indigo-2); background: #EFEDFF; padding: 2px 9px; border-radius: 999px; }
+.fi-cal-cuerpo { display: grid; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--linea); }
+.fi-cal-modos { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.fi-cal-modos .btn.activo { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+.fi-cal-reset { margin-left: auto; }
+.fi-cal-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(195px, 1fr)); gap: 6px; }
+.fi-cal-item { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 10px; border: 1.5px solid var(--linea); background: #FBFAFF; font-size: .82rem; font-weight: 700; text-align: left; }
+.fi-cal-item:hover { border-color: var(--indigo); background: #F4F1FF; }
+.fi-cal-item.fijado { border-color: var(--indigo); background: #EFEDFF; box-shadow: 0 0 0 2px rgba(108, 99, 255, .15); }
+.fi-cal-nom { font-family: var(--display); white-space: nowrap; }
+.fi-cal-bar { height: 7px; border-radius: 999px; background: #EAE6FA; overflow: hidden; min-width: 44px; }
+.fi-cal-bar i { display: block; height: 100%; border-radius: inherit; background: var(--indigo); transition: width .3s ease; }
+.fi-cal-item.est-alto .fi-cal-bar i { background: #2CC48A; }
+.fi-cal-item.est-bajo .fi-cal-bar i { background: #FF6B5B; }
+.fi-cal-pct { font: 800 .78rem var(--display); color: var(--tinta-2); white-space: nowrap; }
+.fi-cal-ayuda, .fi-cal-vacio { margin: 0; font-size: .82rem; color: var(--tinta-2); }
+
 .fi-sec { display: grid; gap: 10px; }
 .fi-sec h2 { font-size: 1.2rem; }
 .fi-sec .intro { margin: 0; max-width: 72ch; color: var(--tinta-2); font-weight: 600; }

@@ -7,7 +7,7 @@ import { svgAprendin } from './aprendin.js';
 import { MUNDOS } from './mundos.js';
 import { tonos } from './color.js';
 import { cargarAprendin, cargarClase } from './guardado.js';
-import { cargarEstudio, guardarEstudio, solicitarFichaInicio, renderizarFichaEstudio, historialDe } from './fichas-apoyo.js';
+import { cargarEstudio, guardarEstudio, solicitarFichaInicio, renderizarFichaEstudio, historialDe, registrarEventoVisual, calcularCalibracion, renderizarPanelCalibracion } from './fichas-apoyo.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -63,14 +63,23 @@ if (A) {
   }
 }
 
-/* ---------- Generación adaptativa ---------- */
+/* ---------- Generación adaptativa y calibración ---------- */
+function pintarCalibracion() {
+  const hist = historialDe(S.fichas);
+  const ops = { historial: hist, alCambiar: () => pintarCalibracion() };
+  renderizarPanelCalibracion($('#calibracionInicio'), { ...ops, compacto: true });
+  renderizarPanelCalibracion($('#calibracionEstudio'), ops);
+}
+
 async function pedirFichaAdaptativa(reaccion, nota = '') {
   if (cargando) return;
   cargando = true;
   pintarEstadoCarga(true);
+  const historial = historialDe(S.fichas);
   const { datos, fuente } = await solicitarFichaInicio({
     ia, tema: S.tema, gustos: S.gustos, nivel: S.nivel, reaccion, nota,
-    aprendin: S.usaAprendin && A ? A : null, historial: historialDe(S.fichas)
+    aprendin: S.usaAprendin && A ? A : null, historial,
+    calibracion: calcularCalibracion(historial)
   });
   if (reaccion === 'entendio') S.nivel = S.nivel === 'cero' ? 'algo' : 'bastante';
   else if (reaccion === 'duda' && S.nivel === 'bastante') S.nivel = 'algo';
@@ -108,6 +117,7 @@ function pintarEstudio() {
   const act = $('#estudioActivo'), cardForm = $('#tarjetaInicio');
   act.hidden = !S.activo;
   cardForm.hidden = S.activo;
+  pintarCalibracion();
   if (!S.activo) return;
 
   $('#estTema').textContent = S.tema;
@@ -140,9 +150,13 @@ function pintarEstudio() {
     btn.addEventListener('click', () => {
       if (cargando) return;
       const r = btn.dataset.reaccion;
-      const nota = lista.querySelector('#notaDuda')?.value.trim() || '';
+      const nota = lista.querySelector('.fi-nota-duda')?.value.trim() || '';
       const ultima = S.fichas.at(-1);
-      if (ultima) { ultima.reaccion = r; ultima.nota = nota; }
+      if (ultima) {
+        ultima.reaccion = r;
+        ultima.nota = nota;
+        registrarEventoVisual(ultima.datos.visual.tipo, r);
+      }
       guardarEstudio(S);
       pedirFichaAdaptativa(r, nota);
     });

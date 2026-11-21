@@ -16,8 +16,9 @@ En el estudio individual, el estudiante no recibe una explicación: **le enseña
 
 **2. Clase: enséñale** (`clase.html`)
 
-- Le explicas el tema con tus palabras (o con la voz). La IA responde **en el papel del aprendín**: no explica, pregunta, intenta usar lo que le enseñaste en su mundo (y lo anota en su cuaderno) y, una vez por paso, comete a propósito el **error típico** para que lo corrijas. Si le enseñas algo mal, te cree y se nota la consecuencia.
+- Le explicas el tema con tus palabras (o dictando con la voz: SpeechRecognition en navegadores compatibles o grabación WAV local + `POST /api/transcribir` en Brave/Linux). La IA responde **en el papel del aprendín**: no explica, pregunta, intenta usar lo que le enseñaste en su mundo (y lo anota en su cuaderno) y, una vez por paso, comete a propósito el **error típico** para que lo corrijas. Si le enseñas algo mal, te cree y se nota la consecuencia.
 - En silencio, la IA **evalúa cada explicación** (vaga, parcial, incorrecta, entendida) y deja una nota para el profe y una pista para ti («¿Cómo se lo explico?»). Se ve en «Lo que midió la IA».
+- Desde el propio chat puedes abrir «📖 Ficha de este paso» para estudiar el concepto sin tapar la conversación y explicárselo enseguida abajo.
 - Cuando entiende un paso, **evoluciona** a la fase siguiente y abre el próximo paso con una pregunta de su misión. Al cuarto paso se transforma y cumple su misión.
 - Sin IA, la clase funciona en modo práctica (pide ejemplos y entiende al segundo mensaje claro).
 
@@ -25,9 +26,10 @@ En el estudio individual, el estudiante no recibe una explicación: **le enseña
 
 Al terminar los 4 pasos llega la prueba de su misión: 5 preguntas de opción múltiple, dentro de su mundo, que el estudiante y el aprendín **responden juntos**. En cada pregunta el aprendín dice qué respuesta cree y cómo lo pensó; el estudiante decide la respuesta del equipo. El aprendín cae en la trampa (el error típico) justo en los pasos que le enseñaste con menos claridad según lo que midió la IA, así que a veces tienes que **salvarlo**. Al final se ve cuántas respondieron bien, cuántas veces lo salvaste y en qué paso se confundió. Con 3 de 5 aprueban y se cumple la misión; si no, repasan las fichas y piden otra prueba. La IA arma el examen mientras le enseñas el último paso; sin IA, se arma con sus fichas.
 
-**4. Fichas adaptativas y galería** (`fichas.html`)
+**4. Fichas adaptativas, calibración y galería** (`fichas.html`)
 
-- **Fichas de inicio y estudio adaptativo**: escribes un tema y tus gustos (o usas tu aprendín), la IA genera una ficha visual animada eligiendo el mejor diseño entre los 13 tipos cuando aplica, y cada reacción («Lo entendí», «No entendí / más simple», «Otro ejemplo de mi mundo», «Dame un reto») adapta el nivel, el ejemplo y el tipo visual de la siguiente ficha. También se pueden abrir y adaptar **dentro de `clase.html`** («📖 Ficha de este paso») para entender un concepto antes de explicárselo al aprendín. Sin IA, usa fichas adaptativas locales.
+- **Fichas de inicio y estudio adaptativo**: escribes un tema y tus gustos (o usas tu aprendín), la IA genera una ficha visual animada eligiendo el mejor diseño entre los 13 tipos cuando aplica, y cada reacción («Lo entendí», «No entendí / más simple», «Otro ejemplo de mi mundo», «Dame un reto») adapta el nivel, el ejemplo y el tipo visual de la siguiente ficha. También se pueden abrir y adaptar **dentro del chat de `clase.html`** («📖 Ficha de este paso») para entender un concepto antes de explicárselo al aprendín. Sin IA, usa fichas adaptativas locales.
+- **Calibración por aceptación**: mide qué formatos visuales entiendes mejor (reacciones positivas vs dudas y si estudiar una ficha en chat ayudó a enseñar el paso en clase), equilibra aprovechamiento de tus formatos preferidos (75 %) con exploración de estilos nuevos (25 %) y permite fijar un formato o cambiar el modo (`Auto 75/25`, `Favoritos`, `Explorar`) desde `fichas.html` y `clase.html`.
 - **Fichas de la clase y galería de los 13 tipos**: cada paso aprendido en `clase.html` deja una **ficha**: la idea clave, un **visual animado** que la IA elige entre 13 tipos y llena con datos de su mundo, un ejemplo resuelto, el «¡Ojo!» con el error en que cayó y la mejor frase que dijiste. Los tipos: pasos, ciclo, partes (mapa de conceptos), comparar, barras, torta, fracciones (pizzas o barras, con suma, resta o equivalencia; la cuenta la verifica el código), recta numérica con saltos, línea de tiempo, ecuación paso a paso, tabla, gráfico x-y e íconos. El código los dibuja y anima; el botón ↻ repite la animación.
 
 ## Cómo verlo

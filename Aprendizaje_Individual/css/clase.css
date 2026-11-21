@@ -51,7 +51,7 @@
 @keyframes cl-evo-txt { 0% { transform: translateY(-40px) scale(.4); } 20% { transform: translateY(-70px) scale(1.1); } 100% { transform: translateY(-80px) scale(1); } }
 
 /* Chat */
-.cl-chat { grid-area: chat; background: var(--papel); border-radius: var(--r-l); box-shadow: var(--sombra-1); display: grid; grid-template-rows: 1fr auto; height: calc(100vh - 100px); min-height: 480px; position: sticky; top: 12px; overflow: hidden; }
+.cl-chat { grid-area: chat; background: var(--papel); border-radius: var(--r-l); box-shadow: var(--sombra-1); display: grid; grid-template-rows: 1fr auto auto; height: calc(100vh - 100px); min-height: 480px; position: sticky; top: 12px; overflow: hidden; }
 @media (max-width: 760px) { .cl-chat { position: static; height: 70vh; } }
 .cl-mensajes { overflow-y: auto; padding: 16px clamp(10px, 2vw, 20px); display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
 .cl-msg { display: flex; align-items: flex-end; gap: 8px; max-width: 88%; animation: cl-entra .3s ease-out both; }
@@ -130,10 +130,25 @@
 .cl-sis-prueba span { background: #1E1B3A; color: #fff; }
 .cl-sis-prueba span::before { content: '🏆 '; }
 
-/* Fichas de apoyo dentro de la clase */
+/* Fichas de apoyo dentro del chat + micrófono */
 .cl-ahora-acc { display: flex; flex-wrap: wrap; gap: 6px; }
 .cl-btn-apoyo { background: #fff; color: var(--indigo-2); border: 1.5px solid #D9D2FF; }
 .cl-btn-apoyo:hover { background: #EFEDFF; }
+.cl-chat-herr { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 6px 12px; border-top: 1px solid var(--linea); background: #F7F5FF; }
+.cl-mic-estado { font-size: .82rem; font-weight: 700; color: var(--tinta-2); margin-left: auto; }
+.cl-mic-estado.grabando { color: var(--coral); }
+.cl-mic-estado.ok { color: #0F6B52; }
+.cl-mic-estado.err { color: #C0392B; }
+
+.cl-msg-apoyo { align-self: stretch; max-width: 100%; display: grid; gap: 8px; background: #FAF8FF; border: 2px solid #DDD6FE; border-radius: 20px; padding: 10px 12px; animation: cl-entra .3s ease-out both; }
+.cl-apoyo-chat-cab { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: .88rem; color: var(--tinta); }
+.cl-apoyo-chat-acc { display: flex; gap: 6px; flex-wrap: wrap; }
+.cl-apoyo-chat-cuerpo { display: grid; gap: 8px; }
+.cl-apoyo-chat-cuerpo .ficha-ap { box-shadow: none; border: 1.5px solid var(--linea); }
+.cl-apoyo-cargando { align-self: stretch; background: #FAF8FF; border: 2px dashed var(--linea); border-radius: 16px; padding: 12px 14px; }
+.cl-apoyo-cargando .cargando { margin: 0; }
+.cl-apoyo-otra-wrap { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding-top: 6px; }
+
 .cl-apoyo-minis { display: grid; gap: 6px; margin-top: 8px; }
 .cl-apoyo-mini {
   width: 100%; text-align: left; display: flex; align-items: center; justify-content: space-between; gap: 8px;
@@ -141,15 +156,4 @@
 }
 .cl-apoyo-mini:hover { border-color: var(--indigo); background: #F4F1FF; }
 .cl-apoyo-mini small { font: 800 .7rem var(--display); text-transform: uppercase; color: var(--indigo-2); background: #EFEDFF; padding: 2px 7px; border-radius: 999px; flex: none; }
-
-.cl-apoyo {
-  position: fixed; inset: 0; z-index: 58; overflow: auto; display: grid; place-items: start center; padding: 18px 12px;
-  background: rgba(30, 27, 58, .55); backdrop-filter: blur(4px); animation: nac-aparece .25s ease both;
-}
-.cl-apoyo-caja { width: min(820px, 100%); background: var(--fondo); border-radius: 26px; box-shadow: var(--sombra-2); overflow: hidden; }
-.cl-apoyo-cab { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px 18px; background: linear-gradient(120deg, #1E1B3A, #3A3470); color: #fff; }
-.cl-apoyo-tit small { display: block; font: 800 .72rem var(--display); text-transform: uppercase; letter-spacing: .06em; color: #FFC83D; }
-.cl-apoyo-tit h2 { font: 800 1.25rem/1.15 var(--display); color: #fff; }
-.cl-apoyo-cab-acc { display: flex; align-items: center; gap: 8px; }
-.cl-apoyo-cuerpo { padding: 18px; display: grid; gap: 16px; }
-@media (prefers-reduced-motion: reduce) { .cl-apoyo { animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { .cl-msg-apoyo { animation: none !important; } }
