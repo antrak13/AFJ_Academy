@@ -19,6 +19,7 @@ h1, h2 { font-family: var(--display); letter-spacing: -.01em; margin: 0; }
 h2 { font-size: 1.15rem; font-weight: 800; }
 button { font: inherit; color: inherit; cursor: pointer; }
 :focus-visible { outline: 3px solid var(--indigo); outline-offset: 2px; }
+[hidden] { display: none !important; }
 .solo-lector { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .nota { color: var(--tinta-2); font-size: .9rem; margin: 6px 0 0; }
 
@@ -155,7 +156,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 @media (prefers-reduced-motion: reduce) {
   .fase, .mundo, .pieza, .btn, .muestra, .globo, .foco { transition: none; }
-  .huevo, .foco.incubando .huevo svg, .foco.eclosion .huevo { animation: none !important; }
+  .huevo svg, .huevo-arriba, .huevo-abajo, .estrella.naciendo, .foco.abierto::after { animation: none !important; transition: none !important; }
 }
 
 /* Fases de evolución */
@@ -175,15 +176,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 /* Huevo mientras la IA crea */
 .huevo { position: absolute; left: 50%; bottom: 26px; width: 150px; transform: translateX(-50%) scale(.6); opacity: 0; z-index: 2; pointer-events: none; transition: opacity .3s, transform .4s cubic-bezier(.3, 1.5, .5, 1); }
-.huevo svg { display: block; width: 100%; transform-origin: 50% 95%; }
-.huevo-grieta { opacity: 0; }
+.huevo svg { display: block; width: 100%; height: auto; overflow: visible; transform-origin: 50% 95%; }
 .estrella { transition: opacity .3s, transform .3s; }
 .foco.incubando .estrella { opacity: 0; transform: translateX(-50%) scale(.7); }
 .foco.incubando .huevo { opacity: 1; transform: translateX(-50%) scale(1); }
 .foco.incubando .huevo svg { animation: huevo-mece 1.3s ease-in-out infinite; }
 @keyframes huevo-mece { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(-7deg); } 40% { transform: rotate(6deg); } 60% { transform: rotate(-3deg); } 80% { transform: rotate(2deg); } }
-.foco.eclosion .huevo { opacity: 0; transform: translateX(-50%) scale(1.35); transition: opacity .5s .25s, transform .6s; }
-.foco.eclosion .huevo-grieta { opacity: 1; }
 
 /* Crear */
 .crear { background: linear-gradient(160deg, #FFFFFF 40%, #FFF6E5); }
@@ -223,3 +221,90 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .paso:hover { border-color: var(--indigo); }
 .paso-fase { font: 800 .74rem var(--display); color: var(--coral); text-transform: uppercase; letter-spacing: .04em; }
+
+/* Eclosión: tiembla, se agrieta, la tapa sale volando y el aprendín salta afuera */
+.huevo-grieta { stroke-dasharray: 100; stroke-dashoffset: 100; opacity: 0; }
+.huevo-arriba, .huevo-abajo { transform-box: fill-box; transition: transform .6s cubic-bezier(.2, .8, .3, 1), opacity .5s; }
+.huevo-arriba { transform-origin: 30% 100%; }
+.huevo-abajo { transform-origin: 50% 100%; }
+.foco.rompiendo .huevo svg { animation: huevo-tiembla .11s linear infinite; }
+@keyframes huevo-tiembla { 0% { transform: translate(-2px, 0) rotate(-3deg); } 50% { transform: translate(2px, -1px) rotate(3deg); } 100% { transform: translate(-2px, 0) rotate(-3deg); } }
+.foco.rompiendo .huevo-grieta { opacity: 1; stroke-dashoffset: 0; transition: stroke-dashoffset .9s ease-out; }
+.foco.abierto .huevo { opacity: 0; transform: translateX(-50%) scale(1); transition: opacity .4s .55s; }
+.foco.abierto .huevo svg { animation: none; }
+.foco.abierto .huevo-arriba { transform: translate(-34px, -80px) rotate(-38deg); opacity: 0; }
+.foco.abierto .huevo-abajo { transform: translateY(14px) scale(1.05, .9); opacity: 0; transition-delay: .15s; }
+.foco.abierto .huevo-grieta { opacity: 0; transition: opacity .1s; }
+.foco::after { content: ''; position: absolute; left: 50%; bottom: 70px; width: 40px; height: 40px; margin-left: -20px; border-radius: 50%; background: radial-gradient(circle, #fff 0%, rgba(255, 246, 200, .9) 40%, rgba(255, 255, 255, 0) 70%); opacity: 0; pointer-events: none; z-index: 1; }
+.foco.abierto::after { animation: destello-huevo .8s ease-out forwards; }
+@keyframes destello-huevo { 0% { opacity: 1; transform: scale(.4); } 100% { opacity: 0; transform: scale(9); } }
+.estrella.naciendo { animation: nacer .85s cubic-bezier(.3, 1.6, .5, 1) both; }
+@keyframes nacer { 0% { opacity: 0; transform: translateX(-50%) translateY(30px) scale(.15); } 60% { opacity: 1; transform: translateX(-50%) translateY(-10px) scale(1.12); } 100% { opacity: 1; transform: translateX(-50%) scale(1); } }
+
+/* Preguntas antes de crear */
+.preguntas { margin-top: 14px; display: grid; gap: 12px; }
+.entendi { margin: 0; font-weight: 700; color: var(--tinta-2); }
+.lista-preguntas { display: grid; gap: 12px; }
+.cargando { margin: 0; color: var(--tinta-2); font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.cargando::before { content: ''; width: 16px; height: 16px; border-radius: 50%; border: 3px solid var(--linea); border-top-color: var(--indigo); animation: girar .8s linear infinite; }
+@keyframes girar { to { transform: rotate(360deg); } }
+.pregunta-ia { background: #fff; border: 2px solid var(--linea); border-radius: var(--r-m); padding: 12px 14px; display: grid; gap: 8px; }
+.pregunta-txt { margin: 0; font: 800 1.02rem/1.3 var(--display); }
+.otra { font: 600 .92rem var(--texto); color: var(--tinta); border: 1.5px dashed var(--linea); border-radius: var(--r-s); padding: 7px 10px; background: #FBFAFF; }
+.otra:focus { outline: none; border-style: solid; border-color: var(--indigo); }
+.preguntas-acciones { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.preguntas-acciones .btn-crear { grid-column: auto; }
+.btn-txt { border: 0; background: none; color: var(--tinta-2); font-weight: 800; text-decoration: underline; text-underline-offset: 3px; padding: 6px 4px; }
+.btn-txt:hover { color: var(--tinta); }
+.btn:disabled { opacity: .6; cursor: progress; }
+
+/* Nacimiento en pantalla completa: golpear el huevo para que nazca */
+.nacimiento {
+  position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; overflow: auto;
+  background: radial-gradient(circle at 50% 42%, rgba(255, 255, 255, .97) 0%, rgba(240, 235, 255, .97) 45%, rgba(205, 194, 255, .98) 100%);
+  backdrop-filter: blur(6px); animation: nac-aparece .35s ease both;
+}
+@keyframes nac-aparece { from { opacity: 0; } }
+.nac-caja { display: grid; justify-items: center; gap: 10px; padding: 24px 18px; text-align: center; width: min(600px, 96vw); }
+.nac-titulo { margin: 0; font: 800 clamp(1.5rem, 4.5vw, 2.4rem)/1.1 var(--display); letter-spacing: -.02em; }
+.nac-sub { margin: 0; min-height: 3em; max-width: 46ch; font: 700 1.05rem/1.45 var(--texto); color: var(--tinta-2); }
+.nac-escena { position: relative; width: min(340px, 78vw); height: min(380px, 48vh); }
+.nac-escena::before {
+  content: ''; position: absolute; left: 50%; top: 52%; width: 150%; aspect-ratio: 1; transform: translate(-50%, -50%);
+  background: repeating-conic-gradient(from 0deg, rgba(255, 214, 90, .28) 0deg 10deg, transparent 10deg 30deg);
+  -webkit-mask: radial-gradient(circle, #000 20%, transparent 62%); mask: radial-gradient(circle, #000 20%, transparent 62%);
+  opacity: 0; transition: opacity .5s; pointer-events: none;
+}
+.nacimiento.listo .nac-escena::before { opacity: 1; animation: nac-rayos 14s linear infinite; }
+@keyframes nac-rayos { to { transform: translate(-50%, -50%) rotate(360deg); } }
+.nac-huevo { position: absolute; left: 50%; bottom: 4%; width: 62%; transform: translateX(-50%); border: 0; background: none; padding: 0; cursor: pointer; touch-action: manipulation; }
+.nac-huevo svg { display: block; width: 100%; height: auto; overflow: visible; transform-origin: 50% 95%; animation: huevo-mece 1.6s ease-in-out infinite; }
+.nac-huevo:focus { outline: none; }
+.nac-huevo:focus-visible svg { filter: drop-shadow(0 0 0 #fff) drop-shadow(0 0 3px var(--indigo)) drop-shadow(0 0 12px rgba(108, 99, 255, .5)); }
+.nacimiento.listo .nac-huevo svg { animation: nac-late 1s ease-in-out infinite; filter: drop-shadow(0 0 18px rgba(255, 200, 61, .7)); }
+@keyframes nac-late { 50% { transform: scale(1.05) rotate(-2deg); } }
+.nacimiento.golpe .nac-huevo svg { animation: nac-golpe .38s ease; }
+.nacimiento.golpe-flojo .nac-huevo svg { animation: nac-golpe .3s ease; }
+@keyframes nac-golpe { 15% { transform: rotate(-10deg) scale(.95, 1.03); } 45% { transform: rotate(9deg) scale(1.03, .96); } 75% { transform: rotate(-4deg); } }
+.nac-grieta { stroke-dasharray: 100; stroke-dashoffset: 100; transition: stroke-dashoffset .3s ease-out; }
+.nacimiento[data-golpes="1"] .nac-grieta { stroke-dashoffset: 70; }
+.nacimiento[data-golpes="2"] .nac-grieta { stroke-dashoffset: 36; }
+.nacimiento[data-golpes="3"] .nac-grieta { stroke-dashoffset: 0; }
+.nacimiento.abierto .nac-huevo { pointer-events: none; }
+.nacimiento.abierto .nac-huevo svg { animation: none; filter: none; }
+.nacimiento.abierto .huevo-arriba { transform: translate(-46px, -120px) rotate(-50deg); opacity: 0; }
+.nacimiento.abierto .huevo-abajo { transform: translateY(24px) scale(1.05, .85); opacity: 0; transition-delay: .2s; }
+.nacimiento.abierto .nac-grieta { opacity: 0; transition: opacity .1s; }
+.nac-escena::after { content: ''; position: absolute; left: 50%; top: 58%; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%; background: radial-gradient(circle, #fff 0%, rgba(255, 246, 200, .9) 40%, rgba(255, 255, 255, 0) 70%); opacity: 0; pointer-events: none; }
+.nacimiento.abierto .nac-escena::after { animation: destello-huevo .9s ease-out forwards; }
+.nac-aprendin { position: absolute; left: 50%; bottom: 0; width: 86%; transform: translateX(-50%); pointer-events: none; }
+.nac-aprendin .aprendin { animation: nac-sale .9s cubic-bezier(.3, 1.6, .5, 1) both; }
+@keyframes nac-sale { 0% { opacity: 0; transform: translateY(40px) scale(.2); } 60% { opacity: 1; transform: translateY(-14px) scale(1.1); } 100% { opacity: 1; transform: none; } }
+.nac-golpes { display: flex; gap: 8px; }
+.nac-golpes i { width: 12px; height: 12px; border-radius: 50%; background: #fff; box-shadow: inset 0 0 0 2px #C9C2F2; transition: background .2s, transform .2s; }
+.nac-golpes i.dado { background: var(--sol); box-shadow: inset 0 0 0 2px #E0A100; transform: scale(1.2); }
+.nacimiento.abierto .nac-golpes { visibility: hidden; }
+.nac-listo { font-size: 1.1rem; padding: 12px 26px; justify-self: center; grid-column: auto; }
+@media (prefers-reduced-motion: reduce) {
+  .nacimiento, .nac-huevo svg, .nac-aprendin .aprendin, .nacimiento.listo .nac-escena::before, .nacimiento.abierto .nac-escena::after { animation: none !important; }
+}

@@ -24,10 +24,19 @@
       <p class="solo-lector" id="dicho" aria-live="polite"></p>
       <div class="estrella" id="estrella"></div>
       <div class="huevo" aria-hidden="true">
-        <svg viewBox="0 0 120 150"><defs><radialGradient id="huevoLuz" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#F4F0FF"/><stop offset="1" stop-color="#D9D1FA"/></radialGradient></defs>
-          <path d="M60 6C88 6 112 52 112 88C112 122 90 144 60 144C30 144 8 122 8 88C8 52 32 6 60 6Z" fill="url(#huevoLuz)" stroke="#BDB2EE" stroke-width="3"/>
-          <g fill="#C9BFFF"><circle cx="38" cy="62" r="9"/><circle cx="80" cy="44" r="6"/><circle cx="86" cy="96" r="11"/><circle cx="44" cy="112" r="6"/><circle cx="62" cy="80" r="4"/></g>
-          <path class="huevo-grieta" d="M14 84l14 -8l10 10l12 -12l12 10l12 -10l12 8l10 -6l12 8" fill="none" stroke="#8F82D6" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+        <svg viewBox="0 0 120 150" overflow="visible">
+          <defs>
+            <radialGradient id="huevoLuz" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#F4F0FF"/><stop offset="1" stop-color="#D9D1FA"/></radialGradient>
+            <g id="huevoForma">
+              <path d="M60 6C88 6 112 52 112 88C112 122 90 144 60 144C30 144 8 122 8 88C8 52 32 6 60 6Z" fill="url(#huevoLuz)" stroke="#BDB2EE" stroke-width="3"/>
+              <g fill="#C9BFFF"><circle cx="38" cy="58" r="9"/><circle cx="80" cy="40" r="6"/><circle cx="86" cy="104" r="11"/><circle cx="42" cy="116" r="6"/><circle cx="64" cy="94" r="4"/></g>
+            </g>
+            <clipPath id="huevoArriba"><path d="M-10 -10H130V82L108 74L96 84L84 72L72 84L60 72L48 84L36 72L24 84L12 74L-10 82Z"/></clipPath>
+            <clipPath id="huevoAbajo"><path d="M-10 82L12 74L24 84L36 72L48 84L60 72L72 84L84 72L96 84L108 74L130 82V160H-10Z"/></clipPath>
+          </defs>
+          <g class="huevo-abajo" clip-path="url(#huevoAbajo)"><use href="#huevoForma"/></g>
+          <g class="huevo-arriba" clip-path="url(#huevoArriba)"><use href="#huevoForma"/></g>
+          <path class="huevo-grieta" d="M9 80L12 74L24 84L36 72L48 84L60 72L72 84L84 72L96 84L108 74L111 80" fill="none" stroke="#8F82D6" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" pathLength="100"/>
         </svg>
       </div>
       <div class="piso" aria-hidden="true"></div>
@@ -72,6 +81,15 @@
         </div>
         <button class="btn btn-crear" id="btnCrear" type="submit">Crear mi aprendín</button>
       </form>
+      <div class="preguntas" id="preguntas" hidden>
+        <p class="entendi" id="entendi"></p>
+        <div class="lista-preguntas" id="listaPreguntas" aria-live="polite"></div>
+        <div class="preguntas-acciones">
+          <button class="btn btn-crear" type="button" id="btnNacer">¡Que nazca!</button>
+          <button class="btn" type="button" id="btnSaltar">Saltar preguntas</button>
+          <button class="btn-txt" type="button" id="btnVolver">Cambiar gustos o tema</button>
+        </div>
+      </div>
       <div class="ficha" id="ficha" hidden></div>
     </div>
 
@@ -99,6 +117,25 @@
     </div>
   </section>
 </main>
+
+<div class="nacimiento" id="nacimiento" hidden>
+  <div class="nac-caja" role="dialog" aria-modal="true" aria-labelledby="nacTitulo" aria-describedby="nacSub">
+    <p class="nac-titulo" id="nacTitulo">Tu aprendín se está formando…</p>
+    <div class="nac-escena">
+      <button class="nac-huevo" id="nacHuevo" type="button" aria-label="Golpear el huevo">
+        <svg viewBox="0 0 120 150" overflow="visible" aria-hidden="true">
+          <g class="huevo-abajo" clip-path="url(#huevoAbajo)"><use href="#huevoForma"/></g>
+          <g class="huevo-arriba" clip-path="url(#huevoArriba)"><use href="#huevoForma"/></g>
+          <path class="nac-grieta" d="M60 72L48 84L36 72L24 84L12 74L9 80M60 72L72 84L84 72L96 84L108 74L111 80" fill="none" stroke="#8F82D6" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" pathLength="100"/>
+        </svg>
+      </button>
+      <div class="nac-aprendin" id="nacAprendin"></div>
+    </div>
+    <div class="nac-golpes" id="nacGolpes" aria-hidden="true"><i></i><i></i><i></i></div>
+    <p class="nac-sub" id="nacSub" aria-live="polite"></p>
+    <button class="btn btn-crear nac-listo" id="nacListo" type="button" hidden>Conocerlo</button>
+  </div>
+</div>
 
 <script type="module" src="js/taller.js"></script>
 </body>

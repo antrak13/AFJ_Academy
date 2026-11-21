@@ -5,7 +5,7 @@
 //   · cada emoción es una mezcla de esos parámetros, y el personaje pasa de una a otra sin saltos.
 // El vestuario (piezas.js) se dibuja encima con las mismas medidas.
 import { PALETA, color, tonos, mover } from './color.js';
-import { PIEZAS, SLOTS, NIVELES, pintarPieza } from './piezas.js';
+import { PIEZAS, SLOTS, NIVELES, pintarPieza, CUELLOS, ESTAMPADOS, EMBLEMAS } from './piezas.js';
 import { n, lim, curvaCerrada, curvaAbierta, estrella } from './trazos.js';
 
 const TINTA = '#1E1B3A', BOCA = '#5B1A32', LENGUA = '#FF8A9A', RUBOR = '#FF6F8E';
@@ -16,12 +16,12 @@ const RM = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-moti
 // nArr / nAba: redondez de la mitad de arriba y de abajo (2 = elipse, más alto = más cuadrado, menos de 2 = en punta)
 // ojos: altura de los ojos
 export const FORMAS = {
-  bollo: { nombre: 'Bollo', W: 150, H: 138, tm: .56, nArr: 2.1, nAba: 3.4, ojos: .43 },
-  gota: { nombre: 'Gota', W: 138, H: 160, tm: .64, nArr: 1.35, nAba: 3, ojos: .52 },
-  pera: { nombre: 'Pera', W: 152, H: 150, tm: .7, nArr: 1.8, nAba: 3.2, ojos: .45 },
-  huevo: { nombre: 'Huevo', W: 134, H: 158, tm: .6, nArr: 1.8, nAba: 2.6, ojos: .42 },
-  torre: { nombre: 'Torre', W: 112, H: 170, tm: .52, nArr: 3.6, nAba: 4.5, ojos: .34 },
-  cubo: { nombre: 'Cubo', W: 140, H: 140, tm: .5, nArr: 9, nAba: 9, ojos: .42 }
+  bollo: { nombre: 'Bolita', W: 158, H: 146, tm: .54, nArr: 2, nAba: 2.5, ojos: .39 },
+  gota: { nombre: 'Gota', W: 146, H: 156, tm: .62, nArr: 1.55, nAba: 2.6, ojos: .46 },
+  pera: { nombre: 'Pera', W: 158, H: 148, tm: .66, nArr: 1.85, nAba: 2.7, ojos: .41 },
+  huevo: { nombre: 'Huevo', W: 140, H: 156, tm: .58, nArr: 1.85, nAba: 2.4, ojos: .4 },
+  torre: { nombre: 'Torre', W: 124, H: 160, tm: .52, nArr: 2.8, nAba: 3.3, ojos: .37 },
+  cubo: { nombre: 'Cubo', W: 146, H: 138, tm: .5, nArr: 5.5, nAba: 5.5, ojos: .39 }
 };
 
 const cacheGeo = new Map();
@@ -51,11 +51,11 @@ export function geometria(forma) {
   });
 
   let tS = 0; while (tS < .3 && hw(tS) * 2 < F.W * .6) tS += .005;
-  const R = lim(F.W * .084, 10, 12.5);
-  const ojoY = y(F.ojos), ojoDx = lim(hw(F.ojos) * .42, 18, 27);
-  const bocaY = ojoY + R * 2.3;
-  const tC = lim((bocaY + R * 1.3 - top) / F.H, 0, .82);
-  const tH = lim(F.ojos + .22, 0, .78);
+  const R = lim(F.W * .088, 10.5, 13.5);
+  const ojoY = y(F.ojos), ojoDx = lim(hw(F.ojos) * .3, 15, 22);
+  const bocaY = ojoY + R * 1.95;
+  const tC = lim((bocaY + R * 1.05 - top) / F.H, 0, .8);
+  const tH = lim(F.ojos + .15, 0, .75);
 
   const centro = [cx, top + F.H * .5];
   const g = {
@@ -64,7 +64,9 @@ export function geometria(forma) {
     ojo: { y: ojoY, dx: ojoDx, r: R },
     boca: { y: bocaY },
     cuello: { y: y(tC), w: hw(tC) * 2, t: tC },
-    hombro: { y: y(tH), dx: hw(tH) - 3 },
+    hombro: { y: y(tH), dx: hw(tH) - 6 },
+    brazo: { L: R * 2.3, w: R * 1.7 },
+    pies: { rx: F.W * .17, ry: F.W * .095, dx: F.W * .19 },
     // punto del borde por ángulo desde el centro del cuerpo: s=0 arriba, s=±1 a los costados (a media altura).
     // off lo separa hacia afuera. rot = giro para que una pieza dibujada «hacia arriba» apunte hacia afuera.
     borde(s, off = 0) {
@@ -93,29 +95,17 @@ export function geometria(forma) {
 // cejaY altura · cejaA ángulo (+ preocupado, − enojado) · cejaAsim una ceja más alta
 // bocaW ancho · bocaC curva (+ sonrisa, − tristeza) · bocaA apertura · bocaX hacia un lado · bocaOnda temblorosa
 // rubor · incl inclinación del cuerpo · mirX/mirY hacia dónde mira · rebote · temblor
-export const BASE = { ojoA: 1, ojoS: 0, ojoT: 0, cejaY: 0, cejaA: 0, cejaAsim: 0, bocaW: .75, bocaC: .3, bocaA: 0, bocaX: 0, bocaOnda: 0, rubor: .25, incl: 0, mirX: 0, mirY: 0, rebote: 0, temblor: 0 };
+export const BASE = { ojoA: 1, ojoS: 0, ojoT: 0, cejaY: 0, cejaA: 0, cejaAsim: 0, bocaW: .75, bocaC: .3, bocaA: 0, bocaX: 0, bocaOnda: 0, rubor: .4, incl: 0, mirX: 0, mirY: 0, rebote: 0, temblor: 0 };
 
-// Poses de cada brazo: x hacia afuera, y hacia abajo (desde el hombro), b curva del codo, obj ángulo del objeto en la mano
+// Brazos: bracitos redondos que giran desde el hombro.
+// ang: 0 = colgando, 90 = hacia afuera, 180 = hacia arriba, negativo = hacia adentro (sobre la cara o la panza).
+// obj: ángulo del objeto que lleva en la mano derecha.
 const POSES = {
-  abajo: { x: 8, y: 22, b: -5, obj: 150 },
-  cadera: { x: -3, y: 20, b: 14, obj: 200 },
-  arriba: { x: 12, y: -28, b: -7, obj: 8 },
-  saludo: { x: 24, y: -18, b: -9, obj: 20 },
-  celebrar: { x: 23, y: -24, b: -10, obj: 15 },
-  encoger: { x: 23, y: -3, b: -12, obj: 40 },
-  adelante: { x: -14, y: 14, b: 9, obj: -40 },
-  sostener: { x: 18, y: 2, b: -10, obj: 18 },
-  menton: { especial: 'menton', obj: -25 },
-  tapar: { especial: 'tapar', obj: -10 }
+  abajo: { ang: 22, obj: 150 }, cadera: { ang: -8, obj: 190 }, arriba: { ang: 160, obj: 0 }, saludo: { ang: 125, obj: 15 },
+  celebrar: { ang: 140, obj: 10 }, encoger: { ang: 95, obj: 50 }, adelante: { ang: -42, obj: -50 }, sostener: { ang: 65, obj: 15 },
+  menton: { ang: -145, obj: -20 }, tapar: { ang: -158, obj: -10 }
 };
-function resolverPose(g, nombre, lado) {
-  const P = POSES[nombre] || POSES.abajo;
-  if (!P.especial) return { x: P.x, y: P.y, b: P.b, obj: P.obj };
-  const sx = g.cx + lado * g.hombro.dx, sy = g.hombro.y, R = g.ojo.r;
-  const tx = P.especial === 'menton' ? g.cx + lado * R * 1.4 : g.cx + lado * R * .4;
-  const ty = P.especial === 'menton' ? g.boca.y + R * 1.3 : g.boca.y + R * .2;
-  return { x: (tx - sx) * lado, y: ty - sy, b: 13, obj: P.obj };
-}
+function resolverPose(g, nombre) { const P = POSES[nombre] || POSES.abajo; return { ang: P.ang, obj: P.obj }; }
 
 /* ================= Rasgos ================= */
 // Rasgos fijos de cada aprendín (además de la forma y el color): tipo de ojos, boca, panza y marcas.
@@ -123,12 +113,12 @@ export const OJOS = {
   redondos: { nombre: 'Redondos', rx: .78, ry: 1.05, br: 1, iris: .62 },
   grandes: { nombre: 'Grandes', rx: .96, ry: 1.26, br: 1.25, iris: .34 },
   puntitos: { nombre: 'Puntitos', rx: .44, ry: .54, br: .6, iris: 1 },
-  ovalados: { nombre: 'Ovalados', rx: .6, ry: 1.3, br: .9, iris: .5 },
+  ovalados: { nombre: 'Ovalados', rx: .62, ry: 1.34, br: 1.15, iris: .46 },
   pestanas: { nombre: 'Con pestañas', rx: .8, ry: 1.06, br: 1, iris: .55, pestanas: true }
 };
 export const BOCAS = { normal: 'Normal', colmillo: 'Colmillo', dientes: 'Dientes' };
 export const MARCAS = { ninguna: 'Ninguna', manchas: 'Manchas', rayas: 'Rayas', punta: 'Punta', estrella: 'Estrella' };
-const EST0 = OJOS.redondos;
+const EST0 = OJOS.ovalados;
 
 function caminoOjo(g, p, lado, parp, est = EST0) {
   const R = g.ojo.r, a = Math.max(0, p.ojoA * parp), s = lim(p.ojoS, 0, 1);
@@ -180,12 +170,8 @@ function caminoBoca(g, p, fase = 0, tipo = 'normal') {
   return { d: curvaAbierta(sup) + curvaAbierta(inf.reverse(), false) + 'Z', lengua, diente };
 }
 function caminoBrazo(g, pose, lado) {
-  const sx = g.cx + lado * g.hombro.dx, sy = g.hombro.y;
-  const hx = sx + lado * pose.x, hy = sy + pose.y;
-  const dx = hx - sx, dy = hy - sy, L = Math.hypot(dx, dy) || 1;
-  const px = -dy / L * -lado, py = dx / L * -lado;
-  const qx = (sx + hx) / 2 + px * pose.b, qy = (sy + hy) / 2 + py * pose.b;
-  return { d: `M${n(sx)} ${n(sy)}Q${n(qx)} ${n(qy)} ${n(hx)} ${n(hy)}`, hx, hy };
+  const sx = g.cx + lado * g.hombro.dx, sy = g.hombro.y, a = pose.ang * Math.PI / 180, L = g.brazo.L * .82;
+  return { t: `translate(${n(sx)} ${n(sy)}) rotate(${n(-pose.ang * lado)})`, hx: sx + Math.sin(a) * lado * L, hy: sy + Math.cos(a) * L };
 }
 
 /* ================= Emociones ================= */
@@ -246,12 +232,32 @@ function pintarMarcas(g, t, r) {
 }
 
 /* ================= Look ================= */
+// Peinado a medida: mechones (puntas que salen del borde de la cabeza) y flequillo (mechones sobre la frente).
+const num = (v, a, b, def) => { const x = Number(v); return Number.isFinite(x) ? lim(x, a, b) : def; };
+export function limpiarTraje(t) {
+  if (!t || typeof t !== 'object') return null;
+  const c = v => (v ? color(v, '') : '') || undefined, de = (v, xs, def) => xs.includes(v) ? v : def;
+  return { arriba: c(t.arriba), abajo: c(t.abajo), interior: c(t.interior), cinturon: c(t.cinturon), cuello: de(t.cuello, CUELLOS, 'redondo'), estampado: de(t.estampado, ESTAMPADOS, 'ninguno'), estampadoColor: c(t.estampadoColor), emblema: de(t.emblema, EMBLEMAS, 'ninguno'), emblemaColor: c(t.emblemaColor), emblemaPos: t.emblemaPos === 'izquierda' ? 'izquierda' : 'centro' };
+}
+export function limpiarPeinado(p) {
+  if (!p || typeof p !== 'object') return null;
+  const mechones = (Array.isArray(p.mechones) ? p.mechones : []).slice(0, 14).map(m => ({ pos: num(m?.pos, -1.2, 1.2, 0), largo: num(m?.largo, 6, 75, 30), ancho: num(m?.ancho, 6, 30, 18), dir: num(m?.dir, -180, 180, num(m?.pos, -1.2, 1.2, 0) * 60), curva: num(m?.curva, -1, 1, 0) }));
+  const flequillo = (Array.isArray(p.flequillo) ? p.flequillo : []).slice(0, 7).map(f => ({ x: num(f?.x, -1, 1, 0), largo: num(f?.largo, 2, 34, 14), ancho: num(f?.ancho, 6, 28, 14), giro: num(f?.giro, -45, 45, 0) }));
+  if (!mechones.length && !flequillo.length) return null;
+  return { mechones, flequillo, tapa: num(p.tapa, 0, 1, .8) };
+}
+
 // Un look: { nombre, forma, color, numero, piezas: { slot: { id, colores: [c1, c2] } } }
 export function normalizarLook(l = {}) {
   const forma = FORMAS[l.forma] ? l.forma : 'bollo';
   const r = l.rasgos || {};
-  const rasgos = { ojos: OJOS[r.ojos] ? r.ojos : 'redondos', boca: BOCAS[r.boca] ? r.boca : 'normal', panza: !!r.panza, marcas: MARCAS[r.marcas] ? r.marcas : 'ninguna' };
+  const rasgos = { ojos: OJOS[r.ojos] ? r.ojos : 'ovalados', boca: BOCAS[r.boca] ? r.boca : 'normal', panza: !!r.panza, marcas: MARCAS[r.marcas] ? r.marcas : 'ninguna', pies: r.pies ? color(r.pies, '') : '' };
   const out = { nombre: String(l.nombre || '').slice(0, 24), forma, color: color(l.color, PALETA.coral), numero: lim(parseInt(l.numero, 10) || 0, 0, 99), rasgos, piezas: {} };
+  const pe = limpiarPeinado(l.peinado), pf = limpiarPeinado(l.peinado_final);
+  if (pe) out.peinado = pe;
+  if (pf) out.peinado_final = pf;
+  const tj = limpiarTraje(l.traje);
+  if (tj) out.traje = tj;
   for (const slot of SLOTS) {
     const x = l.piezas?.[slot];
     const id = typeof x === 'string' ? x : x?.id;
@@ -279,7 +285,7 @@ export function svgAprendin(lookIn, opciones = {}) {
   const g = geometria(look.forma), t = tonos(look.color), id = opciones.id || `apr${++contador}`;
   const p = { ...paramsDe(opciones.emocion), ...(opciones.p || {}) };
   const emo = EMOCIONES[opciones.emocion] || EMOCIONES.neutral;
-  const capas = { atras: '', dentro: '', fuera: '', cara: '', espalda: '', aura: '', cuello: '', mano: '' };
+  const capas = { atras: '', dentro: '', fuera: '', cara: '', espalda: '', aura: '', cuello: '', mano: '', brazo: '' };
   const tieneObjeto = !!look.piezas.mano;
   for (const slot of SLOTS) {
     const pz = look.piezas[slot]; if (!pz) continue;
@@ -292,7 +298,8 @@ export function svgAprendin(lookIn, opciones = {}) {
   const ojos = [-1, 1].map(lado => ({ d: caminoOjo(g, p, lado, 1, est), b: brillosOjo(g, p, lado, 1, est), pe: caminoPestanas(g, p, lado, 1, est) }));
   const iris = mover(t.oscuro, -.08, .12);
   const R = g.ojo.r, tr = n(p.incl);
-  const brazoColor = t.oscuro;
+  const B = g.brazo, PI = g.pies, pies = look.rasgos.pies ? tonos(look.rasgos.pies) : { base: mover(t.oscuro, -.04), oscuro: t.tinta };
+  const bracito = (cls, b) => `<g class="${cls}" transform="${b.t}"><ellipse cx="0" cy="${n(B.L * .42)}" rx="${n(B.w / 2)}" ry="${n(B.L / 2)}" fill="url(#${id}-g)" stroke="${t.oscuro}" stroke-width="3"/>${capas.brazo}</g>`;
   const etiqueta = opciones.etiqueta || `${look.nombre || 'Aprendín'}, ${emo.nombre.toLowerCase()}`;
   return `<svg class="apr-svg" viewBox="-20 -14 300 272" role="img" aria-label="${esc(etiqueta)}" xmlns="http://www.w3.org/2000/svg">
 <defs>
@@ -306,8 +313,7 @@ export function svgAprendin(lookIn, opciones = {}) {
   <g class="apr-aura">${capas.aura}</g>
   <g class="apr-espalda">${capas.espalda}</g>
   <g class="apr-atras">${capas.atras}</g>
-  <g fill="${t.oscuro}"><ellipse cx="${n(g.cx - g.W * .21)}" cy="${g.piso - 1}" rx="14" ry="8"/><ellipse cx="${n(g.cx + g.W * .21)}" cy="${g.piso - 1}" rx="14" ry="8"/></g>
-  <path class="apr-cuerpo" d="${g.path}" fill="url(#${id}-g)" stroke="${t.oscuro}" stroke-width="3" stroke-linejoin="round"/>
+  <path class="apr-cuerpo" d="${g.path}" fill="url(#${id}-g)" stroke="${t.oscuro}" stroke-width="3.2" stroke-linejoin="round"/>
   <g clip-path="url(#${id}-c)">
     <ellipse cx="${n(g.cx + g.W * .12)}" cy="${n(g.piso + 8)}" rx="${n(g.W * .62)}" ry="${n(g.H * .3)}" fill="${t.oscuro}" opacity=".22"/>
     ${pintarMarcas(g, t, look.rasgos)}
@@ -315,10 +321,11 @@ export function svgAprendin(lookIn, opciones = {}) {
     <ellipse cx="${n(g.cx - g.W * .2)}" cy="${n(g.top + g.H * .2)}" rx="${n(g.W * .16)}" ry="${n(g.H * .09)}" fill="#fff" opacity=".35" transform="rotate(-24 ${n(g.cx - g.W * .2)} ${n(g.top + g.H * .2)})"/>
     ${capas.dentro}
   </g>
+  <g class="apr-pies" fill="${pies.base}" stroke="${pies.oscuro}" stroke-width="3"><ellipse cx="${n(g.cx - PI.dx)}" cy="${n(g.piso - PI.ry * .35)}" rx="${n(PI.rx)}" ry="${n(PI.ry)}" transform="rotate(-6 ${n(g.cx - PI.dx)} ${n(g.piso)})"/><ellipse cx="${n(g.cx + PI.dx)}" cy="${n(g.piso - PI.ry * .35)}" rx="${n(PI.rx)}" ry="${n(PI.ry)}" transform="rotate(6 ${n(g.cx + PI.dx)} ${n(g.piso)})"/></g>
   <g class="apr-cuello">${capas.cuello}</g>
   <g class="apr-cara" transform="translate(${n(p.mirX * R * .45)} ${n(p.mirY * R * .35)})">
-    <ellipse class="apr-rubor" cx="${n(g.cx - g.ojo.dx - R * .9)}" cy="${n(g.ojo.y + R * 1.55)}" rx="${n(R * 1.05)}" ry="${n(R * .58)}" fill="${RUBOR}" opacity="${n(p.rubor * .55)}"/>
-    <ellipse class="apr-rubor" cx="${n(g.cx + g.ojo.dx + R * .9)}" cy="${n(g.ojo.y + R * 1.55)}" rx="${n(R * 1.05)}" ry="${n(R * .58)}" fill="${RUBOR}" opacity="${n(p.rubor * .55)}"/>
+    <ellipse class="apr-rubor" cx="${n(g.cx - g.ojo.dx - R * 1.3)}" cy="${n(g.ojo.y + R * 1.15)}" rx="${n(R * .95)}" ry="${n(R * .52)}" fill="${RUBOR}" opacity="${n(p.rubor * .75)}"/>
+    <ellipse class="apr-rubor" cx="${n(g.cx + g.ojo.dx + R * 1.3)}" cy="${n(g.ojo.y + R * 1.15)}" rx="${n(R * .95)}" ry="${n(R * .52)}" fill="${RUBOR}" opacity="${n(p.rubor * .75)}"/>
     ${ojos.map(o => `<path class="apr-ojo" d="${o.d}" fill="url(#${id}-i)" stroke="${TINTA}" stroke-width="2.4" stroke-linejoin="round"/><path class="apr-pestanas" d="${o.pe}" stroke="${TINTA}" stroke-width="${n(R * .22)}" stroke-linecap="round" fill="none"/><circle class="apr-brillo1" cx="${n(o.b.x1)}" cy="${n(o.b.y1)}" r="${n(o.b.r1)}" fill="#fff" opacity="${n(o.b.op)}"/><circle class="apr-brillo2" cx="${n(o.b.x2)}" cy="${n(o.b.y2)}" r="${n(o.b.r2)}" fill="#fff" opacity="${n(o.b.op)}"/>`).join('')}
     ${[-1, 1].map(lado => `<path class="apr-ceja" d="${caminoCeja(g, p, lado)}" fill="none" stroke="${TINTA}" stroke-width="${n(R * .3)}" stroke-linecap="round" opacity=".9"/>`).join('')}
     <path class="apr-boca" d="${boca.d}" fill="${BOCA}" stroke="${BOCA}" stroke-width="${n(R * .3)}" stroke-linejoin="round" stroke-linecap="round"/>
@@ -327,11 +334,9 @@ export function svgAprendin(lookIn, opciones = {}) {
     ${capas.cara}
   </g>
   <g class="apr-fuera">${capas.fuera}</g>
-  <path class="apr-brazo apr-brazo-i" d="${bl.d}" fill="none" stroke="${brazoColor}" stroke-width="9" stroke-linecap="round"/>
-  <path class="apr-brazo apr-brazo-d" d="${br.d}" fill="none" stroke="${brazoColor}" stroke-width="9" stroke-linecap="round"/>
-  <circle class="apr-mano-i" cx="${n(bl.hx)}" cy="${n(bl.hy)}" r="6.6" fill="${t.oscuro}"/>
-  <g class="apr-objeto" transform="translate(${n(br.hx)} ${n(br.hy)}) rotate(${n(pr.obj)}) scale(1.2)">${capas.mano}</g>
-  <circle class="apr-mano-d" cx="${n(br.hx)}" cy="${n(br.hy)}" r="6.6" fill="${t.oscuro}"/>
+  ${bracito('apr-brazo apr-brazo-i', bl)}
+  <g class="apr-objeto" transform="translate(${n(br.hx)} ${n(br.hy)}) rotate(${n(pr.obj)}) scale(1.15)">${capas.mano}</g>
+  ${bracito('apr-brazo apr-brazo-d', br)}
   <g class="apr-sticker">${pintarSticker(g, emo.sticker)}</g>
 </g>
 </svg>`;
@@ -339,8 +344,8 @@ export function svgAprendin(lookIn, opciones = {}) {
 
 function brazosDe(g, poses, tieneObjeto) {
   let [i, d] = poses;
-  if (tieneObjeto && ['abajo', 'cadera', 'encoger', 'tapar'].includes(d)) d = 'sostener';
-  return [resolverPose(g, i, -1), resolverPose(g, d, 1)];
+  if (tieneObjeto && ['abajo', 'cadera', 'encoger', 'tapar', 'adelante'].includes(d)) d = 'sostener';
+  return [resolverPose(g, i), resolverPose(g, d)];
 }
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -418,7 +423,7 @@ function montar(a) {
   a.dom = {
     todo: q('.apr-todo'), sombra: q('.apr-sombra'), cara: q('.apr-cara'), ojos: qa('.apr-ojo'), b1: qa('.apr-brillo1'), b2: qa('.apr-brillo2'),
     cejas: qa('.apr-ceja'), pestanas: qa('.apr-pestanas'), diente: q('.apr-diente'), boca: q('.apr-boca'), bocaClip: q('.apr-boca-clip'), lengua: q('.apr-lengua'), rubor: qa('.apr-rubor'),
-    brazoI: q('.apr-brazo-i'), brazoD: q('.apr-brazo-d'), manoI: q('.apr-mano-i'), manoD: q('.apr-mano-d'), objeto: q('.apr-objeto'), sticker: q('.apr-sticker')
+    brazoI: q('.apr-brazo-i'), brazoD: q('.apr-brazo-d'), objeto: q('.apr-objeto'), sticker: q('.apr-sticker')
   };
   a.g = geometria(look.forma);
   a.rasgos = normalizarLook(look).rasgos; a.est = OJOS[a.rasgos.ojos];
@@ -446,7 +451,7 @@ function animar(a, t, dt) {
   const meta = paramsDe(a.emocion), k = 1 - Math.exp(-dt * 9);
   for (const key in meta) a.cur[key] += (meta[key] - a.cur[key]) * k;
   const poses = brazosDe(g, emo.brazos, a.tieneObjeto);
-  a.brazos.forEach((b, i) => { for (const key of ['x', 'y', 'b', 'obj']) b[key] += (poses[i][key] - b[key]) * k; });
+  a.brazos.forEach((b, i) => { for (const key of ['ang', 'obj']) b[key] += (poses[i][key] - b[key]) * k; });
 
   const p = { ...a.cur };
   // 2) mirar al puntero
@@ -507,7 +512,7 @@ function animar(a, t, dt) {
     a.dom.b1[i].setAttribute('cx', n(b.x1)); a.dom.b1[i].setAttribute('cy', n(b.y1)); a.dom.b1[i].setAttribute('opacity', n(b.op));
     a.dom.b2[i].setAttribute('cx', n(b.x2)); a.dom.b2[i].setAttribute('cy', n(b.y2)); a.dom.b2[i].setAttribute('opacity', n(b.op));
     a.dom.cejas[i].setAttribute('d', caminoCeja(g, p, lado));
-    a.dom.rubor[i].setAttribute('opacity', n(p.rubor * .55));
+    a.dom.rubor[i].setAttribute('opacity', n(p.rubor * .75));
   });
   const boca = caminoBoca(g, p, fase, a.rasgos.boca);
   a.dom.boca.setAttribute('d', boca.d); if (boca.diente) a.dom.diente.setAttribute('d', boca.diente); a.dom.bocaClip.setAttribute('d', boca.d);
@@ -516,13 +521,10 @@ function animar(a, t, dt) {
 
   // 7) brazos (el derecho saluda si toca)
   const pd = { ...a.brazos[1] };
-  if (saludo > 0) {
-    const w = POSES.saludo, osc = Math.sin(t * 15) * 7;
-    pd.x += (w.x + osc * .5 - pd.x) * saludo; pd.y += (w.y + osc - pd.y) * saludo; pd.b += (w.b - pd.b) * saludo; pd.obj += (w.obj - pd.obj) * saludo;
-  }
-  const bi = caminoBrazo(g, a.brazos[0], -1), bd = caminoBrazo(g, pd, 1);
-  a.dom.brazoI.setAttribute('d', bi.d); a.dom.brazoD.setAttribute('d', bd.d);
-  a.dom.manoI.setAttribute('cx', n(bi.hx)); a.dom.manoI.setAttribute('cy', n(bi.hy));
-  a.dom.manoD.setAttribute('cx', n(bd.hx)); a.dom.manoD.setAttribute('cy', n(bd.hy));
-  a.dom.objeto.setAttribute('transform', `translate(${n(bd.hx)} ${n(bd.hy)}) rotate(${n(pd.obj)}) scale(1.2)`);
+  if (saludo > 0) { const w = POSES.saludo; pd.ang += (w.ang + Math.sin(t * 15) * 20 - pd.ang) * saludo; pd.obj += (w.obj - pd.obj) * saludo; }
+  const pi = { ...a.brazos[0] };
+  if (!RM) { const vaiven = Math.sin(t * 2.3) * 3; pi.ang += vaiven; pd.ang -= vaiven; }
+  const bi = caminoBrazo(g, pi, -1), bd = caminoBrazo(g, pd, 1);
+  a.dom.brazoI.setAttribute('transform', bi.t); a.dom.brazoD.setAttribute('transform', bd.t);
+  a.dom.objeto.setAttribute('transform', `translate(${n(bd.hx)} ${n(bd.hy)}) rotate(${n(pd.obj)}) scale(1.15)`);
 }

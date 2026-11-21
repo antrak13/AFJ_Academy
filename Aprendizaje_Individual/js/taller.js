@@ -4,7 +4,7 @@ import { crearAprendin, svgAprendin, FORMAS, EMOCIONES, EMO_IDS, OJOS, BOCAS, MA
 import { PIEZAS, NOMBRES_SLOT } from './piezas.js';
 import { PALETA, color, tonos } from './color.js';
 import { MUNDOS, NOMBRES } from './mundos.js';
-import { fasesDesdeLook, crearLocal, ZONAS } from './creador.js';
+import { fasesDesdeLook, crearLocal, preguntasLocales, ZONAS } from './creador.js';
 
 const $ = s => document.querySelector(s);
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -99,7 +99,7 @@ EMO_IDS.forEach(id => cajaEmo.append(h('button', { class: 'chip', type: 'button'
 function marcarEmocion() { cajaEmo.querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', b.dataset.emo === E.emocion)); }
 
 /* ---------- Crear con IA ---------- */
-const GUSTOS = ['fútbol', 'anime de peleas', 'cocinar', 'videojuegos de bloques', 'música', 'dinosaurios', 'el espacio', 'básquet', 'dibujar', 'gatos'];
+const GUSTOS = ['anime', 'fútbol', 'superhéroes', 'videojuegos', 'cocinar', 'música', 'dinosaurios', 'el espacio', 'básquet', 'gatos'];
 const TEMAS = ['fracciones', 'la fotosíntesis', 'ecuaciones lineales', 'el ciclo del agua', 'porcentajes', 'la célula'];
 function sugerir(caja, input, lista, sumar) {
   for (const t of lista) caja.append(h('button', { class: 'chip chip-sug', type: 'button', onclick: () => {
@@ -121,45 +121,144 @@ async function estadoIA() {
   el.textContent = si ? `IA conectada · ${E.ia.modelo}` : 'Sin IA: lo armo con el catálogo';
 }
 
-const PASOS = ['Leyendo lo que te gusta…', 'Eligiendo su forma y sus colores…', 'Buscando ropa de su mundo…', 'Dividiendo el tema en pasos…', 'Pensando por qué lo necesita…', 'Ya casi sale del huevo…'];
+// Flujo: 1) gustos y tema → aparece el huevo y la IA hace 2 o 3 preguntas · 2) respuestas → la IA crea · 3) el huevo se rompe.
+const PASOS = ['Leyendo lo que te gusta…', 'Eligiendo su disfraz y sus colores…', 'Probándole el peinado…', 'Dividiendo el tema en pasos…', 'Pensando por qué lo necesita…', 'Ya casi sale del huevo…'];
+const pedido = { gustos: '', tema: '', preguntas: [] };
 let pasos = 0;
-function incubar(si) {
-  foco.classList.toggle('incubando', si);
+const pedirIA = async (ruta, cuerpo) => {
+  const r = await fetch(ruta, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) });
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || `error ${r.status}`);
+  return j;
+};
+function mostrarHuevo(si) {
   clearInterval(pasos);
-  if (si) {
-    let i = 0; decir(PASOS[0]);
-    pasos = setInterval(() => { i = Math.min(i + 1, PASOS.length - 1); decir(PASOS[i]); }, 2600);
-  } else if (!RM) { foco.classList.add('eclosion'); setTimeout(() => foco.classList.remove('eclosion'), 900); }
+  foco.classList.remove('rompiendo', 'abierto');
+  foco.classList.toggle('incubando', si);
+}
+function verPaso(paso) {
+  $('#formCrear').hidden = paso !== 'form';
+  $('#preguntas').hidden = paso !== 'preguntas';
 }
 
 $('#formCrear').addEventListener('submit', async e => {
   e.preventDefault();
   if (E.creando) return;
-  const gustos = $('#gustos').value.trim(), tema = $('#tema').value.trim();
-  if (!gustos || !tema) return;
-  const btn = $('#btnCrear');
-  E.creando = true; btn.disabled = true; btn.textContent = 'Creando…'; $('#ficha').hidden = true;
-  incubar(true);
+  pedido.gustos = $('#gustos').value.trim(); pedido.tema = $('#tema').value.trim();
+  if (!pedido.gustos || !pedido.tema) return;
+  E.creando = true; $('#ficha').hidden = true;
+  verPaso('preguntas'); mostrarHuevo(true);
+  decir('¡Apareció tu huevo! Mientras se forma, cuéntame un poco más.');
+  $('#entendi').textContent = '';
+  $('#listaPreguntas').replaceChildren(h('p', { class: 'cargando' }, 'Pensando qué preguntarte…'));
+  $('#btnNacer').disabled = true;
+  let r;
+  try { if (!E.ia?.ia) throw new Error('sin IA'); r = await pedirIA('/api/preguntas', { gustos: pedido.gustos, tema: pedido.tema }); if (!r.preguntas?.length) throw new Error('sin preguntas'); }
+  catch { r = preguntasLocales(pedido.gustos, pedido.tema); }
+  pedido.preguntas = r.preguntas;
+  $('#entendi').textContent = r.entendi || '';
+  pintarPreguntas();
+  $('#btnNacer').disabled = false;
+});
+
+function pintarPreguntas() {
+  const caja = $('#listaPreguntas'); caja.replaceChildren();
+  pedido.preguntas.forEach((q, i) => {
+    q.respuesta = '';
+    const otra = h('input', { class: 'otra', type: 'text', maxlength: 80, placeholder: 'O escribe otra respuesta…', 'aria-label': `Otra respuesta: ${q.pregunta}` });
+    const chips = h('div', { class: 'chips', role: 'group', 'aria-labelledby': `preg${i}` }, q.opciones.map(op => h('button', { class: 'chip', type: 'button', 'aria-pressed': 'false', onclick: ev => {
+      const ya = ev.currentTarget.getAttribute('aria-pressed') === 'true';
+      chips.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', 'false'));
+      if (!ya) { ev.currentTarget.setAttribute('aria-pressed', 'true'); q.respuesta = op; otra.value = ''; } else q.respuesta = '';
+    } }, op)));
+    otra.addEventListener('input', () => { if (otra.value.trim()) { chips.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', 'false')); q.respuesta = otra.value.trim(); } else q.respuesta = ''; });
+    caja.append(h('div', { class: 'pregunta-ia' }, h('p', { class: 'pregunta-txt', id: `preg${i}` }, q.pregunta), chips, otra));
+  });
+}
+
+$('#btnNacer').addEventListener('click', () => crear(pedido.preguntas.filter(q => q.respuesta).map(q => ({ pregunta: q.pregunta, respuesta: q.respuesta }))));
+$('#btnSaltar').addEventListener('click', () => crear([]));
+$('#btnVolver').addEventListener('click', () => { E.creando = false; mostrarHuevo(false); verPaso('form'); decir(EMOCIONES.neutral.frase, 'neutral'); $('#gustos').focus(); });
+
+async function crear(detalles) {
+  const nacer = $('#btnNacer'); nacer.disabled = true; $('#btnSaltar').disabled = true;
+  abrirNacimiento();
   let a, info;
   const t0 = performance.now();
   try {
     if (!E.ia?.ia) throw new Error('sin IA');
-    const r = await fetch('/api/aprendin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gustos, tema }) });
-    const j = await r.json();
-    if (!j.ok) throw new Error(j.error || `error ${r.status}`);
+    const j = await pedirIA('/api/aprendin', { gustos: pedido.gustos, tema: pedido.tema, detalles });
     a = j.aprendin; info = j.ia ? { ...j.ia, ensayo: j.ensayo } : null;
   } catch (err) {
-    const falta = 1800 - (performance.now() - t0);
+    const falta = 2500 - (performance.now() - t0);
     if (falta > 0) await espera(falta);
-    a = crearLocal(gustos, tema); info = { sinIA: true, motivo: err.message };
+    a = crearLocal(pedido.gustos, pedido.tema, detalles); info = { sinIA: true, motivo: err.message };
   }
-  E.creando = false; incubar(false);
   E.ficha = a; E.mundo = null; E.fases = a.fases; E.nivel = 0;
+  await nacimientoListo(a);           // espera a que el estudiante rompa el huevo y toque «Conocer»
+  mostrarHuevo(false); E.creando = false;
   marcarMundo(); teñir();
-  estrella.evolucionar(look());
-  setTimeout(() => decir(a.saludo, 'feliz'), RM ? 0 : 500);
+  estrella.vestir(look()); estrella.saltar();
+  decir(a.saludo, 'feliz');
   pintarFicha(info); pintarTodo();
-  btn.disabled = false; btn.textContent = 'Crear otro';
+  verPaso('form'); nacer.disabled = false; $('#btnSaltar').disabled = false;
+  $('#btnCrear').textContent = 'Crear otro';
+}
+
+/* ---------- Nacimiento en pantalla completa: hay que golpear el huevo ---------- */
+const NAC = { el: $('#nacimiento'), listo: false, golpes: 0, mini: null, fin: null, pasos: 0, aprendin: null };
+const GOLPES = 3;
+function abrirNacimiento() {
+  const n = NAC; clearInterval(n.pasos);
+  n.listo = false; n.golpes = 0; n.mini?.destruir(); n.mini = null;
+  n.el.className = 'nacimiento'; n.el.dataset.golpes = '0'; n.el.hidden = false;
+  $('#nacTitulo').textContent = 'Tu aprendín se está formando…';
+  $('#nacListo').hidden = true; $('#nacAprendin').replaceChildren();
+  let i = 0; $('#nacSub').textContent = PASOS[0];
+  n.pasos = setInterval(() => { i = Math.min(i + 1, PASOS.length - 1); $('#nacSub').textContent = PASOS[i]; }, 2600);
+  pintarGolpes(); $('#nacHuevo').focus();
+}
+function pintarGolpes() { $('#nacGolpes').querySelectorAll('i').forEach((el, i) => el.classList.toggle('dado', i < NAC.golpes)); }
+function nacimientoListo(a) {
+  const n = NAC; clearInterval(n.pasos);
+  n.listo = true; n.aprendin = a; n.el.classList.add('listo');
+  $('#nacTitulo').textContent = '¡Ya está listo para nacer!';
+  $('#nacSub').textContent = `Golpea el huevo ${GOLPES} veces para que salga.`;
+  return new Promise(ok => { n.fin = ok; });
+}
+function golpe(clase) { const el = NAC.el; el.classList.remove('golpe', 'golpe-flojo'); void el.offsetWidth; el.classList.add(clase); }
+$('#nacHuevo').addEventListener('click', () => {
+  const n = NAC;
+  if (n.el.classList.contains('abierto')) return;
+  if (!n.listo) { golpe('golpe-flojo'); $('#nacSub').textContent = 'Todavía se está formando… espera un poquito.'; return; }
+  n.golpes++; n.el.dataset.golpes = String(n.golpes); pintarGolpes(); golpe('golpe');
+  const faltan = GOLPES - n.golpes;
+  if (faltan > 0) { $('#nacSub').textContent = faltan === 1 ? '¡Uno más!' : `¡Se está rompiendo! Faltan ${faltan}.`; return; }
+  romperHuevo();
+});
+async function romperHuevo() {
+  const n = NAC, a = n.aprendin;
+  n.el.classList.add('abierto');
+  n.mini = crearAprendin({ look: a.fases[0].look, emocion: 'emocionado' });
+  $('#nacAprendin').append(n.mini.el);
+  $('#nacTitulo').textContent = `¡Nació ${a.nombre}!`;
+  $('#nacSub').textContent = a.saludo;
+  await espera(RM ? 0 : 650); n.mini.entender();
+  const btn = $('#nacListo'); btn.textContent = `Conocer a ${a.nombre}`; btn.hidden = false; btn.focus();
+}
+function cerrarNacimiento() {
+  const n = NAC; if (!n.el.classList.contains('abierto')) return;
+  n.el.hidden = true; n.mini?.destruir(); n.mini = null;
+  n.fin?.(); n.fin = null;
+}
+$('#nacListo').addEventListener('click', cerrarNacimiento);
+NAC.el.addEventListener('keydown', e => {
+  if (e.key === 'Escape') cerrarNacimiento();
+  if (e.key === 'Tab') { // el foco no sale del diálogo
+    const f = [...NAC.el.querySelectorAll('button:not([hidden])')]; if (!f.length) return;
+    const i = f.indexOf(document.activeElement), j = e.shiftKey ? (i <= 0 ? f.length - 1 : i - 1) : (i + 1) % f.length;
+    e.preventDefault(); f[j].focus();
+  }
 });
 
 function pintarFicha(info) {
@@ -170,6 +269,7 @@ function pintarFicha(info) {
   caja.replaceChildren(
     h('div', { class: 'ficha-cab' }, miniSvg(a.fases[a.fases.length - 1].look, 'orgulloso'), h('div', {}, h('b', {}, a.nombre), h('span', {}, `viene ${a.de}`))),
     h('dl', {},
+      a.inspiracion ? [h('dt', {}, 'Inspirado en'), h('dd', {}, a.inspiracion)] : null,
       h('dt', {}, 'Su misión'), h('dd', {}, a.mision),
       a.personalidad ? [h('dt', {}, 'Cómo es'), h('dd', {}, a.personalidad)] : null,
       h('dt', {}, `Lo que le vas a enseñar: ${a.tema}`),
