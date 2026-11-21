@@ -3,7 +3,7 @@
 
 export const PALETA = {
   coral: '#FF6B5B', mandarina: '#FF9A3D', sol: '#FFC83D', lima: '#8BCB4A', menta: '#2CC4A8', cielo: '#4BA3FF',
-  indigo: '#6C63FF', uva: '#A66BFF', chicle: '#FF6FB1', cacao: '#B57B52', nieve: '#F4F5FA', carbon: '#3D4060'
+  indigo: '#6C63FF', uva: '#A66BFF', chicle: '#FF6FB1', rosado: '#FFA3C7', durazno: '#FFC9A0', cacao: '#B57B52', nieve: '#F4F5FA', carbon: '#3D4060'
 };
 
 const HEX = /^#[0-9a-f]{6}$/i;

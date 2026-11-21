@@ -7,13 +7,13 @@
 import { tonos } from './color.js';
 import { n, P, lim, curvaCerrada, curvaAbierta, estrella, poligono, ruido } from './trazos.js';
 
-export const SLOTS = ['aura', 'espalda', 'cuerpo', 'cuello', 'pelo', 'cara', 'cabeza', 'mano'];
-export const NOMBRES_SLOT = { cabeza: 'Cabeza', pelo: 'Pelo', cara: 'Cara', cuello: 'Cuello', cuerpo: 'Cuerpo', espalda: 'Espalda', mano: 'En la mano', aura: 'Aura' };
+export const SLOTS = ['aura', 'espalda', 'cuerpo', 'cuello', 'pelo', 'cara', 'cabeza', 'brazos', 'mano'];
+export const NOMBRES_SLOT = { cabeza: 'Cabeza', pelo: 'Pelo', cara: 'Cara', cuello: 'Cuello', cuerpo: 'Cuerpo', brazos: 'Brazos', espalda: 'Espalda', mano: 'En la mano', aura: 'Aura' };
 // Qué zonas se ven en cada nivel de aprendizaje: cuanto más le enseñas, más se transforma.
-export const NIVELES = [[], ['cabeza', 'pelo'], ['cabeza', 'pelo', 'mano'], ['cabeza', 'pelo', 'mano', 'cara', 'cuello', 'cuerpo'], ['cabeza', 'pelo', 'mano', 'cara', 'cuello', 'cuerpo', 'espalda', 'aura']];
+export const NIVELES = [[], ['cabeza', 'pelo'], ['cabeza', 'pelo', 'mano'], ['cabeza', 'pelo', 'mano', 'cara', 'cuello', 'cuerpo', 'brazos'], ['cabeza', 'pelo', 'mano', 'cara', 'cuello', 'cuerpo', 'brazos', 'espalda', 'aura']];
 export const NOMBRES_NIVEL = ['Recién llegado', 'Aprendiz', 'Practicante', 'Experto', 'Maestro'];
 
-const CAPA = { cabeza: 'fuera', pelo: 'fuera', cara: 'cara', cuello: 'cuello', cuerpo: 'dentro', espalda: 'espalda', mano: 'mano', aura: 'aura' };
+const CAPA = { cabeza: 'fuera', pelo: 'fuera', cara: 'cara', cuello: 'cuello', cuerpo: 'dentro', brazos: 'brazo', espalda: 'espalda', mano: 'mano', aura: 'aura' };
 const SW = 2.4;
 
 // Línea de la frente: hasta dónde baja el pelo o un pañuelo.
@@ -570,7 +570,225 @@ const aura = {
   }
 };
 
-export const PIEZAS = { cabeza, pelo, cara, cuello, cuerpo, espalda, mano, aura };
+
+/* ======================= PIEZAS ICÓNICAS ======================= */
+// Sirven para que el aprendín se parezca a lo que le gusta al estudiante (un estilo de anime, un equipo, un héroe)
+// combinando peinado, ropa y colores, sin copiar personajes ni logos.
+const picosPelo = (g, ss, largo, inclina, gruesa = 15) => ss.map((s, i) => {
+  const b = g.borde(s, -10), L = largo - Math.abs(s) * 15 + (i % 2 ? -4 : 4);
+  return `<path transform="translate(${n(b.x)} ${n(b.y)}) rotate(${n(b.rot * inclina + s * 20)})" d="M${-gruesa} 8Q-8 ${n(-L * .42)} 2 ${n(-L)}Q7 ${n(-L * .46)} ${gruesa} 8Z"/>`;
+}).join('');
+const mechonesFrente = (g, yf) => [-.52, -.18, .16, .5].map((u, i) => { const x = g.cx + u * g.W * .5, L = 16 + (i % 2) * 7; return `<path d="M${P(x - 10, yf - 16)}L${P(x + (u < 0 ? -3 : 3), yf - 16 + L)}L${P(x + 10, yf - 16)}Z"/>`; }).join('');
+
+Object.assign(pelo, {
+  puntas_grande: {
+    nombre: 'Puntas grandes', c: ['#1E1B3A', '#1E1B3A'], desc: 'anime de peleas, héroes shonen, guerreros, energía', pinta(g, A) {
+      const yf = frente(g) + 4;
+      return { atras: `<g fill="${A.base}" stroke="${A.tinta}" stroke-width="${SW}" stroke-linejoin="round">${picosPelo(g, [-1.1, -.82, -.55, -.27, 0, .27, .55, .82, 1.1], 52, 1)}</g>`,
+        dentro: `<path d="${casquete(g, yf - 12, { k: 1, prof: 0 })}" fill="${A.base}"/><g fill="${A.base}">${mechonesFrente(g, yf)}</g>` };
+    }
+  },
+  super: {
+    nombre: 'Pelo de transformación', c: ['#FFD83D', '#FFF3A0'], desc: 'transformación, poder máximo, anime de peleas, pelo dorado', pinta(g, A, B) {
+      const yf = frente(g) + 4;
+      return { atras: `<g fill="${A.base}" stroke="${A.oscuro}" stroke-width="${SW}" stroke-linejoin="round">${picosPelo(g, [-1, -.72, -.44, -.16, .12, .4, .68, .96], 64, .5, 16)}</g>`,
+        dentro: `<path d="${casquete(g, yf - 12, { k: 1, prof: 0 })}" fill="${A.base}"/><g fill="${A.base}">${mechonesFrente(g, yf)}</g><path d="M${P(g.cx - g.W * .3, g.top + 10)}q${n(g.W * .12)} -6 ${n(g.W * .22)} -2" stroke="${B.base}" stroke-width="3" fill="none" stroke-linecap="round"/>` };
+    }
+  },
+  cola_caballo: {
+    nombre: 'Cola de caballo', c: ['#6B4226', '#FF6B5B'], desc: 'deporte, danza, aventura, cualquiera', pinta(g, A, B) {
+      const b = g.borde(.62, -2), tr = `translate(${n(b.x)} ${n(b.y)}) rotate(${n(b.rot + 75)})`;
+      return { atras: `<path transform="${tr}" d="M-7 2C-12 -16 -4 -38 9 -48C18 -32 19 -12 7 2Z" fill="${A.base}" stroke="${A.oscuro}" stroke-width="${SW}" stroke-linejoin="round"/><path d="${volumen(g, .8, 4)}" fill="${A.base}" stroke="${A.oscuro}" stroke-width="${SW}"/>`,
+        dentro: `<path d="${casquete(g, frente(g), { k: 3, prof: 7 })}" fill="${A.base}"/>`,
+        fuera: `<rect transform="${tr}" x="-7" y="-5" width="14" height="7" rx="3" fill="${B.base}" stroke="${B.oscuro}" stroke-width="1.4"/>` };
+    }
+  },
+  afro: {
+    nombre: 'Afro', c: ['#2B1D14', '#2B1D14'], desc: 'música, baile, funk, alegría', pinta(g, A) {
+      const bolas = []; for (let i = 0; i <= 12; i++) { const b = g.borde(-1.08 + 2.16 * i / 12, 9); bolas.push(`<circle cx="${n(b.x)}" cy="${n(b.y)}" r="${i % 2 ? 15 : 19}"/>`); }
+      return { atras: `<g fill="${A.base}" stroke="${A.oscuro}" stroke-width="5">${bolas.join('')}</g><g fill="${A.base}">${bolas.join('')}</g>`, dentro: `<path d="${casquete(g, frente(g), { k: 5, prof: 6 })}" fill="${A.base}"/>` };
+    }
+  },
+  tupe: {
+    nombre: 'Tupé', c: ['#2B2D42', '#2B2D42'], desc: 'rock and roll, cantantes, elegante, rebelde', pinta(g, A) {
+      const { cx, top } = g, w = Math.max(48, g.sombrero.w * .85);
+      return { fuera: `<path d="M${P(cx - w * .5, top + 14)}C${P(cx - w * .62, top - 14)} ${P(cx + w * .1, top - 32)} ${P(cx + w * .64, top - 10)}C${P(cx + w * .42, top - 12)} ${P(cx + w * .3, top - 2)} ${P(cx + w * .44, top + 12)}Z" fill="${A.base}" stroke="${A.oscuro}" stroke-width="${SW}" stroke-linejoin="round"/><path d="M${P(cx - w * .28, top)}Q${P(cx, top - 18)} ${P(cx + w * .45, top - 10)}" stroke="#fff" stroke-opacity=".25" stroke-width="3" fill="none" stroke-linecap="round"/>`,
+        dentro: `<path d="${casquete(g, frente(g) - 4, { k: 2, prof: 5 })}" fill="${A.base}"/>` };
+    }
+  },
+  flequillo_lado: {
+    nombre: 'Flequillo de lado', c: ['#3D2A1E', '#3D2A1E'], desc: 'anime, música, estudiante, misterioso', pinta(g, A) {
+      const yf = frente(g) + 2, { cx, W } = g;
+      return { atras: `<path d="${volumen(g, .85, 4)}" fill="${A.base}" stroke="${A.oscuro}" stroke-width="${SW}"/>`,
+        dentro: `<path d="M${P(cx - W, g.top - 60)}H${n(cx + W)}V${n(yf - 16)}Q${P(cx + W * .1, yf - 8)} ${P(cx - W * .28, yf + 16)}L${P(cx - W * .34, yf + 2)}Q${P(cx - W * .5, yf + 8)} ${P(cx - W, yf + 6)}Z" fill="${A.base}"/>` };
+    }
+  }
+});
+
+Object.assign(cabeza, {
+  paja: {
+    nombre: 'Sombrero de paja', c: ['#F2C14E', '#E2483D'], desc: 'piratas, aventura, campo, verano, playa', pinta(g, A, B) {
+      const yb = g.sombrero.y + 6, w = g.sombrero.w * 1.05, h = altoSombrero(g, w * .36), cx = g.cx;
+      return `<ellipse cx="${n(cx)}" cy="${n(yb)}" rx="${n(w * .98)}" ry="${n(w * .17)}" fill="${A.base}" stroke="${A.oscuro}" stroke-width="${SW}"/>
+<path d="${domo(cx, yb - 2, w * .8, h)}" fill="${A.base}" stroke="${A.oscuro}" stroke-width="${SW}"/>
+<path d="M${P(cx - w * .4, yb - 5)}Q${P(cx, yb + 1)} ${P(cx + w * .4, yb - 5)}L${P(cx + w * .39, yb - 13)}Q${P(cx, yb - 7)} ${P(cx - w * .39, yb - 13)}Z" fill="${B.base}" stroke="${B.oscuro}" stroke-width="1.4"/>
+<path d="M${P(cx - w * .7, yb + 2)}Q${P(cx, yb + 12)} ${P(cx + w * .7, yb + 2)}M${P(cx - w * .3, yb - h * .55)}Q${P(cx, yb - h * .66)} ${P(cx + w * .3, yb - h * .55)}" stroke="${A.oscuro}" stroke-width="1.4" fill="none" opacity=".6"/>`;
+    }
+  },
+  placa: {
+    nombre: 'Vincha con placa', c: ['#2B3A67', '#C9CCD8'], desc: 'ninjas, anime, artes marciales, aldeas ocultas', pinta(g, A, B) {
+      const y0 = Math.max(g.top + 11, g.ojo.y - g.ojo.r * 2.9), half = g.hw((y0 - g.top) / g.H), x = g.cx + half, w = Math.min(50, half * 1.15);
+      return {
+        dentro: `<rect x="${n(g.cx - g.W)}" y="${n(y0 - 7)}" width="${n(g.W * 2)}" height="14" fill="${A.base}"/>`,
+        fuera: `<rect x="${n(g.cx - w / 2)}" y="${n(y0 - 9)}" width="${n(w)}" height="18" rx="3.5" fill="${B.base}" stroke="${B.oscuro}" stroke-width="2"/><circle cx="${n(g.cx)}" cy="${n(y0)}" r="4.6" fill="none" stroke="${B.oscuro}" stroke-width="2"/><path d="M${P(g.cx - w / 2 + 4, y0 - 5)}h${n(w * .28)}" stroke="#fff" stroke-width="1.8" opacity=".7" stroke-linecap="round"/><g fill="${A.base}" stroke="${A.oscuro}" stroke-width="1.8" stroke-linejoin="round"><path d="M${P(x - 4, y0 - 4)}q16 0 24 12q-9 1 -16 -4z"/><path d="M${P(x - 4, y0 + 1)}q12 8 14 22q-8 -2 -13 -12z"/></g>`
+      };
+    }
+  },
+  orejas_largas: {
+    nombre: 'Orejas largas', c: ['cuerpo', '#1E1B3A'], desc: 'conejos, zorros, criaturas eléctricas, animales', pinta(g, A, B) {
+      const oreja = s => { const b = g.borde(s, -6); return `<g transform="translate(${n(b.x)} ${n(b.y)}) rotate(${n(b.rot + s * 16)})"><path d="M-11 8C-14 -16 -6 -40 0 -52C6 -40 14 -16 11 8Z" fill="${A.base}" stroke="${A.oscuro}" stroke-width="${SW}" stroke-linejoin="round"/><path d="M-5.4 -33C-3 -42 -1 -48 0 -52C1 -48 3 -42 5.4 -33Q0 -36 -5.4 -33Z" fill="${B.base}"/></g>`; };
+      return { atras: oreja(-.4) + oreja(.4) };
+    }
+  },
+  cuernos: {
+    nombre: 'Cuernos', c: ['#F4EBDD', '#C9B8A0'], desc: 'dragones, monstruos, vikingos, criaturas', pinta(g, A, B) {
+      const cuerno = s => { const b = g.borde(s, -4); return `<g transform="translate(${n(b.x)} ${n(b.y)}) rotate(${n(b.rot)}) scale(${s < 0 ? -1 : 1} 1)"><path d="M-7 5Q-9 -12 8 -26Q3 -10 7 5Z" fill="${A.base}" stroke="${B.oscuro}" stroke-width="2" stroke-linejoin="round"/><path d="M-6 -2Q-1 -4 4 -3M-5 -9Q0 -11 4 -10" stroke="${B.base}" stroke-width="1.6" fill="none"/></g>`; };
+      return { atras: cuerno(-.38) + cuerno(.38) };
+    }
+  },
+  gorro_lana: {
+    nombre: 'Gorro de lana', c: ['#4BA3FF', '#FFFFFF'], desc: 'invierno, calle, skate, música', pinta(g, A, B) {
+      const yb = g.sombrero.y + 8, w = g.sombrero.w * 1.06, h = altoSombrero(g, w * .5), cx = g.cx;
+      return `<path d="${domo(cx, yb, w, h)}" fill="${A.base}" stroke="${A.oscuro}" stroke-width="${SW}"/><path d="M${P(cx - w * .18, yb - h * .8)}V${n(yb - 10)}M${P(cx + w * .18, yb - h * .8)}V${n(yb - 10)}" stroke="${A.oscuro}" stroke-width="1.6" opacity=".4"/>
+<rect x="${n(cx - w * .52)}" y="${n(yb - 12)}" width="${n(w * 1.04)}" height="13" rx="5" fill="${A.oscuro}" stroke="${A.tinta}" stroke-width="2"/><circle cx="${n(cx)}" cy="${n(yb - h - 5)}" r="8" fill="${B.base}" stroke="${B.oscuro}" stroke-width="2"/>`;
+    }
+  }
+});
+
+Object.assign(cara, {
+  bigotes: {
+    nombre: 'Marcas de bigotes', c: ['#3D2A1E', '#3D2A1E'], desc: 'ninjas, zorros, gatos, criaturas', pinta(g, A) {
+      const { y, dx, r: R } = g.ojo;
+      return `<g stroke="${A.base}" stroke-width="2.2" stroke-linecap="round" opacity=".8">${[-1, 1].map(l => [0, 1, 2].map(k => { const x0 = g.cx + l * (dx + R * .55), y0 = y + R * (1.15 + k * .45); return `<path d="M${P(x0, y0)}l${n(l * R * 1.2)} ${n((k - 1) * R * .25)}"/>`; }).join('')).join('')}</g>`;
+    }
+  },
+  cicatriz: {
+    nombre: 'Cicatriz', c: ['#B5503C', '#B5503C'], desc: 'aventureros, piratas, guerreros, valientes', pinta(g, A) {
+      const { y, dx, r: R } = g.ojo, x = g.cx - dx;
+      return `<g stroke="${A.base}" stroke-width="2" stroke-linecap="round" opacity=".85"><path d="M${P(x - R * .9, y + R * 1.6)}l${n(R * 1.6)} ${n(R * .55)}"/><path d="M${P(x - R * .5, y + R * 1.45)}l${n(-R * .2)} ${n(R * .45)}M${P(x, y + R * 1.62)}l${n(-R * .2)} ${n(R * .45)}M${P(x + R * .45, y + R * 1.78)}l${n(-R * .2)} ${n(R * .45)}"/></g>`;
+    }
+  },
+  mejillas: {
+    nombre: 'Mejillas de color', c: ['#FF4D4D', '#FF4D4D'], desc: 'criaturas eléctricas, mascotas, payasos', pinta(g, A) {
+      const { y, dx, r: R } = g.ojo;
+      return [-1, 1].map(l => `<circle cx="${n(g.cx + l * (dx + R * 1.3))}" cy="${n(y + R * 1.15)}" r="${n(R * .85)}" fill="${A.base}" stroke="${A.oscuro}" stroke-width="1.5"/>`).join('');
+    }
+  }
+});
+
+Object.assign(cuerpo, {
+  gi: {
+    nombre: 'Traje de artes marciales', c: ['#FF8A1E', '#2E5BD9'], desc: 'anime de peleas, karate, kung fu, guerreros', pinta(g, A, B) {
+      const y0 = g.cuello.y - 2, cx = g.cx, yc = y0 + (g.piso - y0) * .52;
+      return `<path d="M${P(cx - g.W, y0 - 6)}Q${P(cx, y0 + 4)} ${P(cx + g.W, y0 - 6)}V${n(g.piso + 20)}H${n(cx - g.W)}Z" fill="${A.base}"/>
+<path d="M${P(cx - 17, y0 - 3)}L${P(cx + 3, yc - 3)}L${P(cx + 19, y0 - 4)}Z" fill="${B.base}"/>
+<path d="M${P(cx - 19, y0 - 4)}L${P(cx + 6, yc - 1)}M${P(cx + 19, y0 - 4)}L${P(cx - 1, yc - 9)}" stroke="${A.oscuro}" stroke-width="3" fill="none" stroke-linecap="round"/>
+<rect x="${n(cx - g.W)}" y="${n(yc)}" width="${n(g.W * 2)}" height="10" fill="${B.base}"/><path d="M${P(cx - g.W, yc)}H${n(cx + g.W)}M${P(cx - g.W, yc + 10)}H${n(cx + g.W)}" stroke="${B.oscuro}" stroke-width="1.6"/>
+<path d="M${P(cx + 3, yc + 8)}l-5 16l7 1.5l3 -16zM${P(cx + 9, yc + 8)}l5 14l6 -2.5l-6 -12z" fill="${B.base}" stroke="${B.oscuro}" stroke-width="1.4" stroke-linejoin="round"/>
+<circle cx="${n(cx - g.W * .24)}" cy="${n(y0 + 13)}" r="7" fill="#fff" stroke="${A.oscuro}" stroke-width="1.5"/><circle cx="${n(cx - g.W * .24)}" cy="${n(y0 + 13)}" r="2.8" fill="${A.oscuro}"/>`;
+    }
+  },
+  chaqueta: {
+    nombre: 'Chaqueta abierta', c: ['#FF8A1E', '#1E1B3A'], desc: 'anime, ninjas, piratas, calle, aventura', pinta(g, A, B) {
+      const y0 = g.cuello.y - 4, cx = g.cx;
+      const panel = k => `<path d="M${P(cx - k * g.W, y0 - 6)}H${n(cx - k * 7)}L${P(cx - k * 12, g.piso + 20)}H${n(cx - k * g.W)}Z" fill="${A.base}" stroke="${A.oscuro}" stroke-width="2"/>`;
+      return `<rect x="${n(cx - g.W)}" y="${n(y0 - 6)}" width="${n(g.W * 2)}" height="${n(g.piso - y0 + 30)}" fill="${B.base}"/>${panel(1)}${panel(-1)}<path d="M${P(cx - 7, y0 - 6)}L${P(cx - 20, y0 + 10)}M${P(cx + 7, y0 - 6)}L${P(cx + 20, y0 + 10)}" stroke="${A.oscuro}" stroke-width="3" stroke-linecap="round"/>`;
+    }
+  },
+  camiseta_rayas: {
+    nombre: 'Camiseta a rayas', c: ['#75AADB', '#FFFFFF'], desc: 'fútbol, selección, hinchas, equipos con rayas', pinta(g, A, B, o) {
+      const y0 = g.cuello.y + 2, cx = g.cx, alto = g.piso - y0; let s = `<path d="M${P(cx - g.W, y0 - 8)}Q${P(cx, y0 + 6)} ${P(cx + g.W, y0 - 8)}V${n(g.piso + 20)}H${n(cx - g.W)}Z" fill="${B.base}"/>`;
+      for (let x = cx - 6.5 - 26 * 3; x < cx + g.W; x += 26) s += `<rect x="${n(x)}" y="${n(y0 - 12)}" width="13" height="${n(alto + 34)}" fill="${A.base}"/>`;
+      return `<clipPath id="cr${Math.round(y0)}"><path d="M${P(cx - g.W, y0 - 8)}Q${P(cx, y0 + 6)} ${P(cx + g.W, y0 - 8)}V${n(g.piso + 20)}H${n(cx - g.W)}Z"/></clipPath><g clip-path="url(#cr${Math.round(y0)})">${s}</g>
+<path d="M${P(cx - g.W, y0 - 8)}Q${P(cx, y0 + 6)} ${P(cx + g.W, y0 - 8)}" stroke="#1E1B3A" stroke-width="2.5" fill="none" opacity=".5"/>
+<text x="${n(cx)}" y="${n(y0 + alto * .62)}" font-size="${n(lim(alto * .4, 16, 30))}" font-weight="800" font-family="'Bricolage Grotesque', 'Nunito', sans-serif" text-anchor="middle" fill="#1E1B3A" stroke="#fff" stroke-width="3" paint-order="stroke">${o.numero || 10}</text>`;
+    }
+  },
+  heroe: {
+    nombre: 'Traje de superhéroe', c: ['#E2483D', '#FFC83D'], desc: 'superhéroes, cómics, poderes, salvar el mundo', pinta(g, A, B) {
+      const y0 = g.cuello.y - 2, cx = g.cx, yc = y0 + (g.piso - y0) * .62;
+      return `<path d="M${P(cx - g.W, y0 - 6)}Q${P(cx, y0 + 4)} ${P(cx + g.W, y0 - 6)}V${n(g.piso + 20)}H${n(cx - g.W)}Z" fill="${A.base}"/>
+<rect x="${n(cx - g.W)}" y="${n(yc)}" width="${n(g.W * 2)}" height="8" fill="${B.base}"/><rect x="${n(cx - 6)}" y="${n(yc - 1.5)}" width="12" height="11" rx="2" fill="${B.oscuro}"/>
+<path d="M${P(cx - 14, y0 + 4)}H${n(cx + 14)}L${P(cx + 10, y0 + 18)}L${P(cx, y0 + 27)}L${P(cx - 10, y0 + 18)}Z" fill="${B.base}" stroke="${B.oscuro}" stroke-width="1.8" stroke-linejoin="round"/><path d="${estrella(cx, y0 + 14, 6)}" fill="${A.base}"/>`;
+    }
+  },
+  kimono: {
+    nombre: 'Kimono a cuadros', c: ['#2E9E5B', '#1E1B3A'], desc: 'Japón, samuráis, cazadores de demonios, espadachines', pinta(g, A, B) {
+      const y0 = g.cuello.y - 2, cx = g.cx, yc = y0 + (g.piso - y0) * .55, tam = 11; let s = '';
+      for (let y = y0 - 8, j = 0; y < g.piso + 14; y += tam, j++) for (let x = cx - g.W, i = 0; x < cx + g.W; x += tam, i++) if ((i + j) % 2) s += `<rect x="${n(x)}" y="${n(y)}" width="${tam}" height="${tam}"/>`;
+      return `<path d="M${P(cx - g.W, y0 - 6)}Q${P(cx, y0 + 4)} ${P(cx + g.W, y0 - 6)}V${n(g.piso + 20)}H${n(cx - g.W)}Z" fill="${A.base}"/><clipPath id="km${Math.round(y0)}"><path d="M${P(cx - g.W, y0 - 6)}Q${P(cx, y0 + 4)} ${P(cx + g.W, y0 - 6)}V${n(g.piso + 20)}H${n(cx - g.W)}Z"/></clipPath><g clip-path="url(#km${Math.round(y0)})" fill="${B.base}">${s}</g>
+<path d="M${P(cx - 16, y0 - 3)}L${P(cx + 4, yc)}M${P(cx + 16, y0 - 3)}L${P(cx - 2, yc - 6)}" stroke="#F4F5FA" stroke-width="6" stroke-linecap="round" fill="none"/>
+<rect x="${n(cx - g.W)}" y="${n(yc)}" width="${n(g.W * 2)}" height="11" fill="#F4F5FA"/><path d="M${P(cx - g.W, yc + 5.5)}H${n(cx + g.W)}" stroke="${A.oscuro}" stroke-width="1.5" opacity=".5"/>`;
+    }
+  },
+  sudadera: {
+    nombre: 'Sudadera con capucha', c: ['#6C63FF', '#FFFFFF'], desc: 'calle, gamers, programación, skate, música', pinta(g, A, B) {
+      const y0 = g.cuello.y - 2, cx = g.cx, yb = y0 + (g.piso - y0) * .5;
+      return { dentro: `<path d="M${P(cx - g.W, y0 - 6)}Q${P(cx, y0 + 4)} ${P(cx + g.W, y0 - 6)}V${n(g.piso + 20)}H${n(cx - g.W)}Z" fill="${A.base}"/>
+<path d="M${P(cx - 22, yb)}H${n(cx + 22)}L${P(cx + 27, yb + 22)}H${n(cx - 27)}Z" fill="none" stroke="${A.oscuro}" stroke-width="2.2" stroke-linejoin="round"/>
+<path d="M${P(cx - 7, y0 - 1)}v18M${P(cx + 7, y0 - 1)}v14" stroke="${B.base}" stroke-width="2.4" stroke-linecap="round"/><circle cx="${n(cx - 7)}" cy="${n(y0 + 18)}" r="2.2" fill="${B.base}"/><circle cx="${n(cx + 7)}" cy="${n(y0 + 14)}" r="2.2" fill="${B.base}"/>`,
+        atras: `<path d="${volumen(g, .95, 9)}" fill="${A.oscuro}" stroke="${A.tinta}" stroke-width="${SW}"/>` };
+    }
+  },
+  vestido: {
+    nombre: 'Vestido', c: ['#FF6FB1', '#FFFFFF'], desc: 'princesas, baile, fiesta, cuentos', pinta(g, A, B) {
+      const y0 = g.cuello.y + 2, cx = g.cx, tw = (y0 + 16 - g.top) / g.H, yw = y0 + 16, hw = g.hw(tw);
+      return { dentro: `<path d="M${P(cx - g.W, y0 - 6)}Q${P(cx, y0 + 4)} ${P(cx + g.W, y0 - 6)}V${n(g.piso + 20)}H${n(cx - g.W)}Z" fill="${A.base}"/><path d="M${P(cx - 12, y0 - 2)}Q${P(cx, y0 + 6)} ${P(cx + 12, y0 - 2)}" stroke="${B.base}" stroke-width="3" fill="none"/>`,
+        fuera: `<path d="M${P(cx - hw + 2, yw)}C${P(cx - hw - 6, yw + 20)} ${P(cx - g.W * .66, g.piso - 14)} ${P(cx - g.W * .64, g.piso - 2)}Q${P(cx, g.piso + 10)} ${P(cx + g.W * .64, g.piso - 2)}C${P(cx + g.W * .66, g.piso - 14)} ${P(cx + hw + 6, yw + 20)} ${P(cx + hw - 2, yw)}Q${P(cx, yw + 6)} ${P(cx - hw + 2, yw)}Z" fill="${A.base}" stroke="${A.oscuro}" stroke-width="${SW}" stroke-linejoin="round"/>
+<path d="M${P(cx - g.W * .62, g.piso - 4)}Q${P(cx, g.piso + 7)} ${P(cx + g.W * .62, g.piso - 4)}" stroke="${B.base}" stroke-width="3.5" fill="none" stroke-dasharray="2 5" stroke-linecap="round"/>` };
+    }
+  },
+  uniforme: {
+    nombre: 'Uniforme marinero', c: ['#FFFFFF', '#2B3A67'], desc: 'escuela, anime escolar, marinos', pinta(g, A, B) {
+      const y0 = g.cuello.y - 2, cx = g.cx;
+      return `<path d="M${P(cx - g.W, y0 - 6)}Q${P(cx, y0 + 4)} ${P(cx + g.W, y0 - 6)}V${n(g.piso + 20)}H${n(cx - g.W)}Z" fill="${A.base}"/>
+<path d="M${P(cx - g.W, y0 - 7)}H${n(cx + g.W)}V${n(y0 + 6)}H${n(cx + 22)}L${P(cx, y0 + 22)}L${P(cx - 22, y0 + 6)}H${n(cx - g.W)}Z" fill="${B.base}"/><path d="M${P(cx - g.W, y0 + 2)}H${n(cx - 19)}L${P(cx, y0 + 17)}L${P(cx + 19, y0 + 2)}H${n(cx + g.W)}" stroke="#fff" stroke-width="1.8" fill="none"/>
+<path d="M${P(cx, y0 + 20)}l-9 -6l-2 9zM${P(cx, y0 + 20)}l9 -6l2 9z" fill="#E2483D" stroke="#B5323A" stroke-width="1.2" stroke-linejoin="round"/><path d="M${P(cx - 2, y0 + 21)}l-4 13M${P(cx + 2, y0 + 21)}l4 13" stroke="#E2483D" stroke-width="4" stroke-linecap="round"/>`;
+    }
+  }
+});
+
+const brazos = {
+  munequeras: { nombre: 'Muñequeras', c: ['#2E5BD9', '#FFFFFF'], desc: 'anime de peleas, deporte, tenis, básquet', pinta(g, A) { const { L, w } = g.brazo; return `<rect x="${n(-w / 2 - 1.5)}" y="${n(L * .56)}" width="${n(w + 3)}" height="${n(L * .2)}" rx="3" fill="${A.base}" stroke="${A.oscuro}" stroke-width="2"/>`; } },
+  guantes: { nombre: 'Guantes de box', c: ['#E2483D', '#FFFFFF'], desc: 'boxeo, peleas, deporte, fuerza', pinta(g, A, B) { const { L, w } = g.brazo; return `<rect x="${n(-w * .55)}" y="${n(L * .48)}" width="${n(w * 1.1)}" height="${n(L * .16)}" rx="2" fill="${B.base}" stroke="${A.oscuro}" stroke-width="1.6"/><ellipse cx="0" cy="${n(L * .82)}" rx="${n(w * .68)}" ry="${n(L * .3)}" fill="${A.base}" stroke="${A.oscuro}" stroke-width="2.4"/><path d="M${P(-w * .25, L * .72)}q${n(w * .25)} -3 ${n(w * .42)} 2" stroke="#fff" stroke-opacity=".55" stroke-width="2" fill="none" stroke-linecap="round"/>`; } },
+  garras: { nombre: 'Garras', c: ['#FFFFFF', '#C9CCD8'], desc: 'animales, dragones, monstruos, felinos', pinta(g, A) { const { L, w } = g.brazo; return [-1, 0, 1].map(k => `<path d="M${P(k * w * .26 - 2.6, L * .88)}L${P(k * w * .3, L * 1.07)}L${P(k * w * .26 + 2.6, L * .88)}Z" fill="${A.base}" stroke="#9EA3BA" stroke-width="1.2" stroke-linejoin="round"/>`).join(''); } },
+  mangas: { nombre: 'Mangas', c: ['#2E5BD9', '#FFFFFF'], desc: 'chaquetas, uniformes, trajes, ropa de invierno', pinta(g, A, B) { const { L, w } = g.brazo; return `<path d="M${P(-w / 2 - .5, L * .02)}V${n(L * .58)}H${n(w / 2 + .5)}V${n(L * .02)}Z" fill="${A.base}" stroke="${A.oscuro}" stroke-width="2"/><rect x="${n(-w / 2 - 1)}" y="${n(L * .56)}" width="${n(w + 2)}" height="4" rx="2" fill="${B.base}"/>`; } }
+};
+
+Object.assign(espalda, {
+  cola_rayo: {
+    nombre: 'Cola de rayo', c: ['cuerpo', '#8B5A2B'], desc: 'criaturas eléctricas, rayos, energía, mascotas', pinta(g, A, B) {
+      const x = g.cx + g.hw(.78) * .72, y = g.y(.78);
+      return `<g transform="translate(${n(x)} ${n(y)})"><g class="apr-menea"><path d="M0 0L14 -6L8 -18L26 -26L20 -40L46 -54L35 -31L42 -26L22 -13L28 -7L6 7Z" fill="${A.base}" stroke="${A.oscuro}" stroke-width="${SW}" stroke-linejoin="round"/><path d="M0 0L14 -6L11 -12L3 1Z" fill="${B.base}"/></g></g>`;
+    }
+  },
+  caparazon: {
+    nombre: 'Caparazón', c: ['#5E9E2C', '#E9D7A8'], desc: 'tortugas, dragones, armadura natural, mar', pinta(g, A, B) {
+      const cy = g.y(.58), rx = g.W * .6, ry = g.H * .42;
+      return `<ellipse cx="${g.cx}" cy="${n(cy)}" rx="${n(rx)}" ry="${n(ry)}" fill="${A.base}" stroke="${A.oscuro}" stroke-width="${SW}"/><ellipse cx="${g.cx}" cy="${n(cy)}" rx="${n(rx)}" ry="${n(ry)}" fill="none" stroke="${B.base}" stroke-width="5" stroke-dasharray="14 8"/>`;
+    }
+  },
+  espada_espalda: {
+    nombre: 'Espada en la espalda', c: ['#DDE3EE', '#1E1B3A'], desc: 'samuráis, cazadores, espadachines, aventuras', pinta(g, A, B) {
+      const x0 = g.cx - g.W * .44, y0 = g.piso - 16, x1 = g.cx + g.W * .5, y1 = g.top + 4, ang = Math.atan2(y1 - y0, x1 - x0) * 180 / Math.PI, L = Math.hypot(x1 - x0, y1 - y0);
+      return `<g transform="translate(${n(x0)} ${n(y0)}) rotate(${n(ang)})"><rect x="0" y="-4" width="${n(L - 22)}" height="8" rx="2" fill="${A.base}" stroke="${A.oscuro}" stroke-width="1.6"/><rect x="${n(L - 25)}" y="-9" width="5" height="18" rx="2" fill="#FFC83D" stroke="#C99A1E" stroke-width="1"/><rect x="${n(L - 20)}" y="-4.5" width="24" height="9" rx="3" fill="${B.base}"/><path d="M${n(L - 18)} -4l4 8m4 -8l4 8m4 -8l4 8" stroke="#fff" stroke-width="1.2" opacity=".7"/></g>`;
+    }
+  }
+});
+
+aura.super = { nombre: 'Aura dorada', c: ['#FFD83D', '#FFF7C2'], desc: 'transformación, poder máximo, anime de peleas', pinta(g, A, B) { return aura.fuego.pinta(g, A, B) + aura.rayos.pinta(g, tonos('#FFFFFF'), tonos('#FFB000')); } };
+
+export const PIEZAS = { cabeza, pelo, cara, cuello, cuerpo, brazos, espalda, mano, aura };
 
 // Lista compacta para la IA: zona → [{ id, nombre, para }]
 export const CATALOGO = Object.fromEntries(Object.entries(PIEZAS).map(([slot, ps]) => [slot, Object.entries(ps).map(([id, p]) => ({ id, nombre: p.nombre, para: p.desc }))]));

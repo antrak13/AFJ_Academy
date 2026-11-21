@@ -4,7 +4,7 @@ import { crearAprendin, svgAprendin, FORMAS, EMOCIONES, EMO_IDS, OJOS, BOCAS, MA
 import { PIEZAS, NOMBRES_SLOT } from './piezas.js';
 import { PALETA, color, tonos } from './color.js';
 import { MUNDOS, NOMBRES } from './mundos.js';
-import { fasesDesdeLook, crearLocal, ZONAS } from './creador.js';
+import { fasesDesdeLook, crearLocal, preguntasLocales, ZONAS } from './creador.js';
 
 const $ = s => document.querySelector(s);
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -99,7 +99,7 @@ EMO_IDS.forEach(id => cajaEmo.append(h('button', { class: 'chip', type: 'button'
 function marcarEmocion() { cajaEmo.querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', b.dataset.emo === E.emocion)); }
 
 /* ---------- Crear con IA ---------- */
-const GUSTOS = ['fútbol', 'anime de peleas', 'cocinar', 'videojuegos de bloques', 'música', 'dinosaurios', 'el espacio', 'básquet', 'dibujar', 'gatos'];
+const GUSTOS = ['anime', 'fútbol', 'superhéroes', 'videojuegos', 'cocinar', 'música', 'dinosaurios', 'el espacio', 'básquet', 'gatos'];
 const TEMAS = ['fracciones', 'la fotosíntesis', 'ecuaciones lineales', 'el ciclo del agua', 'porcentajes', 'la célula'];
 function sugerir(caja, input, lista, sumar) {
   for (const t of lista) caja.append(h('button', { class: 'chip chip-sug', type: 'button', onclick: () => {
@@ -121,46 +121,104 @@ async function estadoIA() {
   el.textContent = si ? `IA conectada · ${E.ia.modelo}` : 'Sin IA: lo armo con el catálogo';
 }
 
-const PASOS = ['Leyendo lo que te gusta…', 'Eligiendo su forma y sus colores…', 'Buscando ropa de su mundo…', 'Dividiendo el tema en pasos…', 'Pensando por qué lo necesita…', 'Ya casi sale del huevo…'];
+// Flujo: 1) gustos y tema → aparece el huevo y la IA hace 2 o 3 preguntas · 2) respuestas → la IA crea · 3) el huevo se rompe.
+const PASOS = ['Leyendo lo que te gusta…', 'Eligiendo su disfraz y sus colores…', 'Probándole el peinado…', 'Dividiendo el tema en pasos…', 'Pensando por qué lo necesita…', 'Ya casi sale del huevo…'];
+const pedido = { gustos: '', tema: '', preguntas: [] };
 let pasos = 0;
-function incubar(si) {
-  foco.classList.toggle('incubando', si);
+const pedirIA = async (ruta, cuerpo) => {
+  const r = await fetch(ruta, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) });
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || `error ${r.status}`);
+  return j;
+};
+function mostrarHuevo(si) {
   clearInterval(pasos);
-  if (si) {
-    let i = 0; decir(PASOS[0]);
-    pasos = setInterval(() => { i = Math.min(i + 1, PASOS.length - 1); decir(PASOS[i]); }, 2600);
-  } else if (!RM) { foco.classList.add('eclosion'); setTimeout(() => foco.classList.remove('eclosion'), 900); }
+  foco.classList.remove('rompiendo', 'abierto');
+  foco.classList.toggle('incubando', si);
+}
+function verPaso(paso) {
+  $('#formCrear').hidden = paso !== 'form';
+  $('#preguntas').hidden = paso !== 'preguntas';
 }
 
 $('#formCrear').addEventListener('submit', async e => {
   e.preventDefault();
   if (E.creando) return;
-  const gustos = $('#gustos').value.trim(), tema = $('#tema').value.trim();
-  if (!gustos || !tema) return;
-  const btn = $('#btnCrear');
-  E.creando = true; btn.disabled = true; btn.textContent = 'Creando…'; $('#ficha').hidden = true;
-  incubar(true);
+  pedido.gustos = $('#gustos').value.trim(); pedido.tema = $('#tema').value.trim();
+  if (!pedido.gustos || !pedido.tema) return;
+  E.creando = true; $('#ficha').hidden = true;
+  verPaso('preguntas'); mostrarHuevo(true);
+  decir('¡Apareció tu huevo! Mientras se forma, cuéntame un poco más.');
+  $('#entendi').textContent = '';
+  $('#listaPreguntas').replaceChildren(h('p', { class: 'cargando' }, 'Pensando qué preguntarte…'));
+  $('#btnNacer').disabled = true;
+  let r;
+  try { if (!E.ia?.ia) throw new Error('sin IA'); r = await pedirIA('/api/preguntas', { gustos: pedido.gustos, tema: pedido.tema }); if (!r.preguntas?.length) throw new Error('sin preguntas'); }
+  catch { r = preguntasLocales(pedido.gustos, pedido.tema); }
+  pedido.preguntas = r.preguntas;
+  $('#entendi').textContent = r.entendi || '';
+  pintarPreguntas();
+  $('#btnNacer').disabled = false;
+});
+
+function pintarPreguntas() {
+  const caja = $('#listaPreguntas'); caja.replaceChildren();
+  pedido.preguntas.forEach((q, i) => {
+    q.respuesta = '';
+    const otra = h('input', { class: 'otra', type: 'text', maxlength: 80, placeholder: 'O escribe otra respuesta…', 'aria-label': `Otra respuesta: ${q.pregunta}` });
+    const chips = h('div', { class: 'chips', role: 'group', 'aria-labelledby': `preg${i}` }, q.opciones.map(op => h('button', { class: 'chip', type: 'button', 'aria-pressed': 'false', onclick: ev => {
+      const ya = ev.currentTarget.getAttribute('aria-pressed') === 'true';
+      chips.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', 'false'));
+      if (!ya) { ev.currentTarget.setAttribute('aria-pressed', 'true'); q.respuesta = op; otra.value = ''; } else q.respuesta = '';
+    } }, op)));
+    otra.addEventListener('input', () => { if (otra.value.trim()) { chips.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', 'false')); q.respuesta = otra.value.trim(); } else q.respuesta = ''; });
+    caja.append(h('div', { class: 'pregunta-ia' }, h('p', { class: 'pregunta-txt', id: `preg${i}` }, q.pregunta), chips, otra));
+  });
+}
+
+$('#btnNacer').addEventListener('click', () => crear(pedido.preguntas.filter(q => q.respuesta).map(q => ({ pregunta: q.pregunta, respuesta: q.respuesta }))));
+$('#btnSaltar').addEventListener('click', () => crear([]));
+$('#btnVolver').addEventListener('click', () => { E.creando = false; mostrarHuevo(false); verPaso('form'); decir(EMOCIONES.neutral.frase, 'neutral'); $('#gustos').focus(); });
+
+async function crear(detalles) {
+  const nacer = $('#btnNacer'); nacer.disabled = true; nacer.textContent = 'Creando…'; $('#btnSaltar').disabled = true;
+  let i = 0; decir(PASOS[0]);
+  pasos = setInterval(() => { i = Math.min(i + 1, PASOS.length - 1); decir(PASOS[i]); }, 2600);
   let a, info;
   const t0 = performance.now();
   try {
     if (!E.ia?.ia) throw new Error('sin IA');
-    const r = await fetch('/api/aprendin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gustos, tema }) });
-    const j = await r.json();
-    if (!j.ok) throw new Error(j.error || `error ${r.status}`);
+    const j = await pedirIA('/api/aprendin', { gustos: pedido.gustos, tema: pedido.tema, detalles });
     a = j.aprendin; info = j.ia ? { ...j.ia, ensayo: j.ensayo } : null;
   } catch (err) {
-    const falta = 1800 - (performance.now() - t0);
+    const falta = 2200 - (performance.now() - t0);
     if (falta > 0) await espera(falta);
-    a = crearLocal(gustos, tema); info = { sinIA: true, motivo: err.message };
+    a = crearLocal(pedido.gustos, pedido.tema, detalles); info = { sinIA: true, motivo: err.message };
   }
-  E.creando = false; incubar(false);
+  clearInterval(pasos);
   E.ficha = a; E.mundo = null; E.fases = a.fases; E.nivel = 0;
+  await eclosionar();
+  E.creando = false;
   marcarMundo(); teñir();
-  estrella.evolucionar(look());
-  setTimeout(() => decir(a.saludo, 'feliz'), RM ? 0 : 500);
+  decir(a.saludo, 'feliz');
   pintarFicha(info); pintarTodo();
-  btn.disabled = false; btn.textContent = 'Crear otro';
-});
+  verPaso('form'); nacer.disabled = false; nacer.textContent = '¡Que nazca!'; $('#btnSaltar').disabled = false;
+  $('#btnCrear').textContent = 'Crear otro';
+}
+
+// El huevo tiembla, se agrieta, la tapa sale volando y el aprendín salta afuera.
+async function eclosionar() {
+  estrella.vestir(look()); estrella.sentir('emocionado');
+  if (RM) { mostrarHuevo(false); return; }
+  decir('¡Está saliendo!');
+  foco.classList.add('rompiendo'); await espera(1100);
+  foco.classList.add('abierto'); foco.classList.remove('incubando');
+  const est = $('#estrella'); est.classList.add('naciendo'); estrella.saltar();
+  await espera(900);
+  estrella.entender();
+  await espera(700);
+  foco.classList.remove('rompiendo', 'abierto'); est.classList.remove('naciendo');
+}
 
 function pintarFicha(info) {
   const a = E.ficha, caja = $('#ficha');
@@ -170,6 +228,7 @@ function pintarFicha(info) {
   caja.replaceChildren(
     h('div', { class: 'ficha-cab' }, miniSvg(a.fases[a.fases.length - 1].look, 'orgulloso'), h('div', {}, h('b', {}, a.nombre), h('span', {}, `viene ${a.de}`))),
     h('dl', {},
+      a.inspiracion ? [h('dt', {}, 'Inspirado en'), h('dd', {}, a.inspiracion)] : null,
       h('dt', {}, 'Su misión'), h('dd', {}, a.mision),
       a.personalidad ? [h('dt', {}, 'Cómo es'), h('dd', {}, a.personalidad)] : null,
       h('dt', {}, `Lo que le vas a enseñar: ${a.tema}`),
