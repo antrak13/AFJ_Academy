@@ -3,8 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node servidor.mjs",
-    "ensayo": "ENSAYO=1 node servidor.mjs",
+    "start": "node --env-file-if-exists=../Aprendizaje_Grupal/Rua/.env.local servidor.mjs",
+    "ensayo": "ENSAYO=1 node --env-file-if-exists=../Aprendizaje_Grupal/Rua/.env.local servidor.mjs",
     "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22.9"
   }
 }

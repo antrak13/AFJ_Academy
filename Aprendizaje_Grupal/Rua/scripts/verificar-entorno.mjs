@@ -55,6 +55,21 @@ if (env.LIVEKIT_URL && env.LIVEKIT_API_KEY && env.LIVEKIT_API_SECRET) {
 console.log("IA");
 if (env.AI_PROVIDER === "mock") ok("AI_PROVIDER=mock (preguntas de ejemplo, sin costo)");
 else if (env.AI_PROVIDER === "anthropic") env.ANTHROPIC_API_KEY ? ok("ANTHROPIC_API_KEY presente") : mal("ANTHROPIC_API_KEY vacía");
+if (env.GEMINI_API_KEY) {
+  try {
+    const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=200", { headers: { "x-goog-api-key": env.GEMINI_API_KEY } });
+    const j = await r.json();
+    if (!r.ok) mal(`GEMINI_API_KEY rechazada: ${j.error?.message ?? r.status}`);
+    else {
+      const hay = new Set(j.models.map((m) => m.name.replace("models/", "")));
+      const modelos = (env.GEMINI_MODELOS ?? "gemini-3.5-flash").split(",").map((m) => m.trim()).filter(Boolean);
+      const faltan = modelos.filter((m) => !hay.has(m));
+      faltan.length ? mal(`GEMINI_MODELOS no disponibles: ${faltan.join(", ")}`) : ok(`Gemini: clave válida (${modelos.join(", ")})`);
+    }
+  } catch (e) { mal(`Gemini: ${e.message}`); }
+} else if (env.AI_PROVIDER === "gemini") mal("GEMINI_API_KEY vacía");
+else aviso("GEMINI_API_KEY vacía: los aprendines solo tendrán IA con agy2");
 
-console.log(fallos ? `\n${fallos} problema(s).` : "\nTodo listo: npm run dev → http://localhost:3000/prueba/estudio-grupal.html");
+if (!env.ADMINS_PLATAFORMA) aviso("ADMINS_PLATAFORMA vacía: nadie puede generar preguntas de control desde la app");
+console.log(fallos ? `\n${fallos} problema(s).` : "\nTodo listo: npm run dev → http://localhost:3000/login.html");
 process.exit(fallos ? 1 : 0);

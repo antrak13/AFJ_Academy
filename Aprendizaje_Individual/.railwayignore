@@ -1,0 +1,8 @@
+# Lo que `railway up` nunca debe subir
+**/node_modules
+**/.next
+**/.env
+**/.env*.local
+**/.venv
+Aprendizaje_Individual/ia/cache
+Aprendizaje_Individual/ia/registro.jsonl

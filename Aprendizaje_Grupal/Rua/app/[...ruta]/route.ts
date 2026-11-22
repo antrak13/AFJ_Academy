@@ -74,8 +74,8 @@ async function servir(segmentos: string[]): Promise<Response> {
 }
 
 async function reenviarIndividual(req: Request, nombre: string): Promise<Response> {
-  const destino = new URL(`/api/${nombre}${new URL(req.url).search}`, INDIVIDUAL);
   try {
+    const destino = new URL(`/api/${nombre}${new URL(req.url).search}`, INDIVIDUAL);
     const r = await fetch(destino, {
       method: req.method,
       headers: { "content-type": req.headers.get("content-type") ?? "application/json" },
