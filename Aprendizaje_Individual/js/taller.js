@@ -7,6 +7,7 @@ import { MUNDOS, NOMBRES } from './mundos.js';
 import { fasesDesdeLook, crearLocal, preguntasLocales, ZONAS } from './creador.js';
 import { svgHuevo, huevoLocal, GRIETA_CENTRO } from './huevo.js';
 import { cargarAprendin, cargarClase, enlaceClase, guardarAprendin, listarAprendines } from './guardado.js';
+import { misAulas, unirseAula } from './avance-nube.js';
 
 const $ = s => document.querySelector(s);
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -477,6 +478,34 @@ $('#sorpresa').addEventListener('click', () => {
 const paramsInicio = new URLSearchParams(location.search);
 if (paramsInicio.get('gustos')) $('#gustos').value = paramsInicio.get('gustos');
 if (paramsInicio.get('tema')) $('#tema').value = paramsInicio.get('tema');
+
+/* ---------- Mi aula (solo dentro de la plataforma, con sesión) ---------- */
+// Muestra el aula del alumno y el tema que asignó su docente (lo carga si el campo está vacío),
+// o un campo para unirse con el código. Fuera de la plataforma no aparece.
+async function pintarMiAula() {
+  let r = null;
+  try { r = await misAulas(); } catch { return; }
+  if (!r) return;
+  const caja = $('#miAula'), esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const aula = r.comoAlumno.find(a => a.tema) || r.comoAlumno[0];
+  const panel = r.comoDocente.length ? ' <a class="mi-aula-panel" href="docente.html">Ir a mi panel docente</a>' : '';
+  if (aula) {
+    caja.innerHTML = `<span class="mi-aula-ic" aria-hidden="true">🏫</span><span><b>${esc(aula.nombre)}</b>${aula.docente ? ` · ${esc(aula.docente)}` : ''}${aula.tema ? `<br>Tu profe te asignó: <b>${esc(aula.tema)}</b> <button class="btn-txt" type="button" id="usarTema">Usar este tema</button>` : ''}${panel}</span>`;
+    if (aula.tema && !$('#tema').value.trim()) $('#tema').value = aula.tema;
+    $('#usarTema')?.addEventListener('click', () => { $('#tema').value = aula.tema; $('#tema').focus(); });
+  } else {
+    caja.innerHTML = `<form class="mi-aula-form" id="formMiAula"><label for="codigoAula">¿Tu profe te dio un código de aula?</label><input id="codigoAula" maxlength="12" placeholder="Ej.: K7M3QX" autocomplete="off"><button class="btn" type="submit">Unirme</button><span class="nota" id="miAulaEstado" role="status"></span></form>${panel}`;
+    $('#formMiAula').addEventListener('submit', async e => {
+      e.preventDefault();
+      const codigo = $('#codigoAula').value.trim();
+      if (!codigo) return;
+      try { await unirseAula(codigo); pintarMiAula(); }
+      catch (err) { $('#miAulaEstado').textContent = err.message; }
+    });
+  }
+  caja.hidden = false;
+}
+pintarMiAula();
 teñir(); marcarEmocion(); pintarTodo(); estadoIA();
 const guardado = cargarAprendin();
 if (guardado) {

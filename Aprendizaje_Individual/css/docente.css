@@ -1,0 +1,97 @@
+/* Panel docente: usa las variables y piezas de taller.css (tarjetas, botones, barra). */
+.barra-acc { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.btn-chico { padding: 6px 12px; font-size: .84rem; }
+.doc-quien { font-weight: 800; font-size: .88rem; color: var(--tinta-2); white-space: nowrap; }
+
+.doc { display: grid; grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); gap: clamp(16px, 2.5vw, 28px); padding: 4px clamp(16px, 4vw, 40px) 48px; align-items: start; }
+@media (max-width: 900px) { .doc { grid-template-columns: minmax(0, 1fr); } }
+.doc-aviso { grid-column: 1 / -1; max-width: 720px; }
+.doc-aviso h1, .doc-vacio h1 { font-size: 1.3rem; margin-bottom: 6px; }
+.doc-lado { display: grid; gap: 16px; position: sticky; top: 12px; }
+@media (max-width: 900px) { .doc-lado { position: static; } }
+.doc-principal, .doc-detalle { display: grid; gap: 16px; min-width: 0; }
+.doc-sub { font: 800 .98rem var(--display); margin: 18px 0 6px; }
+.doc-opc { font: 600 .74rem var(--texto); color: var(--tinta-2); }
+
+/* Formularios */
+.doc-form { display: grid; gap: 6px; margin-top: 10px; }
+.doc-form label, .doc-tema label { font: 800 .9rem var(--display); margin-top: 4px; }
+.doc input, .doc select, .doc textarea {
+  font: 600 .98rem var(--texto); color: var(--tinta); border: 1.5px solid var(--linea); border-radius: var(--r-s);
+  padding: 9px 11px; background: #fff; width: 100%; transition: border-color .15s, box-shadow .15s;
+}
+.doc input:focus, .doc select:focus, .doc textarea:focus { outline: none; border-color: var(--indigo); box-shadow: 0 0 0 4px rgba(47, 94, 168, .14); }
+.doc textarea { resize: vertical; line-height: 1.45; }
+.doc-form .btn-crear { margin-top: 8px; }
+
+/* Lista de aulas */
+.doc-aulas { display: grid; gap: 6px; margin-top: 10px; }
+.doc-aula { display: grid; text-align: left; gap: 1px; padding: 9px 12px; background: #fff; border: 1.5px solid var(--linea); border-radius: var(--r-m); transition: border-color .15s, background .15s; }
+.doc-aula:hover { border-color: #BFB29C; }
+.doc-aula[aria-pressed="true"] { border-color: var(--indigo); background: #E6EEF8; }
+.doc-aula small { color: var(--tinta-2); font-weight: 600; }
+
+/* Cabecera del aula */
+.doc-cab { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px 20px; align-items: center; }
+.doc-cab h1 { font-size: clamp(1.3rem, 2.4vw, 1.7rem); }
+.doc-codigo { display: grid; justify-items: center; gap: 2px; background: var(--papel-2); border-radius: var(--r-m); padding: 8px 14px; }
+.doc-codigo span { font-size: .76rem; font-weight: 800; color: var(--tinta-2); text-transform: uppercase; letter-spacing: .06em; }
+.doc-codigo b { font: 800 1.7rem/1.1 var(--display); letter-spacing: .14em; color: var(--indigo-2); }
+.doc-tema { grid-column: 1 / -1; display: grid; grid-template-columns: auto minmax(0, 320px) auto 1fr; gap: 8px 10px; align-items: center; }
+.doc-tema .nota { margin: 0; }
+@media (max-width: 640px) { .doc-cab, .doc-tema { grid-template-columns: minmax(0, 1fr); } .doc-codigo { justify-items: start; } }
+
+/* Debilidades */
+.doc-debil { display: grid; gap: 10px; margin-top: 12px; }
+.doc-paso { border: 1.5px solid var(--linea); border-left-width: 6px; border-radius: var(--r-m); padding: 10px 14px; background: #fff; }
+.doc-paso.flojo { border-left-color: var(--coral); }
+.doc-paso.medio { border-left-color: var(--sol); }
+.doc-paso.firme { border-left-color: var(--menta); }
+.doc-paso.vacio { background: transparent; border-style: dashed; }
+.doc-paso-cab { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.doc-paso-cab .nota { margin: 0; }
+.doc-barra { height: 8px; border-radius: 999px; background: var(--papel-2); margin: 8px 0 6px; overflow: hidden; }
+.doc-barra i { display: block; height: 100%; border-radius: inherit; background: var(--menta); }
+.doc-paso.flojo .doc-barra i { background: var(--coral); }
+.doc-paso.medio .doc-barra i { background: var(--sol); }
+.doc-cifras { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; font-size: .86rem; color: var(--tinta-2); }
+.doc-cifras b { color: var(--tinta); }
+.doc-notas { margin: 8px 0 0; padding-left: 18px; font-size: .88rem; }
+.doc-notas li::marker { color: var(--coral); }
+.doc-ayuda { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+
+/* Tabla de alumnos */
+.doc-leyenda { display: flex; align-items: center; gap: 4px 6px; flex-wrap: wrap; font-size: .78rem; font-weight: 700; color: var(--tinta-2); }
+.doc-leyenda .est { margin-left: 6px; }
+.doc-tabla-caja { overflow-x: auto; margin-top: 10px; }
+.doc-tabla { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.doc-tabla th, .doc-tabla td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--linea); vertical-align: middle; }
+.doc-tabla thead th { font: 800 .8rem var(--texto); color: var(--tinta-2); text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+.doc-tabla tbody th { font-weight: 800; }
+.doc-tabla small { display: block; color: var(--tinta-2); font-weight: 600; font-size: .78rem; }
+.doc-fila { cursor: pointer; }
+.doc-fila:hover, .doc-fila[aria-expanded="true"] { background: #F7F2E8; }
+.doc-fila-det td { background: #FBF8F2; }
+.doc-nada { color: #A39A8C; }
+.doc-prueba { font-weight: 800; padding: 2px 8px; border-radius: 999px; }
+.doc-prueba.si { background: #E4F5EE; color: #167252; }
+.doc-prueba.no { background: #FDECE6; color: #B2442A; }
+.doc-pasos { margin: 6px 0 8px; padding-left: 20px; display: grid; gap: 8px; }
+.doc-pasos > li > .est-chips { display: inline-flex; margin-left: 6px; vertical-align: middle; }
+.doc-pasos ul { margin: 4px 0 0; padding-left: 16px; font-size: .88rem; }
+.doc-et { font-size: .72rem; font-weight: 800; padding: 1px 6px; border-radius: 6px; color: #fff; background: #9C9488; }
+.doc-et.est-vago { background: #C98A0B; } .doc-et.est-parcial { background: #3A79BD; } .doc-et.est-error { background: #D0553A; } .doc-et.est-entendio { background: #1B8762; }
+
+/* Fichas de estado (como en la clase) */
+.est-chips { display: flex; gap: 4px; flex-wrap: wrap; }
+.est { display: inline-block; width: 14px; height: 14px; border-radius: 4px; background: #D7CEBE; }
+.est-vago { background: #F2B233; } .est-parcial { background: #4B8FD6; } .est-error { background: #E86A4A; } .est-entendio { background: #229F74; } .est-empezando { background: #D7CEBE; }
+
+/* Registrar alumnos */
+.doc-alumnos { display: grid; gap: 8px; margin-top: 10px; }
+.doc-alumnos .btn-crear { justify-self: start; }
+.doc-cred { margin-top: 14px; display: grid; gap: 10px; justify-items: start; }
+.doc-tabla-cred { max-width: 520px; }
+.doc-tabla-cred code { font: 800 1rem ui-monospace, monospace; }
+.doc-alerta { margin: 0; background: #FFF6DE; border: 1px solid #F2D27A; border-radius: var(--r-s); padding: 8px 12px; font-size: .9rem; }
+.doc-error { grid-column: 1 / -1; color: #B2442A; font-weight: 700; margin: 0; }
