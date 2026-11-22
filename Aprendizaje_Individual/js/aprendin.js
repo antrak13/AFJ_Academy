@@ -250,9 +250,9 @@ export function limpiarPeinado(p) {
 
 // Un look: { nombre, forma, color, numero, piezas: { slot: { id, colores: [c1, c2] } } }
 export function normalizarLook(l = {}) {
-  const forma = FORMAS[l.forma] ? l.forma : 'bollo';
+  const forma = Object.hasOwn(FORMAS, l.forma) ? l.forma : 'bollo';
   const r = l.rasgos || {};
-  const rasgos = { ojos: OJOS[r.ojos] ? r.ojos : 'ovalados', boca: BOCAS[r.boca] ? r.boca : 'normal', panza: !!r.panza, marcas: MARCAS[r.marcas] ? r.marcas : 'ninguna', pies: r.pies ? color(r.pies, '') : '' };
+  const rasgos = { ojos: Object.hasOwn(OJOS, r.ojos) ? r.ojos : 'ovalados', boca: Object.hasOwn(BOCAS, r.boca) ? r.boca : 'normal', panza: !!r.panza, marcas: Object.hasOwn(MARCAS, r.marcas) ? r.marcas : 'ninguna', pies: r.pies ? color(r.pies, '') : '' };
   const out = { nombre: String(l.nombre || '').slice(0, 24), forma, color: color(l.color, PALETA.coral), numero: lim(parseInt(l.numero, 10) || 0, 0, 99), rasgos, piezas: {} };
   const pe = limpiarPeinado(l.peinado), pf = limpiarPeinado(l.peinado_final);
   if (pe) out.peinado = pe;
@@ -264,7 +264,7 @@ export function normalizarLook(l = {}) {
   for (const slot of SLOTS) {
     const x = l.piezas?.[slot];
     const id = typeof x === 'string' ? x : x?.id;
-    const def = id && PIEZAS[slot]?.[id];
+    const def = typeof id === 'string' && Object.hasOwn(PIEZAS[slot], id) ? PIEZAS[slot][id] : null;
     if (!def) continue;
     const cs = (x && Array.isArray(x.colores)) ? x.colores : [];
     out.piezas[slot] = { id, colores: [0, 1].map(i => cs[i] === 'cuerpo' || (!cs[i] && def.c[i] === 'cuerpo') ? 'cuerpo' : color(cs[i], color(def.c[i], PALETA.nieve))) };

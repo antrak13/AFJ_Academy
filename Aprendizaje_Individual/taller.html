@@ -13,8 +13,9 @@
 </head>
 <body>
 <header class="barra">
+  <a class="btn-inicio" href="../inicio.html" title="Volver al inicio de AFJ Academy"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Volver al inicio</span></a>
   <a class="marca" href="taller.html" aria-label="Aprendines: taller"><span class="marca-av" id="marcaAv"></span><span>Aprendines</span></a>
-  <nav class="nav" aria-label="Secciones"><a href="taller.html" aria-current="page">Taller</a><a href="clase.html">Clase</a><a href="fichas.html">Fichas</a></nav>
+  <nav class="nav" aria-label="Secciones"><a href="taller.html" aria-current="page">Taller</a><a href="clase.html">Clase</a><a href="sala.html">Sala</a><a href="fichas.html">Fichas</a><a href="disenos.html">Diseños</a></nav>
   <p class="lema">Tú le enseñas, tu aprendín aprende y, mientras aprende, <b>se transforma</b>.</p>
 </header>
 
@@ -33,6 +34,7 @@
       <input id="nombre" maxlength="20" autocomplete="off" spellcheck="false">
       <span class="placa-mundo" id="placaMundo"></span>
     </div>
+    <a class="btn btn-fuerte taller-salto" href="#crearAprendin" id="saltoCrear">Crear mi aprendín</a>
 
     <div class="bloque">
       <div class="bloque-tit"><h2 id="tFases">Fases de evolución</h2><span class="nivel-nombre" id="faseNombre"></span></div>
@@ -52,7 +54,11 @@
   </section>
 
   <section class="panel">
-    <div class="tarjeta crear">
+    <section class="tarjeta coleccion" id="coleccion" aria-labelledby="tColeccion" hidden>
+      <h2 id="tColeccion">Mis aprendines</h2>
+      <div class="coleccion-lista" id="coleccionLista"></div>
+    </section>
+    <div class="tarjeta crear" id="crearAprendin">
       <div class="tarjeta-tit"><h2>Crea tu aprendín</h2><span class="estado-ia" id="estadoIA">Conectando…</span></div>
       <form id="formCrear" class="form-crear" autocomplete="off">
         <div class="pregunta">
@@ -87,6 +93,7 @@
         </div>
       </div>
       <div class="ficha" id="ficha" hidden></div>
+      <p class="nota" id="estadoGuardado" role="status" hidden></p>
     </div>
 
     <div class="tarjeta">

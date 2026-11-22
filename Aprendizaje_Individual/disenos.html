@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diseños y fases · Aprendines</title>
+<meta name="description" content="Galería de demostración con todos los diseños de aprendines y sus 5 fases de evolución desde el inicio.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Nunito:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="css/aprendin.css">
+<link rel="stylesheet" href="css/taller.css">
+<link rel="stylesheet" href="css/disenos.css">
+</head>
+<body class="pag-disenos">
+<header class="barra">
+  <a class="btn-inicio" href="../inicio.html" title="Volver al inicio de AFJ Academy"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Volver al inicio</span></a>
+  <a class="marca" href="taller.html" aria-label="Aprendines: taller"><span class="marca-av" id="marcaAv"></span><span>Aprendines</span></a>
+  <nav class="nav" aria-label="Secciones"><a href="taller.html">Taller</a><a href="clase.html">Clase</a><a href="sala.html">Sala</a><a href="fichas.html">Fichas</a><a href="disenos.html" aria-current="page">Diseños</a></nav>
+  <p class="lema">Todas las fases desde el inicio para ver los diseños que tenemos.</p>
+</header>
+
+<main class="dis-marco">
+  <section class="tarjeta dis-cab" aria-labelledby="tDisenos">
+    <div class="dis-cab-sup">
+      <div>
+        <span class="dis-kicker">Modo demostración</span>
+        <h1 id="tDisenos">Todos los diseños y sus 5 fases</h1>
+        <p class="nota">Explora de golpe la evolución completa (Fase 0 a Fase 4) de los aprendines dibujados por la IA, por piezas del catálogo, los 12 mundos base y tus personajes guardados.</p>
+      </div>
+      <div class="dis-resumen" id="resumenDisenos"></div>
+    </div>
+
+    <div class="dis-controles">
+      <div class="dis-filtros" id="filtros" role="tablist" aria-label="Filtrar diseños">
+        <button class="chip" type="button" role="tab" data-cat="todos" aria-selected="true">Todos</button>
+        <button class="chip" type="button" role="tab" data-cat="dibujo" aria-selected="false">Dibujo IA</button>
+        <button class="chip" type="button" role="tab" data-cat="piezas" aria-selected="false">Piezas IA</button>
+        <button class="chip" type="button" role="tab" data-cat="mundo" aria-selected="false">Mundos base</button>
+        <button class="chip" type="button" role="tab" data-cat="propios" aria-selected="false">Mis aprendines</button>
+      </div>
+      <label class="dis-buscar-wrap">
+        <span class="solo-lector">Buscar diseño</span>
+        <input class="otra dis-buscar" id="buscarDiseno" type="search" placeholder="Buscar por nombre, personaje o mundo…">
+      </label>
+    </div>
+
+    <div class="dis-emociones-fila">
+      <span class="dis-emo-lbl">Emoción en vivo:</span>
+      <div class="dis-emociones" id="emocionesDemo" role="group" aria-label="Cambiar emoción de todos los diseños"></div>
+    </div>
+  </section>
+
+  <section class="dis-lista" id="listaDisenos" aria-live="polite"></section>
+</main>
+
+<script type="module" src="js/disenos.js"></script>
+</body>
+</html>

@@ -60,12 +60,14 @@ export function preguntaInicial(a, paso) {
     : `Siguiente paso: ${minus}. ¿Cómo funciona? Explícamelo con algo de mi mundo.`;
 }
 
-// Turno sin IA: pide ejemplos, repite lo que entendió y, al segundo mensaje claro, entiende.
-export function turnoLocal(a, paso, mensaje, turnos) {
-  const m = txt(mensaje, 600), corta = m.split(' ').length < 6;
+// Sin evaluación de IA, el docente del aprendín decide cuándo dio una explicación y un ejemplo.
+export function turnoLocal(a, paso, mensajes) {
+  const m = txt(mensajes.at(-1), 600);
+  const completa = texto => texto.match(/[\p{L}\p{N}]+/gu)?.length >= 6;
+  const anteriores = new Set(mensajes.slice(0, -1).map(s => txt(s, 600).toLowerCase()).filter(completa));
   const primera = (m.split(/(?<=[.!?])\s+/)[0] || m).slice(0, 140);
-  const hayOtro = paso < PASOS;
-  if (corta) return limpiarTurno({ dice: `Mmm… me falta entender un poco más. ¿Me das un ejemplo ${a.de ? 'de ' + String(a.de).replace(/^(del|de la|de los|de las|de)\s+/i, '') : 'de mi mundo'}?`, emocion: 'curioso', estado: 'vago', nota: 'Respuesta muy corta.', pista: 'Explícale con un ejemplo de su mundo y di por qué funciona.' }, { turnos, hayOtro });
-  if (turnos < MIN_TURNOS) return limpiarTurno({ dice: `A ver si entendí: «${primera}». ¿Y cómo lo uso en mi misión? Dime un caso concreto.`, emocion: 'pensando', estado: 'parcial', nota: 'Explicó la idea; falta aplicarla.', pista: 'Ahora dale un caso concreto con números o cosas de su mundo.' }, { turnos, hayOtro });
-  return limpiarTurno({ dice: '¡Ahhh, ya entendí! Lo voy a anotar en mi ficha.', emocion: 'eureka', estado: 'entendio', nota: 'Explicó y dio un caso.', pista: '', siguiente: hayOtro ? preguntaInicial(a, paso + 1) : '' }, { turnos, hayOtro });
+  const concepto = a.fases?.[paso]?.concepto || a.tema;
+  if (!completa(m)) return { dice: `Mmm… ¿me explicas «${concepto}» con un poco más de detalle?`, emocion: 'curioso', estado: 'vago', nota: 'Respuesta muy corta.', pista: 'Cuéntale la idea y di por qué funciona.' };
+  if (!anteriores.size || anteriores.has(m.toLowerCase())) return { dice: `Anoté «${primera}». ¿Me das un ejemplo distinto que pueda usar en mi misión?`, emocion: 'pensando', estado: 'parcial', nota: 'Modo práctica. Falta confirmar un ejemplo.', pista: 'Dale un caso concreto de su mundo.' };
+  return { dice: 'Ya tengo tus dos explicaciones. Si la segunda muestra cómo aplicar la idea, ¿guardamos la ficha y seguimos?', emocion: 'curioso', estado: 'parcial', nota: 'Modo práctica. Tú decides cuándo guardar la ficha.', pista: 'Comprueba que tu ejemplo muestre por qué funciona la idea.', puedeConfirmar: true };
 }

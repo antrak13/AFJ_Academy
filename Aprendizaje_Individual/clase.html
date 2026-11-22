@@ -16,8 +16,9 @@
 </head>
 <body class="pag-clase">
 <header class="barra">
+  <a class="btn-inicio" href="../inicio.html" title="Volver al inicio de AFJ Academy"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Volver al inicio</span></a>
   <a class="marca" href="taller.html" aria-label="Aprendines: volver al taller"><span class="marca-av" id="marcaAv"></span><span>Aprendines</span></a>
-  <nav class="nav" aria-label="Secciones"><a href="taller.html">Taller</a><a href="clase.html" aria-current="page">Clase</a><a href="fichas.html">Fichas</a></nav>
+  <nav class="nav" aria-label="Secciones"><a href="taller.html">Taller</a><a href="clase.html" aria-current="page">Clase</a><a href="sala.html">Sala</a><a href="fichas.html">Fichas</a><a href="disenos.html">Diseños</a></nav>
   <p class="lema" id="lema">Enséñale y míralo <b>evolucionar</b>.</p>
   <div class="barra-acc">
     <span class="estado-ia" id="estadoIA">Conectando…</span>
@@ -46,12 +47,19 @@
       <p class="cl-pista" id="pista" hidden></p>
       <button class="btn btn-crear cl-btn-prueba" id="btnPrueba" type="button" hidden>Hacer la prueba juntos</button>
     </div>
+    <div class="cl-cuidado">
+      <button class="btn btn-chico" id="btnAnimar" type="button">Dar ánimos</button>
+      <button class="btn btn-chico" id="btnPostal" type="button">Descargar postal</button>
+      <button class="btn btn-chico" id="btnCompartirAprendin" type="button">Compartir aprendín</button>
+      <p class="nota" id="clCuidadoEstado" role="status"></p>
+    </div>
     <details class="cl-mision"><summary>Su misión</summary><p id="mision"></p></details>
   </section>
 
   <section class="cl-chat" aria-label="Clase">
     <div class="cl-mensajes" id="mensajes" role="log" aria-live="polite" aria-relevant="additions"></div>
     <div class="cl-chat-herr" id="chatHerr">
+      <button class="btn btn-chico" id="btnConfirmarPractica" type="button" hidden>Guardar ficha y seguir</button>
       <span class="cl-mic-estado" id="micEstado" role="status" aria-live="polite"></span>
     </div>
     <form class="cl-escribir" id="formMsg" autocomplete="off">

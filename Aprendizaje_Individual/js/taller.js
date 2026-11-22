@@ -6,7 +6,7 @@ import { PALETA, color, tonos } from './color.js';
 import { MUNDOS, NOMBRES } from './mundos.js';
 import { fasesDesdeLook, crearLocal, preguntasLocales, ZONAS } from './creador.js';
 import { svgHuevo, huevoLocal, GRIETA_CENTRO } from './huevo.js';
-import { guardarAprendin } from './guardado.js';
+import { cargarAprendin, cargarClase, enlaceClase, guardarAprendin, listarAprendines } from './guardado.js';
 
 const $ = s => document.querySelector(s);
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -55,7 +55,27 @@ function decir(texto, emocion) {
 
 /* ---------- Placa ---------- */
 const inputNombre = $('#nombre');
-inputNombre.addEventListener('input', () => { const v = inputNombre.value.trim() || 'Aprendín'; E.fases.forEach(f => { f.look.nombre = v; }); if (E.ficha) E.ficha.nombre = v; estrella.vestir(look()); pintarJSON(); });
+inputNombre.addEventListener('focus', () => {
+  if (!E.ficha) return;
+  E.textosNombre = { nombre: E.ficha.nombre, saludo: E.ficha.saludo, mision: E.ficha.mision, personalidad: E.ficha.personalidad };
+});
+inputNombre.addEventListener('blur', () => { E.textosNombre = null; });
+inputNombre.addEventListener('input', () => {
+  const v = inputNombre.value.trim() || 'Aprendín';
+  E.fases.forEach(f => { f.look.nombre = v; });
+  if (E.ficha && v !== E.ficha.nombre) {
+    const original = E.textosNombre || E.ficha;
+    for (const campo of ['saludo', 'mision', 'personalidad']) {
+      if (original[campo]) E.ficha[campo] = original[campo].replaceAll(original.nombre, () => v);
+    }
+    E.ficha.nombre = v;
+    persistir();
+    pintarFicha();
+    pintarColeccion();
+  }
+  estrella.vestir(look());
+  pintarJSON();
+});
 function pintarPlaca() {
   inputNombre.value = look().nombre || '';
   const de = E.ficha?.de || E.mundo?.de;
@@ -127,6 +147,7 @@ async function estadoIA() {
 // Flujo: 1) gustos y tema → aparece el huevo y la IA hace 2 o 3 preguntas · 2) respuestas → la IA crea · 3) el huevo se rompe.
 const PASOS = ['Leyendo lo que te gusta…', 'Imaginando cómo se ve de frente…', 'Dibujando su peinado mechón por mechón…', 'Eligiendo los colores exactos…', 'Cosiendo su ropa…', 'Agregando los detalles que lo hacen único…', 'Dividiendo el tema en pasos…', 'Pensando por qué lo necesita…', 'Dibujando su transformación…', 'Revisando que se parezca…', 'Ya casi sale del huevo…'];
 const pedido = { gustos: '', tema: '', preguntas: [], huevo: null };
+let consultaPreguntas = 0;
 // El huevo se dibuja con los gustos: primero el que se deduce sin IA y, cuando la IA responde, el suyo.
 function pintarHuevo(h, cambio = false) {
   pedido.huevo = h;
@@ -157,6 +178,8 @@ $('#formCrear').addEventListener('submit', async e => {
   if (E.creando) return;
   pedido.gustos = $('#gustos').value.trim(); pedido.tema = $('#tema').value.trim();
   if (!pedido.gustos || !pedido.tema) return;
+  const consulta = ++consultaPreguntas;
+  pedido.preguntas = [];
   E.creando = true; $('#ficha').hidden = true;
   pintarHuevo(huevoLocal(pedido.gustos));
   verPaso('preguntas'); mostrarHuevo(true);
@@ -167,6 +190,7 @@ $('#formCrear').addEventListener('submit', async e => {
   let r;
   try { if (!E.ia?.ia) throw new Error('sin IA'); r = await pedirIA('/api/preguntas', { gustos: pedido.gustos, tema: pedido.tema }); if (!r.preguntas?.length) throw new Error('sin preguntas'); }
   catch { r = preguntasLocales(pedido.gustos, pedido.tema); }
+  if (consulta !== consultaPreguntas) return;
   pedido.preguntas = r.preguntas;
   if (r.huevo) pintarHuevo(r.huevo, true);
   $('#entendi').textContent = r.entendi || '';
@@ -191,9 +215,15 @@ function pintarPreguntas() {
 
 $('#btnNacer').addEventListener('click', () => crear(pedido.preguntas.filter(q => q.respuesta).map(q => ({ pregunta: q.pregunta, respuesta: q.respuesta }))));
 $('#btnSaltar').addEventListener('click', () => crear([]));
-$('#btnVolver').addEventListener('click', () => { E.creando = false; mostrarHuevo(false); verPaso('form'); decir(EMOCIONES.neutral.frase, 'neutral'); $('#gustos').focus(); });
+$('#btnVolver').addEventListener('click', () => {
+  consultaPreguntas++;
+  E.creando = false;
+  mostrarHuevo(false); verPaso('form'); pintarFicha();
+  decir(EMOCIONES.neutral.frase, 'neutral'); $('#gustos').focus();
+});
 
 async function crear(detalles) {
+  consultaPreguntas++;
   const nacer = $('#btnNacer'); nacer.disabled = true; $('#btnSaltar').disabled = true;
   abrirNacimiento();
   let a, info;
@@ -210,7 +240,7 @@ async function crear(detalles) {
     a = crearLocal(pedido.gustos, pedido.tema, detalles, nombre); info = { sinIA: true, motivo: err.message };
   }
   a.huevo = pedido.huevo;
-  guardarAprendin(a);
+  if (info?.sinIA) a.modo = 'local';
   E.ficha = a; E.mundo = null; E.fases = a.fases; E.nivel = 0;
   await nacimientoListo(a);           // espera a que el estudiante rompa el huevo y toque «Conocer»
   mostrarHuevo(false); E.creando = false;
@@ -218,8 +248,10 @@ async function crear(detalles) {
   estrella.vestir(look()); estrella.saltar();
   decir(a.saludo, 'feliz');
   pintarFicha(info); pintarTodo();
-  verPaso('form'); nacer.disabled = false; $('#btnSaltar').disabled = false;
+  verPaso('form'); nacer.disabled = false; $('#btnSaltar').disabled = false; $('#nombrePropio').value = '';
   $('#btnCrear').textContent = 'Crear otro';
+  $('#saltoCrear').textContent = 'Crear otro aprendín';
+  ($('#ficha .btn-clase') || $('#btnCrear')).focus();
 }
 
 /* ---------- Nacimiento en pantalla completa: hay que golpear el huevo ---------- */
@@ -229,6 +261,7 @@ function abrirNacimiento() {
   const n = NAC; clearInterval(n.pasos);
   n.listo = false; n.golpes = 0; n.mini?.destruir(); n.mini = null;
   n.el.className = 'nacimiento'; n.el.dataset.golpes = '0'; n.el.hidden = false;
+  $('#nacHuevo').disabled = false;
   $('#nacTitulo').textContent = pedido.huevo?.nombre ? `Tu ${pedido.huevo.nombre.charAt(0).toLowerCase() + pedido.huevo.nombre.slice(1)} se está formando…` : 'Tu aprendín se está formando…';
   $('#nacListo').hidden = true; $('#nacClase').hidden = true; $('#nacAprendin').replaceChildren();
   let i = 0; const t0 = Date.now(), lento = document.querySelector('input[name="calidad"]:checked')?.value === 'maxima';
@@ -258,13 +291,18 @@ $('#nacHuevo').addEventListener('click', () => {
 async function romperHuevo() {
   const n = NAC, a = n.aprendin;
   n.el.classList.add('abierto');
+  $('#nacHuevo').disabled = true;
+  const guardado = persistir(true);
+  pintarColeccion();
   n.mini = crearAprendin({ look: a.fases[0].look, emocion: 'emocionado' });
   $('#nacAprendin').append(n.mini.el);
   $('#nacTitulo').textContent = `¡Nació ${a.nombre}!`;
-  $('#nacSub').textContent = a.saludo;
-  await espera(RM ? 0 : 650); n.mini.entender();
+  $('#nacSub').textContent = guardado ? a.saludo : 'Tu aprendín nació. No se pudo guardar en este navegador.';
+  await espera(RM ? 0 : 650); if (n.el.hidden) return;
+  n.mini.entender();
   $('#nacListo').textContent = `Conocer a ${a.nombre}`; $('#nacListo').hidden = false;
-  const btn = $('#nacClase'); btn.textContent = `Enseñarle ${a.tema}`; btn.hidden = false; btn.focus();
+  const btn = $('#nacClase'); btn.textContent = `Enseñarle ${a.tema}`; btn.hidden = !guardado;
+  (guardado ? btn : $('#nacListo')).focus();
 }
 function cerrarNacimiento() {
   const n = NAC; if (!n.el.classList.contains('abierto')) return;
@@ -272,11 +310,11 @@ function cerrarNacimiento() {
   n.fin?.(); n.fin = null;
 }
 $('#nacListo').addEventListener('click', cerrarNacimiento);
-$('#nacClase').addEventListener('click', () => { location.href = 'clase.html'; });
+$('#nacClase').addEventListener('click', () => { location.href = enlaceClase(NAC.aprendin); });
 NAC.el.addEventListener('keydown', e => {
   if (e.key === 'Escape') cerrarNacimiento();
   if (e.key === 'Tab') { // el foco no sale del diálogo
-    const f = [...NAC.el.querySelectorAll('button:not([hidden])')]; if (!f.length) return;
+    const f = [...NAC.el.querySelectorAll('button:not([hidden]):not(:disabled)')]; if (!f.length) return;
     const i = f.indexOf(document.activeElement), j = e.shiftKey ? (i <= 0 ? f.length - 1 : i - 1) : (i + 1) % f.length;
     e.preventDefault(); f[j].focus();
   }
@@ -285,7 +323,7 @@ NAC.el.addEventListener('keydown', e => {
 function pintarFicha(info) {
   const a = E.ficha, caja = $('#ficha');
   if (!a) { caja.hidden = true; return; }
-  const origen = info?.sinIA ? 'Armado en modo práctica con el catálogo.'
+  const origen = info?.sinIA || a.modo === 'local' ? 'Armado en modo práctica con el catálogo.'
     : info ? `Generado en ${info.segundos} s${info.ensayo ? ' (guardado)' : ''}.` : '';
   caja.replaceChildren(
     h('div', { class: 'ficha-cab' }, miniSvg(a.fases[a.fases.length - 1].look, 'orgulloso'), h('div', {}, h('b', {}, a.nombre), h('span', {}, `viene ${a.de}`))),
@@ -296,10 +334,46 @@ function pintarFicha(info) {
       h('dt', {}, `Lo que le vas a enseñar: ${a.tema}`),
       h('dd', {}, h('ol', { class: 'pasos' }, a.fases.slice(1).map((f, i) => h('li', {}, h('button', { class: 'paso', type: 'button', onclick: () => cambiarFase(i + 1) }, h('span', { class: 'paso-fase' }, f.titulo), f.concepto)))))
     ),
-    h('a', { class: 'btn btn-crear btn-clase', href: 'clase.html' }, `Enseñarle ${a.tema}`),
+    E.guardado ? h('a', { class: 'btn btn-crear btn-clase', href: enlaceClase(a) }, `Enseñarle ${a.tema}`) : null,
     h('p', { class: 'nota' }, origen)
   );
   caja.hidden = false;
+}
+
+function persistir(activar = false) {
+  E.guardado = guardarAprendin(E.ficha, { activar });
+  const estado = $('#estadoGuardado');
+  estado.textContent = E.guardado ? '' : 'No se pudo guardar el aprendín en este navegador.';
+  estado.hidden = E.guardado;
+  return E.guardado;
+}
+
+function faseGuardada(a) {
+  const clase = cargarClase(a.id);
+  const fase = Math.max(0, Math.min(a.fases.length - 1, (clase?.paso || 1) - 1));
+  return { fase, completo: Boolean(clase?.prueba?.aprobado) };
+}
+
+function pintarColeccion() {
+  const lista = listarAprendines();
+  $('#coleccion').hidden = !lista.length;
+  $('#coleccionLista').replaceChildren(...lista.reverse().map(a => {
+    const { fase, completo } = faseGuardada(a);
+    const actual = a.id === E.ficha?.id;
+    return h('button', { class: 'coleccion-item', type: 'button', 'aria-pressed': String(actual),
+      onclick: () => { if (!E.creando) { elegirAprendin(a); $('#coleccionLista [aria-pressed="true"]')?.focus(); } } },
+    miniSvg(a.fases[fase].look, 'feliz'),
+    h('span', {}, h('b', {}, a.nombre), h('small', {}, a.tema), h('small', {}, completo ? 'Misión cumplida' : `${fase} de ${a.fases.length - 1} pasos`)));
+  }));
+}
+
+function elegirAprendin(a, activar = true) {
+  E.ficha = a; E.fases = a.fases; E.mundo = null; E.nivel = faseGuardada(a).fase;
+  if (activar) persistir(true);
+  else E.guardado = true;
+  marcarMundo(); teñir(); estrella.vestir(look());
+  decir(`¡Hola! Soy ${a.nombre}. ¿Seguimos con mi misión?`, 'feliz');
+  pintarFicha(); pintarTodo(); pintarColeccion();
 }
 
 /* ---------- Mundos listos ---------- */
@@ -322,7 +396,10 @@ function elegirMundo(m) {
 // Forma, color y rasgos cambian en todas las fases. Las piezas cambian en esta fase y en las siguientes.
 function editarTodas(fn) { E.fases.forEach(f => { fn(f.look); f.look = normalizarLook(f.look); }); aplicar(); }
 function editarDesdeAqui(fn) { for (let i = E.nivel; i < E.fases.length; i++) { fn(E.fases[i].look); E.fases[i].look = normalizarLook(E.fases[i].look); } aplicar(false); }
-function aplicar(salto = true) { E.mundo = null; marcarMundo(); estrella.vestir(look()); if (salto) estrella.saltar(); teñir(); pintarTodo(); }
+function aplicar(salto = true) {
+  E.mundo = null; marcarMundo(); estrella.vestir(look()); if (salto) estrella.saltar(); teñir(); pintarTodo();
+  if (E.ficha) { persistir(); pintarFicha(); pintarColeccion(); }
+}
 
 function grupoChips(sel, opciones, actual, alElegir) {
   const caja = $(sel); caja.replaceChildren();
@@ -401,4 +478,12 @@ const paramsInicio = new URLSearchParams(location.search);
 if (paramsInicio.get('gustos')) $('#gustos').value = paramsInicio.get('gustos');
 if (paramsInicio.get('tema')) $('#tema').value = paramsInicio.get('tema');
 teñir(); marcarEmocion(); pintarTodo(); estadoIA();
-setTimeout(() => { if (!E.creando && !E.ficha) decir(`¡Hola! Soy ${look().nombre} y vengo ${E.mundo.de}. Todavía no sé casi nada… ¿me enseñas?`, 'feliz'); }, 400);
+const guardado = cargarAprendin();
+if (guardado) {
+  elegirAprendin(guardado, false);
+  $('#btnCrear').textContent = 'Crear otro';
+  $('#saltoCrear').textContent = 'Crear otro aprendín';
+} else {
+  pintarColeccion();
+  setTimeout(() => { if (!E.creando && !E.ficha && E.mundo) decir(`¡Hola! Soy ${look().nombre} y vengo ${E.mundo.de}. Todavía no sé casi nada… ¿me enseñas?`, 'feliz'); }, 400);
+}

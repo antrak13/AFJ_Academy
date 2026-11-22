@@ -122,11 +122,12 @@ export function esquemaAprendin(modo = 'piezas') {
 // Respuesta de la IA (ya con la forma del esquema, pero sin confiar en ella) → aprendín listo para dibujar.
 export function armarAprendin(r = {}, { gustos = '', tema = '', detalles = [], nombrePropio = '' } = {}) {
   // el nombre no puede copiar al personaje («Naru» por Naruto); si el estudiante lo eligió, se respeta
-  let nombre = txt(nombrePropio, 14) || txt(r.nombre, 14) || 'Aprendín';
+  const propuesto = txt(r.nombre, 80);
+  let nombre = txt(nombrePropio, 14) || propuesto.slice(0, 14) || 'Aprendín';
   if (!nombrePropio && pareceA(nombre, `${gustos} ${limpiarDetalles(detalles).map(d => d.respuesta).join(' ')}`)) {
-    const viejo = nombre; nombre = otroNombre(nombre);
-    for (const k of ['saludo', 'mision', 'personalidad']) if (typeof r[k] === 'string') r[k] = r[k].split(viejo).join(nombre);
+    nombre = otroNombre(nombre);
   }
+  const conNombre = (texto, max) => txt(propuesto && nombre !== propuesto ? txt(texto, max + propuesto.length).replaceAll(propuesto, () => nombre) : texto, max);
   const base = { nombre, forma: r.forma, color: r.color, numero: r.numero, rasgos: { ojos: r.ojos, boca: r.boca, marcas: r.marcas, panza: r.panza, pies: r.pies }, peinado: r.peinado, peinado_final: r.peinado_final, traje: r.traje, dibujo: limpiarDibujo(r.dibujo) };
   const entrada = Array.isArray(r.fases) ? r.fases.slice(0, FASES) : [];
   // si la IA dibujó pero olvidó usar su dibujo en las fases, se agrega solo
@@ -151,7 +152,7 @@ export function armarAprendin(r = {}, { gustos = '', tema = '', detalles = [], n
   }
   return {
     nombre, inspiracion: txt(r.inspiracion, 60), mundo: txt(r.mundo, 40), de: txt(r.de, 50) || 'de muy lejos',
-    personalidad: txt(r.personalidad, 160), mision: txt(r.mision, 240), saludo: txt(r.saludo, 200) || `¡Hola! Soy ${nombre}. ¿Me enseñas?`,
+    personalidad: conNombre(r.personalidad, 160), mision: conNombre(r.mision, 240), saludo: conNombre(r.saludo, 200) || `¡Hola! Soy ${nombre}. ¿Me enseñas?`,
     gustos: txt(gustos, 160), tema: txt(tema, 80), detalles: limpiarDetalles(detalles), fases
   };
 }

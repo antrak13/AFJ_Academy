@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "start": "node servidor.mjs",
-    "ensayo": "ENSAYO=1 node servidor.mjs"
+    "ensayo": "ENSAYO=1 node servidor.mjs",
+    "test": "node --test"
   }
 }

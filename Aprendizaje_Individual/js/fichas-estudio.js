@@ -1,12 +1,12 @@
 // Fichas de inicio / estudio adaptativo: genera fichas visuales animadas según tema, gustos y nivel,
 // y adapta cada nueva ficha según las reacciones del estudiante.
-import { limpiarFicha, htmlFicha, TIPOS } from './fichas.js';
+import { limpiarFicha, htmlFicha, NOMBRES_VISUAL, TIPOS } from './fichas.js';
 import { activarFichas, animar } from './fichas-dom.js';
 import { EJEMPLOS } from './fichas-ejemplo.js';
 import { svgAprendin } from './aprendin.js';
 import { MUNDOS } from './mundos.js';
 import { tonos } from './color.js';
-import { cargarAprendin, cargarClase } from './guardado.js';
+import { cargarAprendin, cargarClase, enlaceClase } from './guardado.js';
 import { cargarEstudio, guardarEstudio, solicitarFichaInicio, renderizarFichaEstudio, enlazarAccionesFicha, historialDe, registrarEventoVisual, calcularCalibracion, renderizarPanelCalibracion } from './fichas-apoyo.js';
 
 const $ = s => document.querySelector(s);
@@ -20,7 +20,8 @@ const A = cargarAprendin();
 const marca = $('#marcaAv');
 if (marca) marca.innerHTML = svgAprendin({ forma: 'bollo', color: 'coral', rasgos: { ojos: 'grandes' }, piezas: { pelo: 'mechon' } }, { emocion: 'feliz' });
 
-let S = cargarEstudio() || { activo: false, tema: '', gustos: '', nivel: 'algo', usaAprendin: false, fichas: [] };
+let S = cargarEstudio() || { activo: false, tema: '', gustos: '', nivel: 'algo', fichas: [] };
+const personajeDeLaSesion = () => S.aprendinId ? cargarAprendin(S.aprendinId) : S.usaAprendin && A?.tema.toLowerCase() === S.tema.toLowerCase() ? A : null;
 
 async function comprobarIA() {
   try { const r = await fetch('/api/estado', { cache: 'no-store' }); const j = r.ok ? await r.json() : null; ia = !!j?.ia; } catch { ia = false; }
@@ -53,13 +54,11 @@ if (A) {
   $('#btnUsarAprendin').addEventListener('click', () => {
     $('#temaEstudio').value = A.tema || '';
     $('#gustosEstudio').value = A.gustos || A.mundo || '';
-    S.usaAprendin = true;
     $('#temaEstudio').focus();
   });
   if (!S.activo && !$('#temaEstudio').value) {
     $('#temaEstudio').value = A.tema || '';
     $('#gustosEstudio').value = A.gustos || A.mundo || '';
-    S.usaAprendin = true;
   }
 }
 
@@ -78,18 +77,22 @@ async function pedirFichaAdaptativa(reaccion, nota = '', pinTipo = '') {
   const historial = historialDe(S.fichas);
   const calBase = calcularCalibracion(historial);
   const calibracion = pinTipo ? { ...calBase, pinTipo, estrategia: 'fijo' } : calBase;
-  const { datos, fuente } = await solicitarFichaInicio({
-    ia, tema: S.tema, gustos: S.gustos, nivel: S.nivel, reaccion, nota,
-    aprendin: S.usaAprendin && A ? A : null, historial,
-    calibracion
-  });
-  if (reaccion === 'entendio') S.nivel = S.nivel === 'cero' ? 'algo' : 'bastante';
-  else if (reaccion === 'duda' && S.nivel === 'bastante') S.nivel = 'algo';
-  S.fichas.push({ datos, fuente, reaccionOrigen: reaccion, reaccion: null, nota });
-  guardarEstudio(S);
-  cargando = false;
-  pintarEstadoCarga(false);
-  pintarEstudio({ animarUltima: true });
+  let nivel = S.nivel;
+  if (reaccion === 'entendio') nivel = nivel === 'cero' ? 'algo' : 'bastante';
+  if (reaccion === 'duda') nivel = nivel === 'bastante' ? 'algo' : 'cero';
+  try {
+    const { datos, fuente } = await solicitarFichaInicio({
+      ia, tema: S.tema, gustos: S.gustos, nivel, reaccion, nota,
+      aprendin: personajeDeLaSesion(), historial, calibracion
+    });
+    S.nivel = nivel;
+    S.fichas.push({ datos, fuente, reaccionOrigen: reaccion, reaccion: null, nota });
+    guardarEstudio(S);
+  } finally {
+    cargando = false;
+    pintarEstadoCarga(false);
+    pintarEstudio({ animarUltima: true });
+  }
 }
 
 $('#formEstudio').addEventListener('submit', e => {
@@ -97,7 +100,8 @@ $('#formEstudio').addEventListener('submit', e => {
   const tema = $('#temaEstudio').value.trim(), gustos = $('#gustosEstudio').value.trim() || 'vida cotidiana';
   if (!tema || cargando) return;
   const nivel = document.querySelector('input[name="nivelEstudio"]:checked')?.value || 'algo';
-  S = { activo: true, tema, gustos, nivel, usaAprendin: !!A && tema === A.tema, fichas: [] };
+  const aprendinId = A?.tema.toLowerCase() === tema.toLowerCase() ? A.id : null;
+  S = { activo: true, tema, gustos, nivel, aprendinId, fichas: [] };
   guardarEstudio(S);
   pintarEstudio();
   pedirFichaAdaptativa('inicio');
@@ -113,6 +117,7 @@ function pintarEstadoCarga(si) {
   const cargaEl = $('#estudioCargando');
   cargaEl.hidden = !si;
   $('#btnGenerar').disabled = si;
+  $('#btnNuevoTema').disabled = si;
   document.querySelectorAll('.fi-reaccion-btn, .fi-btn-enfoque, .fi-enfoque-chip, .fi-enfoque-send').forEach(b => { b.disabled = si; });
   if (si && S.fichas.length) {
     cargaEl.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest' });
@@ -131,17 +136,17 @@ function pintarEstudio({ animarUltima = false } = {}) {
   $('#estNivel').textContent = NIVEL_NOMBRE[S.nivel] || S.nivel;
   $('#estCuenta').textContent = `${S.fichas.length} ${S.fichas.length === 1 ? 'ficha' : 'fichas'}`;
   const tipos = [...new Set(S.fichas.map(f => f.datos.visual.tipo))];
-  $('#estTipos').innerHTML = tipos.map(t => `<span class="fi-tipo-chip" title="${esc(TIPOS[t] || t)}">${esc(t)}</span>`).join('');
+  $('#estTipos').innerHTML = tipos.map(t => `<span class="fi-tipo-chip" title="${esc(TIPOS[t] || t)}">${esc(NOMBRES_VISUAL[t] || t)}</span>`).join('');
 
   const linkClase = $('#btnIrClase');
-  const mismoTema = !!A && A.tema.toLowerCase() === S.tema.toLowerCase();
-  linkClase.href = mismoTema ? 'clase.html' : `taller.html?tema=${encodeURIComponent(S.tema)}&gustos=${encodeURIComponent(S.gustos)}`;
-  linkClase.textContent = mismoTema ? `Enseñarle a ${A.nombre} →` : 'Crear aprendín de este tema →';
+  const personaje = personajeDeLaSesion();
+  linkClase.href = personaje ? enlaceClase(personaje) : `taller.html?tema=${encodeURIComponent(S.tema)}&gustos=${encodeURIComponent(S.gustos)}`;
+  linkClase.textContent = personaje ? `Enseñarle a ${personaje.nombre} →` : 'Crear aprendín de este tema →';
 
   const lista = $('#estudioLista');
   lista.replaceChildren();
-  const av = S.usaAprendin && A ? svgAprendin(A.fases.at(-1).look, { emocion: 'orgulloso' }) : '';
-  const tono = S.usaAprendin && A ? tonos(A.fases.at(-1).look.color) : tonos('#2F5EA8');
+  const av = personaje ? svgAprendin(personaje.fases[0].look, { emocion: 'feliz' }) : '';
+  const tono = personaje ? tonos(personaje.fases[0].look.color) : tonos('#2F5EA8');
 
   S.fichas.forEach((item, idx) => {
     const esUltima = idx === S.fichas.length - 1;
@@ -229,4 +234,4 @@ activarFichas(galeria);
 
 pintarFichasClase();
 pintarEstudio();
-comprobarIA();
+comprobarIA().then(() => { if (S.activo && !S.fichas.length) pedirFichaAdaptativa('inicio'); });

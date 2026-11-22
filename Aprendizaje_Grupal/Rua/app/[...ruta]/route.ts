@@ -24,8 +24,8 @@ const INDIVIDUAL = process.env.INDIVIDUAL_URL ?? "http://127.0.0.1:8080";
 
 const ARCHIVOS_RAIZ = new Set(["inicio.html", "login.html", "demov1.html"]);
 const CARPETAS = ["Aprendizaje_Grupal/Andre/Oficial/", "Aprendizaje_Individual/"];
-const PROHIBIDO = [/^Aprendizaje_Individual\/ia\//, /\.(mjs|md|jsonl)$/i, /(^|\/)\./, /(^|\/)node_modules\//, /(^|\/)package(-lock)?\.json$/];
-const API_INDIVIDUAL = new Set(["estado", "preguntas", "aprendin", "turno", "ficha", "ficha-inicio", "examen"]);
+const PROHIBIDO = [/^Aprendizaje_Individual\/ia\//, /\.(mjs|md|jsonl|py)$/i, /(^|\/)\./, /(^|\/)node_modules\//, /(^|\/)package(-lock)?\.json$/];
+const API_INDIVIDUAL = new Set(["estado", "preguntas", "aprendin", "turno", "ficha", "ficha-inicio", "examen", "transcribir"]);
 
 const TIPOS: Record<string, string> = {
   ".html": "text/html; charset=utf-8",

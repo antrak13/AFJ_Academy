@@ -176,7 +176,8 @@
 .v-fr { display: grid; justify-items: center; gap: 4px; min-width: 58px; }
 .v-fr-num { display: grid; justify-items: center; font: 800 1.35rem/1.05 'Bricolage Grotesque', sans-serif; }
 .v-fr-num span:first-child { border-bottom: 3px solid var(--tinta); padding: 0 4px; }
-.v-fr-dib { display: flex; gap: 4px; }
+.v-fr-dib { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px; }
+.v-fr-entero { font-size: .83rem; font-weight: 800; }
 .v-fr-pizza { width: 58px; height: 58px; }
 .v-fr-barra { width: 104px; height: 24px; }
 .v-fr-sola .v-fr-pizza { width: 110px; height: 110px; }
@@ -187,7 +188,9 @@
 .v-vacia { fill: color-mix(in srgb, var(--c-claro) 75%, #fff); }
 .v-fr small { font-size: .76rem; font-weight: 700; color: var(--tinta-2); text-align: center; max-width: 110px; line-height: 1.15; }
 .v-op { font: 800 1.8rem 'Bricolage Grotesque', sans-serif; color: var(--c-osc); }
-.vis-anim .v-llena { animation: v-porcion .35s ease-out both; animation-delay: calc(var(--i) * 110ms + 150ms); transform-box: fill-box; transform-origin: center; }
+.vis-anim:not(:has(.vis-playbar)) .v-llena, .vis-anim .v-step.is-active .v-llena {
+  animation: v-porcion .35s ease-out both; animation-delay: calc(min(var(--i), 8) * 90ms); transform-box: fill-box; transform-origin: center;
+}
 @keyframes v-porcion { from { fill: #EAE2D2; transform: scale(.6); } }
 .v-fr.is-active { transform: translateY(-2px); }
 .v-fr.is-active .v-fr-num { color: var(--c-osc); }
@@ -256,7 +259,10 @@
 /* gráfico */
 .v-grafico { width: 100%; height: auto; overflow: visible; }
 .v-guia { stroke: rgba(35, 43, 62, .1); stroke-width: 1; stroke-dasharray: 3 4; }
-.v-linea { stroke-width: 3; stroke-dasharray: 1; stroke-dashoffset: var(--seg-off, 0); transition: stroke-dashoffset .55s ease-out; }
+.v-linea { stroke-width: 3; }
+.fi-solucion { margin-top: 8px; }
+.fi-solucion summary { cursor: pointer; color: var(--indigo-2); font-weight: 800; }
+.fi-solucion[open] > :not(summary) { margin-top: 9px; }
 .v-ejeT { font-size: 11px; font-weight: 800; fill: var(--tinta-2); text-anchor: middle; }
 
 /* íconos vectoriales, barras, torta, comparar */

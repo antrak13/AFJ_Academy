@@ -88,14 +88,14 @@ export function examenLocal(a, fichas = {}) {
   const fs = Object.entries(fichas).filter(([, f]) => f?.datos).map(([p, f]) => ({ paso: Number(p), ...f.datos }));
   const preguntas = [];
   const relleno = ['Depende del día', 'No tiene nada que ver con el tema', 'Siempre da cero'];
-  const otras = (lista, i) => { const xs = lista.filter((_, j) => j !== i); while (xs.length < 3) xs.push(relleno[xs.length]); return xs.slice(0, 3); };
+  const otras = (lista, correcta) => [...new Set([...lista, ...relleno])].filter(x => x !== correcta).slice(0, 3);
   const ideas = fs.map(f => f.idea).filter(Boolean), res = fs.map(f => f.ejemplo?.resultado).filter(Boolean);
   // primero una pregunta de idea por paso (así cubre los 4) y después los ejemplos
   fs.forEach(f => {
-    if (f.idea) preguntas.push({ paso: f.paso, enunciado: `¿Qué es lo más importante de «${f.titulo}»?`, opciones: [f.idea, ...otras(ideas, ideas.indexOf(f.idea))], respuesta: 0, trampa: 1, por_que: f.idea, resolucion: '', voz_acierto: 'Creo que es esta: es justo lo que anoté en mi ficha.', voz_trampa: 'Creo que es esta… me suena de mi cuaderno, aunque no sé si de este paso.' });
+    if (f.idea) preguntas.push({ paso: f.paso, enunciado: `¿Qué es lo más importante de «${f.titulo}»?`, opciones: [f.idea, ...otras(ideas, f.idea)], respuesta: 0, trampa: 1, por_que: f.idea, resolucion: '', voz_acierto: 'Creo que es esta: es justo lo que anoté en mi ficha.', voz_trampa: 'Creo que es esta… me suena de mi cuaderno, aunque no sé si de este paso.' });
   });
   fs.forEach(f => {
-    if (f.ejemplo?.situacion && f.ejemplo?.resultado) preguntas.push({ paso: f.paso, enunciado: f.ejemplo.situacion, opciones: [f.ejemplo.resultado, ...otras(res, res.indexOf(f.ejemplo.resultado))], respuesta: 0, trampa: 1, por_que: (f.ejemplo.pasos || []).join(' · ') || f.idea, resolucion: '', voz_acierto: 'Este lo resolví en mi ficha, creo que da esto.', voz_trampa: 'Mmm, creo que da esto… lo hice rápido.' });
+    if (f.ejemplo?.situacion && f.ejemplo?.resultado) preguntas.push({ paso: f.paso, enunciado: f.ejemplo.situacion, opciones: [f.ejemplo.resultado, ...otras(res, f.ejemplo.resultado)], respuesta: 0, trampa: 1, por_que: (f.ejemplo.pasos || []).join(' · ') || f.idea, resolucion: '', voz_acierto: 'Este lo resolví en mi ficha, creo que da esto.', voz_trampa: 'Mmm, creo que da esto… lo hice rápido.' });
   });
   return limpiarExamen({ titulo: 'La prueba de la misión', intro: `¡Llegó la prueba de mi misión! ¿La respondemos juntos? Yo te digo lo que pienso y tú decides.`, preguntas: preguntas.slice(0, PREGUNTAS) });
 }
