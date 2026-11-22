@@ -1,4 +1,6 @@
-// Página temporal. La interfaz (navegación, diseño compartido) la arma el equipo de front.
+import { redirect } from "next/navigation";
+
+// La portada de la plataforma es inicio.html (Andre), servida por app/[...ruta]/route.ts.
 export default function Inicio() {
-  return <main>La plataforma: backend en construcción.</main>;
+  redirect("/inicio.html");
 }

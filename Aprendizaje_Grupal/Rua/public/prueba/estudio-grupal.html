@@ -49,6 +49,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .barra { position: sticky; top: 0; z-index: 30; height: var(--barra); display: flex; align-items: center; gap: 14px; padding: 0 22px; background: rgba(251, 247, 239, .88); backdrop-filter: blur(10px); border-bottom: 1px solid var(--linea); }
 .marca { display: flex; align-items: center; gap: 10px; font: 700 1.25rem/1 var(--display); letter-spacing: -.02em; white-space: nowrap; }
 .marca b { color: var(--coral); }
+a.marca { color: inherit; text-decoration: none; }
 .marca .puntos3 { display: flex; }
 .marca .puntos3 i { width: 16px; height: 16px; border-radius: 50%; margin-left: -5px; border: 2px solid var(--papel); }
 .chip { display: inline-flex; align-items: center; gap: 8px; border: 1.5px solid var(--linea); background: var(--blanco); border-radius: 999px; padding: .38em .85em; font-size: .8rem; font-weight: 700; color: var(--tinta-2); white-space: nowrap; }
@@ -399,7 +400,7 @@ audio { display: none; }
 </head>
 <body>
 <header class="barra">
-  <div class="marca"><span class="puntos3" aria-hidden="true"><i style="background:var(--coral)"></i><i style="background:var(--menta)"></i><i style="background:var(--sol)"></i></span><span class="txt">Estudio <b>en grupo</b></span></div>
+  <a class="marca" href="/inicio.html" title="Volver al inicio"><span class="puntos3" aria-hidden="true"><i style="background:var(--coral)"></i><i style="background:var(--menta)"></i><i style="background:var(--sol)"></i></span><span class="txt">Estudio <b>en grupo</b></span></a>
   <div class="barra-acc" id="barraAcc"></div>
 </header>
 <main id="vista"></main>
@@ -423,7 +424,8 @@ audio { display: none; }
 // Prueba de interfaz del estudio grupal (F1 a F6) sobre el backend real:
 // rutas /api/grupo/*, Supabase Auth + Realtime (Presence y Broadcast) y LiveKit para la voz.
 // Las reglas puras de sincronía y voz son una copia en JS de lib/grupo/sincronia.ts y lib/grupo/voz.ts.
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.119.2';
+// La cuenta es la del login de la plataforma (login.html de Andre): misma sesión de Supabase.
+import { cliente, irAlLogin, salir, usuarioActual } from '/comun/sesion.js';
 import { Room, RoomEvent, Track } from 'https://esm.sh/livekit-client@2.25.0';
 
 /* ============ Utilidades ============ */
@@ -523,9 +525,7 @@ function efectosVoz(s, ahora) {
 let sb = null;
 let yo = null; // { id, nombre, avatar, telemetria }
 async function configurar() {
-  const r = await fetch('/api/config/publica').then(r => r.json()).catch(() => ({}));
-  if (!r.supabaseUrl || !r.supabaseAnonKey) throw new Error('Falta configurar NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY en .env.local');
-  sb = createClient(r.supabaseUrl, r.supabaseAnonKey);
+  sb = await cliente();
 }
 async function api(ruta, { method = 'GET', body } = {}) {
   const { data } = await sb.auth.getSession();
@@ -546,55 +546,9 @@ async function cargarYo(user) {
 /* ============ Barra ============ */
 function barra(...kids) { poner($('#barraAcc'), ...kids); }
 function botonSalirCuenta() {
-  return h('button', { class: 'btn-sec', onclick: async () => { await salirDeSala(); await sb.auth.signOut(); location.href = location.pathname; } }, 'Cerrar sesión');
+  return h('button', { class: 'btn-sec', onclick: async () => { await salirDeSala(); await salir(); location.href = '/login.html'; } }, 'Cerrar sesión');
 }
 
-/* ============ Pantalla: acceso ============ */
-function pantallaAcceso(error) {
-  barra();
-  let modo = 'entrar';
-  const err = h('p', { class: 'error-txt', hidden: !error }, error || '');
-  const nombre = h('input', { class: 'in', id: 'nom', autocomplete: 'name', placeholder: 'Cómo te verán en la sala' });
-  const campoNombre = h('div', { class: 'campo', hidden: true }, h('label', { for: 'nom' }, 'Tu nombre'), nombre);
-  const correo = h('input', { class: 'in', id: 'cor', type: 'email', autocomplete: 'email', required: true });
-  const clave = h('input', { class: 'in', id: 'cla', type: 'password', autocomplete: 'current-password', minlength: 6, required: true });
-  const tele = h('input', { type: 'checkbox', checked: true });
-  const campoTele = h('label', { class: 'check', hidden: true }, tele, h('span', {}, 'Acepto que se registren mis respuestas a las preguntas de las clases para ajustar mi perfil de aprendizaje. Puedo desactivarlo cuando quiera.'));
-  const btn = h('button', { class: 'btn btn-pri', type: 'submit' }, 'Entrar');
-  const seg = h('div', { class: 'seg', role: 'group' },
-    h('button', { type: 'button', 'aria-pressed': 'true', onclick: e => cambiar('entrar', e.target) }, 'Entrar'),
-    h('button', { type: 'button', 'aria-pressed': 'false', onclick: e => cambiar('crear', e.target) }, 'Crear cuenta'));
-  function cambiar(m, b) {
-    modo = m;
-    seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
-    campoNombre.hidden = campoTele.hidden = m !== 'crear';
-    btn.textContent = m === 'crear' ? 'Crear cuenta' : 'Entrar';
-  }
-  const form = h('form', { class: 'form', onsubmit: async e => {
-    e.preventDefault(); err.hidden = true; btn.disabled = true;
-    try {
-      if (modo === 'crear') {
-        const { data, error } = await sb.auth.signUp({ email: correo.value, password: clave.value, options: { data: { full_name: nombre.value.trim() || correo.value.split('@')[0] }, emailRedirectTo: location.href } });
-        if (error) throw error;
-        if (!data.session) { err.textContent = 'Revisa tu correo para confirmar la cuenta y vuelve a entrar.'; err.hidden = false; btn.disabled = false; return; }
-        sessionStorage.setItem('telemetria', tele.checked ? '1' : '0');
-      } else {
-        const { error } = await sb.auth.signInWithPassword({ email: correo.value, password: clave.value });
-        if (error) throw error;
-      }
-      await arrancar();
-    } catch (x) { err.textContent = x.message; err.hidden = false; btn.disabled = false; }
-  } },
-    h('h2', {}, 'Entra a estudiar'),
-    seg, campoNombre,
-    h('div', { class: 'campo' }, h('label', { for: 'cor' }, 'Correo'), correo),
-    h('div', { class: 'campo' }, h('label', { for: 'cla' }, 'Contraseña'), clave),
-    campoTele, err,
-    h('div', { class: 'fila' }, btn),
-    h('div', { class: 'separador' }, 'o'),
-    h('button', { type: 'button', class: 'btn btn-sec', onclick: () => sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.href } }) }, 'Continuar con Google'));
-  poner($('#vista'), h('section', { class: 'entrada' }, introSala(), form));
-}
 function introSala() {
   return h('div', {},
     h('p', { class: 'kicker' }, 'Prueba del estudio grupal'),
@@ -2051,11 +2005,9 @@ function pintarControlFantasma() {
 /* ============ Arranque ============ */
 async function arrancar() {
   const { data } = await sb.auth.getSession();
-  if (!data.session) return pantallaAcceso();
+  if (!data.session) return irAlLogin();
   await cargarYo(data.session.user);
-  // Preferencia de telemetría elegida al crear la cuenta (regla 35).
-  const pref = sessionStorage.getItem('telemetria');
-  if (pref !== null) { sessionStorage.removeItem('telemetria'); await sb.from('profiles').update({ telemetria: pref === '1' }).eq('id', yo.id); yo.telemetria = pref === '1'; }
+  usuarioActual().catch(() => {}); // refresca la copia que usan inicio.html y el módulo social
   conectarUsuario();
   const q = new URLSearchParams(location.search);
   if (q.get('sala')) return entrarASala(q.get('sala').toUpperCase());

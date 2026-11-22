@@ -976,7 +976,7 @@
           </svg>
         </div>
 
-        <a href="prototipo/aprende.html" class="card-cta">
+        <a href="Aprendizaje_Individual/taller.html" class="card-cta">
           Comenzar a los Aprendines
         </a>
       </article>
@@ -1096,7 +1096,7 @@
           </svg>
         </div>
 
-        <a href="public/prueba/estudio-grupal.html" class="card-cta">
+        <a href="/prueba/estudio-grupal.html" class="card-cta">
           Salas de Estudio Grupal
         </a>
       </article>
@@ -1145,7 +1145,7 @@
           </svg>
         </div>
 
-        <a href="Andre2/futuro-yo-aprende.html" class="card-cta">
+        <a href="Aprendizaje_Grupal/Andre/Oficial/futuro-yo-aprende.html" class="card-cta">
           Clases Grupales &amp; Social
         </a>
       </article>
@@ -1515,9 +1515,10 @@
         }
 
         if (logoutBtn) {
-          logoutBtn.addEventListener('click', (e) => {
+          logoutBtn.addEventListener('click', async (e) => {
             e.stopPropagation();
             localStorage.removeItem('afj_current_user');
+            try { const { salir } = await import('/comun/sesion.js'); await salir(); } catch (err) { /* sin servidor de la app */ }
             renderUserHeader();
           });
         }
@@ -1545,6 +1546,12 @@
       startIntroSequence();
       initAprendinesManager();
       renderUserHeader();
+      // La sesión real vive en Supabase (login.html). Se refresca la copia local al entrar,
+      // y si la sesión caducó, la cabecera vuelve a «Iniciar Sesión».
+      import('/comun/sesion.js')
+        .then(({ usuarioActual }) => usuarioActual())
+        .then(() => renderUserHeader())
+        .catch(() => { /* abierto sin la app (file:// o servidor estático): se usa la copia local */ });
     });
   </script>
 </body>

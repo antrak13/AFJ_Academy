@@ -1756,7 +1756,7 @@
 
     if (nameEl) nameEl.textContent = currentUser.nombre;
     if (avatarEl) avatarEl.textContent = currentUser.avatar;
-    if (subEl) subEl.textContent = `🎓 ${currentUser.universidad || 'Estudiante'} • ${currentUser.ciudad}`;
+    if (subEl) subEl.textContent = '🎓 ' + [currentUser.universidad || currentUser.colegio || 'Estudiante', currentUser.ciudad].filter(Boolean).join(' • ');
 
     actualizarBadgeSolicitudesNav();
   }
@@ -1837,8 +1837,56 @@
   }
   window.mostrarToast = mostrarToast;
 
+  /* ==========================================================================
+     CUENTA INICIADA EN LA PLATAFORMA (login.html → Supabase)
+     login.html deja una copia del usuario en localStorage['afj_current_user'].
+     Si hay sesión, el módulo arranca con esa persona en vez de la cuenta demo.
+     ========================================================================== */
+  function cuentaDeLaPlataforma() {
+    let u = null;
+    try { u = JSON.parse(localStorage.getItem('afj_current_user') || 'null'); } catch (e) { u = null; }
+    if (!u || !u.id) return null;
+
+    const existente = stateCuentas.find(c => c.id === u.id);
+    if (existente) return existente;
+
+    const esColegio = u.role === 'estudiante';
+    const cuenta = {
+      id: u.id,
+      email: u.email || '',
+      nombre: u.username || (u.email || 'Estudiante').split('@')[0],
+      avatar: esColegio ? '🎒' : '🧑‍🎓',
+      tipo: esColegio ? 'colegio' : 'universidad',
+      universidad: esColegio ? '' : (u.institution || ''),
+      carrera: u.career || '',
+      colegio: esColegio ? (u.institution || '') : '',
+      grado: '',
+      pais: u.country || 'Bolivia',
+      region: u.city || '',
+      ciudad: u.city || '',
+      rolDocente: 'Estudiante Nuevo',
+      tarifa: 'A coordinar por privado',
+      rating: 0,
+      reviews: 0,
+      horasSemana: 0,
+      rachaDias: 1,
+      estudiandoAhora: true,
+      materiaActual: 'Estudio Activo',
+      amigos: [],
+      solicitudesRecibidas: [],
+      solicitudesEnviadas: []
+    };
+    stateCuentas.push(cuenta);
+    return cuenta;
+  }
+
   /* Inicialización */
   document.addEventListener('DOMContentLoaded', () => {
+    const deLaPlataforma = cuentaDeLaPlataforma();
+    if (deLaPlataforma) {
+      currentUser = deLaPlataforma;
+      window.currentUser = deLaPlataforma; // el cuaderno firma los apuntes con esta persona
+    }
     actualizarHeaderUsuario();
     renderizarClases();
   });
