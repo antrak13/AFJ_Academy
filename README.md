@@ -32,7 +32,7 @@ cd Aprendizaje_Grupal/Rua
 npm install
 cp .env.example .env.local   # y completa las claves
 npm run verificar            # comprueba Supabase, LiveKit y Gemini
-npm run db:usuarios          # cuentas de prueba: ana@, beto@, caro@prueba.local / prueba123
+npm run db:usuarios          # cuentas de prueba: ana@, beto@, caro@prueba.local y profe@prueba.local (docente) / prueba123
 npm run dev                  # http://localhost:3000
 ```
 
