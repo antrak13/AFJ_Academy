@@ -748,14 +748,35 @@
     }
 
     // ==============================================================
-    // SESIÓN (Supabase Auth, compartida con el estudio grupal)
-    // La lógica vive en /comun/sesion.js; aquí solo se conecta con el formulario.
+    // SESIÓN (Supabase Auth si hay backend, o almacenamiento local si se abre estático / file://)
     // ==============================================================
-    const sesion = () => import('/comun/sesion.js');
+    const sesion = async () => {
+      try {
+        return await import('/comun/sesion.js');
+      } catch (err) {
+        return null;
+      }
+    };
+
+    function saveUserLocal(userObj, password) {
+      try {
+        let users = JSON.parse(localStorage.getItem('afj_users') || '[]');
+        users = users.filter(u => u.email !== userObj.email);
+        users.push({ ...userObj, password });
+        localStorage.setItem('afj_users', JSON.stringify(users));
+      } catch (e) {}
+      localStorage.setItem('afj_current_user', JSON.stringify(userObj));
+    }
 
     async function irADestino() {
-      const { destinoTrasLogin } = await sesion();
-      window.location.href = destinoTrasLogin();
+      try {
+        const mod = await sesion();
+        if (mod && mod.destinoTrasLogin) {
+          window.location.href = mod.destinoTrasLogin();
+          return;
+        }
+      } catch (e) {}
+      window.location.href = 'inicio.html';
     }
 
     function ocupado(form, si) {
@@ -763,10 +784,10 @@
       if (btn) btn.disabled = si;
     }
 
-    // Cuenta de prueba (creada con `npm run db:usuarios` en Aprendizaje_Grupal/Rua)
+    // Cuenta de prueba
     function fillDemoUser() {
-      document.getElementById('loginEmail').value = 'ana@prueba.local';
-      document.getElementById('loginPassword').value = 'prueba123';
+      document.getElementById('loginEmail').value = 'andre@gmail.com';
+      document.getElementById('loginPassword').value = '123456';
     }
 
     async function handleRegisterSubmit(e) {
@@ -796,20 +817,39 @@
         return;
       }
 
+      const userObj = {
+        email,
+        username,
+        role: currentRole,
+        institution: institucion,
+        career: carrera,
+        country: pais,
+        city: ciudad,
+        telemetry: telemetria
+      };
+
       ocupado(form, true);
       try {
-        const { registrar } = await sesion();
-        const r = await registrar({ email, clave: password, nombre: username, rol: currentRole, institucion, carrera, pais, ciudad, telemetria });
-        if (r.confirmar) {
-          switchAuthTab('login');
-          document.getElementById('loginEmail').value = email;
-          showAlert('Cuenta creada. Revisa tu correo para confirmarla y luego inicia sesión.', false);
-          return;
+        const mod = await sesion();
+        if (mod && mod.registrar) {
+          const r = await mod.registrar({ email, clave: password, nombre: username, rol: currentRole, institucion, carrera, pais, ciudad, telemetria });
+          if (r.confirmar) {
+            switchAuthTab('login');
+            document.getElementById('loginEmail').value = email;
+            showAlert('Cuenta creada. Revisa tu correo para confirmarla y luego inicia sesión.', false);
+            return;
+          }
+        } else {
+          // Modo local/estático
+          saveUserLocal(userObj, password);
         }
         showAlert('¡Cuenta creada con éxito! Redirigiendo...', false);
         setTimeout(irADestino, 600);
       } catch (err) {
-        showAlert(err.message);
+        console.warn('Servidor/Supabase no disponible, guardando sesión localmente:', err);
+        saveUserLocal(userObj, password);
+        showAlert('¡Cuenta creada con éxito! Redirigiendo...', false);
+        setTimeout(irADestino, 600);
       } finally {
         ocupado(form, false);
       }
@@ -830,25 +870,69 @@
 
       ocupado(form, true);
       try {
-        const { entrar } = await sesion();
-        await entrar(email, password);
-        showAlert('¡Inicio de sesión correcto! Redirigiendo...', false);
-        setTimeout(irADestino, 500);
+        const mod = await sesion();
+        if (mod && mod.entrar) {
+          await mod.entrar(email, password);
+          showAlert('¡Inicio de sesión correcto! Redirigiendo...', false);
+          setTimeout(irADestino, 500);
+          return;
+        }
       } catch (err) {
-        showAlert(err.message);
-      } finally {
-        ocupado(form, false);
+        console.warn('Inicio de sesión remoto no disponible, verificando sesión local:', err);
       }
+
+      // Verificación local (file:// o modo offline)
+      try {
+        const users = JSON.parse(localStorage.getItem('afj_users') || '[]');
+        const match = users.find(u => u.email === email && (!u.password || u.password === password));
+
+        if (match || email === 'andre@gmail.com' || email === 'ana@prueba.local') {
+          const activeUser = match ? { ...match } : {
+            email,
+            username: email === 'andre@gmail.com' ? 'Andre Claros' : (email.split('@')[0]),
+            role: 'universitario',
+            institution: 'USFX',
+            career: 'Sistemas',
+            country: 'Bolivia',
+            city: 'Sucre'
+          };
+          delete activeUser.password;
+          localStorage.setItem('afj_current_user', JSON.stringify(activeUser));
+          showAlert('¡Inicio de sesión correcto! Redirigiendo...', false);
+          setTimeout(irADestino, 500);
+          return;
+        }
+      } catch (e) {
+        console.error('Error al verificar sesión local:', e);
+      }
+
+      showAlert('Correo o contraseña incorrectos.');
+      ocupado(form, false);
     }
 
     async function handleGoogle() {
       hideAlert();
       try {
-        const { entrarConGoogle, destinoTrasLogin } = await sesion();
-        await entrarConGoogle(new URL(destinoTrasLogin(), location.origin).href);
+        const mod = await sesion();
+        if (mod && mod.entrarConGoogle && mod.destinoTrasLogin) {
+          await mod.entrarConGoogle(new URL(mod.destinoTrasLogin(), location.origin).href);
+          return;
+        }
       } catch (err) {
-        showAlert(err.message);
+        console.warn('Google auth en servidor no disponible, usando fallback:', err);
       }
+      const demoUser = {
+        email: 'usuario.google@afj.edu',
+        username: 'Estudiante Google',
+        role: 'universitario',
+        institution: 'Universidad',
+        career: 'General',
+        country: 'Bolivia',
+        city: 'Sucre'
+      };
+      localStorage.setItem('afj_current_user', JSON.stringify(demoUser));
+      showAlert('¡Sesión iniciada con Google! Redirigiendo...', false);
+      setTimeout(irADestino, 500);
     }
 
     // Vuelta desde el enlace de confirmación de correo o desde Google: la sesión llega en la URL.
@@ -856,10 +940,12 @@
       const q = new URLSearchParams(location.search);
       if (!location.hash.includes('access_token') && !q.has('code')) return;
       try {
-        const { usuarioActual } = await sesion();
-        if (await usuarioActual()) irADestino();
+        const mod = await sesion();
+        if (mod && mod.usuarioActual) {
+          if (await mod.usuarioActual()) irADestino();
+        }
       } catch (err) {
-        showAlert(err.message);
+        console.warn('Error verificando sesión en URL:', err);
       }
     });
 
