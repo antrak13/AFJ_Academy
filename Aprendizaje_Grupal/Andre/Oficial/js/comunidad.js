@@ -16,13 +16,13 @@
   window.getRangoDocente = function(stars) {
     const s = parseFloat(stars) || 0;
     if (s === 0) {
-      return { titulo: 'Estudiante', icono: '🎓', clase: 'profile-rank-estudiante' };
+      return { titulo: 'Estudiante', icono: '', clase: 'profile-rank-estudiante' };
     } else if (s < 3) {
-      return { titulo: 'Aprendiz', icono: '📖', clase: 'profile-rank-aprendiz' };
+      return { titulo: 'Aprendiz', icono: '', clase: 'profile-rank-aprendiz' };
     } else if (s <= 4) {
-      return { titulo: 'Profesor', icono: '👨‍🏫', clase: 'profile-rank-profesor' };
+      return { titulo: 'Profesor', icono: '', clase: 'profile-rank-profesor' };
     } else {
-      return { titulo: 'Maestro', icono: '🧙‍♂️✨', clase: 'profile-rank-maestro' };
+      return { titulo: 'Maestro', icono: '', clase: 'profile-rank-maestro' };
     }
   };
 
@@ -39,7 +39,7 @@
       email: 'andre@gmail.com',
       password: '123',
       nombre: 'Andre',
-      avatar: '👨‍💻',
+      avatar: 'A',
       tipo: 'universidad',
       universidad: 'UMSS',
       carrera: 'Ingeniería de Sistemas',
@@ -65,7 +65,7 @@
       email: 'sofia@gmail.com',
       password: '123',
       nombre: 'Sofía Gutiérrez',
-      avatar: '👩‍🎓',
+      avatar: 'S',
       tipo: 'universidad',
       universidad: 'UMSA',
       carrera: 'Matemática Aplicada',
@@ -91,7 +91,7 @@
       email: 'mateo@gmail.com',
       password: '123',
       nombre: 'Mateo Justiniano',
-      avatar: '👨‍🎓',
+      avatar: 'M',
       tipo: 'universidad',
       universidad: 'UMSS',
       carrera: 'Ingeniería Industrial',
@@ -117,7 +117,7 @@
       email: 'andrea@gmail.com',
       password: '123',
       nombre: 'Andrea Claros',
-      avatar: '👩‍💻',
+      avatar: 'AC',
       tipo: 'universidad',
       universidad: 'UPSA',
       carrera: 'Desarrollo de Software',
@@ -147,57 +147,57 @@
       id: 'stream_sofia',
       usuarioId: 'u_sofia',
       nombre: 'Sofía Gutiérrez',
-      avatar: '👩‍🎓',
+      avatar: 'S',
       univ: 'UMSA • La Paz',
       materia: 'Cálculo II (Integrales Dobles y Polares)',
       racha: 12,
       horas: 28.5,
       espectadores: 6,
       mensajes: [
-        { autor: 'Andre', avatar: '👨‍💻', texto: '¡Buena racha Sofi, 12 días seguidos!', hora: '13:40' },
-        { autor: 'Andrea Claros', avatar: '👩‍💻', texto: 'Inspiración total ese repaso de integrales.', hora: '13:55' }
+        { autor: 'Andre', avatar: 'A', texto: '¡Buena racha Sofi, 12 días seguidos!', hora: '13:40' },
+        { autor: 'Andrea Claros', avatar: 'AC', texto: 'Inspiración total ese repaso de integrales.', hora: '13:55' }
       ]
     },
     {
       id: 'stream_mateo',
       usuarioId: 'u_mateo',
       nombre: 'Mateo Justiniano',
-      avatar: '👨‍🎓',
+      avatar: 'M',
       univ: 'UMSS • Cochabamba',
       materia: 'Física I & Termodinámica',
       racha: 5,
       horas: 21.0,
       espectadores: 4,
       mensajes: [
-        { autor: 'Andre', avatar: '👨‍💻', texto: '¡Fuerza Mateo con física!', hora: '12:30' }
+        { autor: 'Andre', avatar: 'A', texto: '¡Fuerza Mateo con física!', hora: '12:30' }
       ]
     },
     {
       id: 'stream_andrea',
       usuarioId: 'u_andrea',
       nombre: 'Andrea Claros',
-      avatar: '👩‍💻',
+      avatar: 'AC',
       univ: 'UPSA • Santa Cruz',
       materia: 'Algoritmos y Estructuras',
       racha: 4,
       horas: 19.5,
       espectadores: 3,
       mensajes: [
-        { autor: 'Sofía Gutiérrez', avatar: '👩‍🎓', texto: '¡A darle duro a los grafos!', hora: '11:15' }
+        { autor: 'Sofía Gutiérrez', avatar: 'S', texto: '¡A darle duro a los grafos!', hora: '11:15' }
       ]
     },
     {
       id: 'stream_andre',
       usuarioId: 'u_andre',
       nombre: 'Andre',
-      avatar: '👨‍💻',
+      avatar: 'A',
       univ: 'UMSS • Cochabamba',
       materia: 'Programación Web & IA',
       racha: 6,
       horas: 24.2,
       espectadores: 5,
       mensajes: [
-        { autor: 'Mateo Justiniano', avatar: '👨‍🎓', texto: '¡Dale Andre! Tu bot de IA está quedando genial.', hora: '14:05' }
+        { autor: 'Mateo Justiniano', avatar: 'M', texto: '¡Dale Andre! Tu bot de IA está quedando genial.', hora: '14:05' }
       ]
     }
   ];
@@ -206,12 +206,12 @@
     {
       id: 1,
       area: 'matematicas',
-      areaLabel: '📐 Matemáticas & Cálculo',
+      areaLabel: 'Matemáticas & Cálculo',
       tema: 'Cálculo II: Trucos visuales para entender Integrales Dobles y Polares',
       desc: 'Sesión de pizarra guiada. Resolveremos 4 ejercicios típicos de examen explicando el cambio de variable a polares con gráficos interactivos.',
       metodologia: 'pizarra',
       tipo: 'clase', facilitador: 'Mateo Justiniano',
-      facilitadorAvatar: '👨‍🎓',
+      facilitadorAvatar: 'M',
       creadorNombre: 'Mateo Justiniano',
       creadorId: 'u_mateo',
       cuposMax: 5,
@@ -225,20 +225,20 @@
         { id: 3, texto: 'Domingo 11:00 (BOT)', votos: ['Carlos Medina'] }
       ],
       chatMensajes: [
-        { autor: 'Mateo Justiniano', avatar: '👨‍🎓', texto: '¡Hola a todos! Vayan votando el horario para fijar la sesión oficial.', hora: '10:15' },
-        { autor: 'Andre', avatar: '👨‍💻', texto: 'Listo Mateo, yo voté por el viernes. Tengo ejercicios de modelos de examen listos.', hora: '10:22' },
-        { autor: 'Sofía Gutiérrez', avatar: '👩‍🎓', texto: 'Perfecto, me sumo para aportar con la visualización polar.', hora: '10:30' }
+        { autor: 'Mateo Justiniano', avatar: 'M', texto: '¡Hola a todos! Vayan votando el horario para fijar la sesión oficial.', hora: '10:15' },
+        { autor: 'Andre', avatar: 'A', texto: 'Listo Mateo, yo voté por el viernes. Tengo ejercicios de modelos de examen listos.', hora: '10:22' },
+        { autor: 'Sofía Gutiérrez', avatar: 'S', texto: 'Perfecto, me sumo para aportar con la visualización polar.', hora: '10:30' }
       ]
     },
     {
       id: 2,
       area: 'programacion',
-      areaLabel: '💻 Programación & Software',
+      areaLabel: 'Programación & Software',
       tema: 'Python & Web: Creando tu primer Bot con IA en vivo',
       desc: 'Live coding paso a paso. Crearemos un asistente conectado a un modelo de IA en menos de 45 minutos usando código limpio.',
       metodologia: 'coding',
       tipo: 'grupo', facilitador: 'Andre',
-      facilitadorAvatar: '👨‍💻',
+      facilitadorAvatar: 'A',
       creadorNombre: 'Andre',
       creadorId: 'u_andre',
       cuposMax: 6,
@@ -250,18 +250,18 @@
         { id: 1, texto: 'Sábado 16:30 (BOT)', votos: ['Andre', 'Mateo Justiniano', 'Sofía Gutiérrez'] }
       ],
       chatMensajes: [
-        { autor: 'Andre', avatar: '👨‍💻', texto: '¡Bienvenidos! La sesión ya quedó agendada para el sábado 16:30.', hora: '09:00' }
+        { autor: 'Andre', avatar: 'A', texto: '¡Bienvenidos! La sesión ya quedó agendada para el sábado 16:30.', hora: '09:00' }
       ]
     },
     {
       id: 3,
       area: 'finanzas',
-      areaLabel: '💵 Finanzas & Cripto',
+      areaLabel: 'Finanzas & Cripto',
       tema: 'Dólar Digital y Protección del Ahorro en Bolivia (USDT Seguro)',
       desc: 'Guía práctica para entender P2P sin estafas, comisiones reales y cómo gestionar ahorros frente a la devaluación.',
       metodologia: 'casos',
       tipo: 'clase', facilitador: 'Sofía Gutiérrez',
-      facilitadorAvatar: '👩‍🎓',
+      facilitadorAvatar: 'S',
       creadorNombre: 'Sofía Gutiérrez',
       creadorId: 'u_sofia',
       cuposMax: 5,
@@ -274,7 +274,7 @@
         { id: 2, texto: 'Sábado 18:00 (BOT)', votos: ['Andre', 'Mateo Justiniano', 'Lucas Paz'] }
       ],
       chatMensajes: [
-        { autor: 'Sofía Gutiérrez', avatar: '👩‍🎓', texto: 'Traigan sus dudas sobre Binance P2P y QR bancarios.', hora: '11:00' }
+        { autor: 'Sofía Gutiérrez', avatar: 'S', texto: 'Traigan sus dudas sobre Binance P2P y QR bancarios.', hora: '11:00' }
       ]
     }
   ];
@@ -297,7 +297,7 @@
       id: 101,
       estudianteId: 'u_mateo',
       estudianteNombre: 'Mateo Justiniano',
-      estudianteAvatar: '👨‍🎓',
+      estudianteAvatar: 'M',
       tutorId: 'u_andre',
       tema: 'Tutoría Privada: Preparación de proyecto final de Algoritmos',
       horarioPropuesto: 'Viernes 18:00 BOT',
@@ -342,7 +342,7 @@
   let studyMediaStream = null;
 
   /* ==========================================================================
-     NAVEGACIÓN ENTRE PESTAÑAS (FUTURO YO APRENDE)
+     NAVEGACIÓN ENTRE PESTAÑAS (AFJ ACADEMY CONECTA)
      ========================================================================== */
   window.switchAppTab = function(tab) {
     document.querySelectorAll('.main-tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -397,7 +397,7 @@
 
     tutorActualParaCalificar = {
       nombre: grupo.facilitador,
-      avatar: grupo.facilitadorAvatar || '👨‍🏫',
+      avatar: grupo.facilitadorAvatar || 'F',
       id: grupo.creadorId || 'u_mateo',
       tarifaHora: (grupo.facilitador === 'Sofía Gutiérrez' ? 35 : grupo.facilitador === 'Mateo Justiniano' ? 25 : 30),
       rating: (grupo.facilitador === 'Sofía Gutiérrez' ? 5.0 : grupo.facilitador === 'Mateo Justiniano' ? 4.8 : 4.9),
@@ -407,7 +407,7 @@
     // Actualizar título de la sala
     const tit = document.getElementById('cmVrTitulo');
     if (tit) {
-      tit.textContent = (esGrupoColaborativo ? '👥 Grupo de Estudio: ' : '🎓 Clase: ') + grupo.tema;
+      tit.textContent = (esGrupoColaborativo ? 'Grupo de Estudio: ' : 'Clase: ') + grupo.tema;
     }
 
     // Iniciar temporizador regresivo
@@ -425,7 +425,7 @@
       nombreFacilitador.textContent = grupo.facilitador + (esCoordinador ? ' (Tú)' : '');
     }
     if (avatarFacilitador) {
-      avatarFacilitador.textContent = grupo.facilitadorAvatar || '👨‍🏫';
+      avatarFacilitador.textContent = grupo.facilitadorAvatar || 'F';
     }
     if (miNombre) {
       miNombre.textContent = currentUser.nombre;
@@ -441,10 +441,10 @@
         btnCam.disabled = false;
         btnCam.title = 'Encender o apagar tu cámara (permitido para todos en grupo de estudio)';
         btnCam.classList.add('active');
-        btnCam.innerHTML = '📹 Encender Mi Cámara';
+        btnCam.innerHTML = 'Encender Mi Cámara';
         btnCam.style.opacity = '1';
       }
-      mostrarToast('👥 Grupo colaborativo: Todos los participantes pueden encender su cámara.');
+      mostrarToast('Grupo colaborativo: Todos los participantes pueden encender su cámara.');
     } else {
       // EN CLASE CON FACILITADOR: Solo el coordinador activa cámara
       if (esCoordinador) {
@@ -453,7 +453,7 @@
           btnCam.disabled = false;
           btnCam.title = 'Activar/Desactivar tu cámara docente';
           btnCam.classList.add('active');
-          btnCam.innerHTML = '📹 Cámara Activa';
+          btnCam.innerHTML = 'Cámara Activa';
         }
         await conectarCamaraReal(true);
       } else {
@@ -462,7 +462,7 @@
           btnCam.disabled = true;
           btnCam.title = 'En una clase magistral, solo el facilitador transmite con cámara';
           btnCam.classList.remove('active');
-          btnCam.innerHTML = '📹 Cámara (Solo Facilitador)';
+          btnCam.innerHTML = 'Cámara (Solo Facilitador)';
           btnCam.style.opacity = '0.6';
         }
         if (videoFacilitador) videoFacilitador.style.display = 'none';
@@ -547,7 +547,7 @@
       const msg = document.createElement('div');
       msg.className = 'cm-msg';
       msg.innerHTML = `
-        <div class="cm-msg-avatar">✋</div>
+        <div class="cm-msg-avatar">H</div>
         <div class="cm-msg-content">
           <div class="cm-msg-bubble" style="background: var(--sol); color: #78350F; font-weight: 700;">
             ${currentUser.nombre} ${isHandRaised ? 'ha levantado la mano' : 'bajó la mano'}
@@ -566,20 +566,20 @@
 
     if (btnMic) {
       btnMic.className = 'cm-vr-ctrl-btn ' + (isMicActive ? 'active' : 'off');
-      btnMic.innerHTML = isMicActive ? '🎙️ Micrófono Activo' : '🔇 Silenciado';
+      btnMic.innerHTML = isMicActive ? 'Micrófono Activo' : 'Silenciado';
     }
     if (btnCam) {
       btnCam.className = 'cm-vr-ctrl-btn ' + (isCamActive ? 'active' : 'off');
-      btnCam.innerHTML = isCamActive ? '📹 Cámara Activa' : '📷 Cámara Apagada';
+      btnCam.innerHTML = isCamActive ? 'Cámara Activa' : 'Cámara Apagada';
     }
     if (btnHand) {
       btnHand.className = 'cm-vr-ctrl-btn ' + (isHandRaised ? 'hand-active' : '');
-      btnHand.innerHTML = isHandRaised ? '✋ Mano Levantada' : '✋ Levantar Mano';
+      btnHand.innerHTML = isHandRaised ? 'Mano Levantada' : 'Levantar Mano';
     }
 
     const micTag = document.getElementById('vrMiMicStatus');
     if (micTag) {
-      micTag.textContent = isMicActive ? '🎙️ Activo' : '🔇 Mute';
+      micTag.textContent = isMicActive ? 'Activo' : 'Silenciado';
     }
   }
 
@@ -752,7 +752,7 @@
       const grupo = stateGrupos.find(g => g.id === grupoActivoId) || stateGrupos[0];
       tutorActualParaCalificar = {
         nombre: grupo.facilitador,
-        avatar: grupo.facilitadorAvatar || '👨‍🏫',
+        avatar: grupo.facilitadorAvatar || 'F',
         id: grupo.creadorId || 'u_mateo',
         tarifaHora: (grupo.facilitador === 'Sofía Gutiérrez' ? 35 : 25),
         rating: 4.8,
@@ -779,14 +779,14 @@
       b.classList.toggle('active', i < n);
     });
     const textMap = {
-      1: '⭐ Explicación difícil de seguir',
-      2: '⭐⭐ Regular, faltó profundizar',
-      3: '⭐⭐⭐ Buena sesión, resolvimos dudas',
-      4: '⭐⭐⭐⭐ ¡Muy buena explicación y pizarra!',
-      5: '⭐⭐⭐⭐⭐ ¡Facilitador de nivel magistral!'
+      1: 'Explicación difícil de seguir',
+      2: 'Regular, faltó profundizar',
+      3: 'Buena sesión, resolvimos dudas',
+      4: 'Muy buena explicación y pizarra',
+      5: 'Facilitador de nivel magistral'
     };
     const t = document.getElementById('ratingStarsText');
-    if (t) t.textContent = textMap[n] || '⭐⭐⭐⭐⭐';
+    if (t) t.textContent = textMap[n] || 'Sesión excelente';
   };
 
   window.cerrarModalCalificacion = function() {
@@ -799,7 +799,7 @@
 
     const t = tutorActualParaCalificar || {
       nombre: 'Mateo Justiniano',
-      avatar: '👨‍🎓',
+      avatar: 'M',
       id: 'u_mateo',
       tarifaHora: 25,
       rating: 4.8,
@@ -815,7 +815,7 @@
     if (nomEl) nomEl.textContent = t.nombre;
     if (avEl) avEl.textContent = t.avatar;
     if (tarifaEl) tarifaEl.textContent = 'Bs ' + (t.tarifaHora || 30) + ' / hora';
-    if (rolEl) rolEl.textContent = 'Facilitador Docente • ⭐ ' + (t.rating || 4.9) + ' (' + (t.resenasCount || 15) + ' reseñas)';
+    if (rolEl) rolEl.textContent = 'Facilitador Docente • ' + (t.rating || 4.9) + ' (' + (t.resenasCount || 15) + ' reseñas)';
 
     if (modalAgendar) modalAgendar.hidden = false;
   };
@@ -833,7 +833,7 @@
 
     const t = tutorActualParaCalificar || {
       nombre: 'Mateo Justiniano',
-      avatar: '👨‍🎓',
+      avatar: 'M',
       id: 'u_mateo',
       tarifaHora: 25
     };
@@ -856,7 +856,7 @@
     stateSolicitudesTutorias.unshift(nuevaSolicitud);
     cerrarModalAgendarClasePrivada();
     renderizarSolicitudesTutorias();
-    mostrarToast('📨 Solicitud de tutoría enviada a ' + t.nombre + ' (' + nuevaSolicitud.tarifa + ')');
+    mostrarToast('Solicitud de tutoría enviada a ' + t.nombre + ' (' + nuevaSolicitud.tarifa + ')');
   };
 
   window.responderSolicitudTutoria = function(solicitudId, accion) {
@@ -864,7 +864,7 @@
     if (!sol) return;
 
     sol.estado = (accion === 'aceptar' ? 'confirmada' : 'rechazada');
-    mostrarToast(accion === 'aceptar' ? '🎉 ¡Tutoría Confirmada! Se habilitó el chat.' : 'Solicitud rechazada');
+    mostrarToast(accion === 'aceptar' ? '¡Tutoría Confirmada! Se habilitó el chat.' : 'Solicitud rechazada');
     renderizarMensajeria();
   };
 
@@ -890,19 +890,19 @@
       if (isCreador) {
         btnAction = `
           <button type="button" class="btn sm btn-coral" style="width: 100%;" onclick="seleccionarGrupo(${g.id})">
-            ⭐ Abrir Mi Sesión (Tú Coordinas)
+            Abrir Mi Sesión (Tú Coordinas)
           </button>
         `;
       } else if (isMiembro) {
         btnAction = `
           <button type="button" class="btn sm" style="background: var(--tinta); color: #fff; width: 100%;" onclick="seleccionarGrupo(${g.id})">
-            💬 Entrar a Coordinar
+            Entrar a Coordinar
           </button>
         `;
       } else {
         btnAction = `
           <button type="button" class="btn sm btn-coral" style="width: 100%;" onclick="unirseAGrupo(${g.id})">
-            🤝 Unirme al Grupo (${g.cuposMax - g.cuposOcupados} cupos)
+            Unirme al Grupo (${g.cuposMax - g.cuposOcupados} cupos)
           </button>
         `;
       }
@@ -913,7 +913,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 4px;">
               <span class="cm-chip" style="background: var(--papel-2);">${g.areaLabel}</span>
               <span class="cm-chip" style="background: ${esGrupo ? 'rgba(78, 157, 255, 0.15)' : 'rgba(255, 107, 77, 0.12)'}; color: ${esGrupo ? '#2563EB' : 'var(--coral)'}; font-weight: 700;">
-                ${esGrupo ? '👥 Grupo Colaborativo' : '🎓 Clase con Facilitador'}
+                ${esGrupo ? 'Grupo Colaborativo' : 'Clase con Facilitador'}
               </span>
             </div>
             <h3 style="font-family: var(--font-title); font-size: 16px; margin: 6px 0; color: var(--tinta); line-height: 1.3;">
@@ -931,7 +931,7 @@
                   <span style="font-size: 22px;">${g.facilitadorAvatar}</span>
                   <div>
                     <b style="font-size: 13px; color: var(--tinta);">${g.facilitador}</b>
-                    <div style="font-size: 11px; color: var(--tinta-2);">${isCreador ? '⭐ Tú coordinas' : (esGrupo ? 'Iniciador del grupo' : 'Facilitador')}</div>
+                    <div style="font-size: 11px; color: var(--tinta-2);">${isCreador ? ' Tú coordinas' : (esGrupo ? 'Iniciador del grupo' : 'Facilitador')}</div>
                   </div>
                 </div>
                 <div style="text-align: right;">
@@ -969,7 +969,7 @@
         texto: '¡Hola a todos! Me uní a la sesión de estudio.',
         hora: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       });
-      mostrarToast('🎉 ¡Te has unido al grupo de estudio!');
+      mostrarToast('¡Te has unido al grupo de estudio!');
     }
     seleccionarGrupo(id);
   };
@@ -988,7 +988,7 @@
     document.getElementById('cmDetalleCuposBadge').textContent = `${g.cuposOcupados}/${g.cuposMax} Integrantes`;
     document.getElementById('cmDetalleFacilitadorAvatar').textContent = g.facilitadorAvatar;
     document.getElementById('cmDetalleFacilitadorNombre').textContent = g.facilitador;
-    document.getElementById('cmFechaReunionOficial').textContent = g.horarioOficial || '⏳ En votación por los integrantes';
+    document.getElementById('cmFechaReunionOficial').textContent = g.horarioOficial || ' En votación por los integrantes';
 
     renderizarChatGrupo(g);
     renderizarEncuestaGrupo(g);
@@ -1050,7 +1050,7 @@
             <div style="font-size: 11.5px; color: var(--tinta-2);">${opt.votos.length} voto(s): ${opt.votos.join(', ') || 'Sin votos aún'}</div>
           </div>
           <button type="button" class="btn sm ${hasVoted ? 'btn-coral' : 'ghost'}" onclick="votarHorario(${g.id}, ${opt.id})">
-            ${hasVoted ? '✓ Votado' : 'Votar'}
+            ${hasVoted ? 'Votado' : 'Votar'}
           </button>
         </div>
       `;
@@ -1088,7 +1088,7 @@
     g.horarioOficial = mejor.texto;
     g.estado = 'agendado';
     document.getElementById('cmFechaReunionOficial').textContent = g.horarioOficial;
-    mostrarToast('📌 ¡Horario confirmado oficialmente: ' + g.horarioOficial + '!');
+    mostrarToast('Horario confirmado oficialmente: ' + g.horarioOficial + '!');
   };
 
   /* Modal Proponer Clase */
@@ -1104,11 +1104,11 @@
     if (tipo === 'grupo') {
       if (optGrupo) optGrupo.checked = true;
       if (titModal) titModal.textContent = 'Crear Grupo de Estudio Colaborativo';
-      if (descModal) descModal.textContent = '👥 En este grupo TODOS los participantes podrán encender su cámara y estudiar juntos.';
+      if (descModal) descModal.textContent = 'En este grupo todos los participantes podrán encender su cámara y estudiar juntos.';
     } else {
       if (optClase) optClase.checked = true;
       if (titModal) titModal.textContent = 'Proponer una Clase (Efecto Protégé)';
-      if (descModal) descModal.textContent = '🎓 Solo tú transmitirás con cámara para enseñar. Los alumnos participan por chat, micro y pizarra.';
+      if (descModal) descModal.textContent = 'Solo tú transmitirás con cámara para enseñar. Los alumnos participan por chat, micro y pizarra.';
     }
 
     modal.hidden = false;
@@ -1124,10 +1124,10 @@
     const descModal = document.getElementById('proponerModalDesc');
     if (tipo === 'grupo') {
       if (titModal) titModal.textContent = 'Crear Grupo de Estudio Colaborativo';
-      if (descModal) descModal.textContent = '👥 En este grupo TODOS los participantes podrán encender su cámara y estudiar juntos.';
+      if (descModal) descModal.textContent = 'En este grupo todos los participantes podrán encender su cámara y estudiar juntos.';
     } else {
       if (titModal) titModal.textContent = 'Proponer una Clase (Efecto Protégé)';
-      if (descModal) descModal.textContent = '🎓 Solo tú transmitirás con cámara para enseñar. Los alumnos participan por chat, micro y pizarra.';
+      if (descModal) descModal.textContent = 'Solo tú transmitirás con cámara para enseñar. Los alumnos participan por chat, micro y pizarra.';
     }
   };
 
@@ -1142,10 +1142,10 @@
     const esGrupo = radioGrupo && radioGrupo.checked;
 
     const areaLabels = {
-      matematicas: '📐 Matemáticas & Cálculo',
-      programacion: '💻 Programación & Software',
-      finanzas: '💵 Finanzas & Cripto',
-      idiomas: '🗣️ Idiomas'
+      matematicas: 'Matemáticas & Cálculo',
+      programacion: 'Programación & Software',
+      finanzas: 'Finanzas & Cripto',
+      idiomas: 'Idiomas'
     };
 
     const nuevoId = Date.now();
@@ -1153,7 +1153,7 @@
       id: nuevoId,
       tipo: esGrupo ? 'grupo' : 'clase',
       area,
-      areaLabel: areaLabels[area] || '📚 General',
+      areaLabel: areaLabels[area] || 'General',
       tema,
       desc: esGrupo ? 'Grupo de estudio colaborativo con cámaras libres.' : 'Sesión de repaso guiada por ' + currentUser.nombre + '.',
       metodologia,
@@ -1177,7 +1177,7 @@
     stateGrupos.unshift(nuevoGrupo);
     closeProponerModal();
     renderizarClases();
-    mostrarToast(esGrupo ? '👥 Grupo de estudio colaborativo publicado en cartelera' : '🎓 Clase por pares publicada en cartelera');
+    mostrarToast(esGrupo ? ' Grupo de estudio colaborativo publicado en cartelera' : ' Clase por pares publicada en cartelera');
   };
 
   /* ==========================================================================
@@ -1217,15 +1217,15 @@
         <div class="focus-stream-card ${isSelected ? 'active' : ''}" onclick="seleccionarStreamEstudio('${s.id}')" style="cursor: pointer; ${isSelected ? 'border-color: var(--coral); box-shadow: 0 0 0 2px var(--coral);' : ''}">
           <div class="focus-stream-preview" style="position: relative; height: 130px; background: #0E1030; border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
             <span class="focus-live-badge" style="position: absolute; top: 8px; left: 8px; background: #EF4444; color: #fff; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 6px;">● LIVE</span>
-            <span class="focus-timer-badge" style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.6); color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px;">${s.espectadores} 👁️</span>
+            <span class="focus-timer-badge" style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.6); color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px;">${s.espectadores} </span>
             <div style="font-size: 40px;">${s.avatar}</div>
           </div>
           <div class="focus-stream-info" style="padding: 10px 4px 4px 4px;">
             <b style="font-size: 13.5px; color: var(--tinta); display: block;">${s.nombre}</b>
-            <div style="font-size: 11px; color: var(--tinta-2); margin-top: 2px;">🎓 ${s.univ} • ${s.materia}</div>
+            <div style="font-size: 11px; color: var(--tinta-2); margin-top: 2px;">${s.univ} • ${s.materia}</div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
-              <span class="streak-pill" style="font-size: 10px; padding: 2px 8px;">🔥 ${s.racha} días</span>
-              <span style="font-size: 10.5px; color: var(--tinta-2);">⏱️ ${s.horas}h total</span>
+              <span class="streak-pill" style="font-size: 10px; padding: 2px 8px;">${s.racha} días racha</span>
+              <span style="font-size: 10.5px; color: var(--tinta-2);">${s.horas}h total</span>
             </div>
           </div>
         </div>
@@ -1253,7 +1253,7 @@
     if (titEl) titEl.textContent = isMine ? 'Tu Transmisión en Vivo (Study With Me)' : 'Estudiando con ' + s.nombre;
     if (subEl) subEl.textContent = s.materia + ' · ' + s.univ;
     if (avEl) avEl.textContent = s.avatar;
-    if (rachaEl) rachaEl.textContent = '🔥 ' + s.racha + ' días de racha';
+    if (rachaEl) rachaEl.textContent = s.racha + ' días de racha';
     if (viewersEl) viewersEl.textContent = '● ' + s.espectadores + ' espectadores activos';
     if (chatTitle) chatTitle.textContent = isMine ? 'Mensajes de tus espectadores' : 'Sala de ' + s.nombre + ' · Ánimos';
 
@@ -1294,7 +1294,7 @@
     s.mensajes.push(nuevoMsg);
     inp.value = '';
     renderizarMensajesEspectadores(s);
-    mostrarToast('👏 Mensaje de ánimo enviado a ' + s.nombre);
+    mostrarToast('Mensaje de ánimo enviado a ' + s.nombre);
   };
 
   window.enviarReaccionRapidaEspectador = function(emojiYTexto) {
@@ -1307,7 +1307,7 @@
     };
     s.mensajes.push(nuevoMsg);
     renderizarMensajesEspectadores(s);
-    mostrarToast('👏 ' + emojiYTexto + ' enviado');
+    mostrarToast('Interacción enviada');
   };
 
   window.toggleIniciarTransmisionEstudio = async function() {
@@ -1327,9 +1327,9 @@
         console.warn('Cámara en modo simulación para estudio:', e);
       }
       isTransmittingStudy = true;
-      if (btn) btn.textContent = '⏹️ Finalizar Mi Transmisión';
+      if (btn) btn.textContent = 'Finalizar Mi Transmisión';
       window.iniciarTimerPomodoro();
-      mostrarToast('📹 ¡Transmisión de Estudio iniciada en vivo!');
+      mostrarToast('Transmisión de Estudio iniciada');
     } else {
       if (studyMediaStream) {
         studyMediaStream.getTracks().forEach(t => t.stop());
@@ -1337,9 +1337,9 @@
       }
       if (video) video.srcObject = null;
       isTransmittingStudy = false;
-      if (btn) btn.textContent = '🎥 Iniciar mi Transmisión';
+      if (btn) btn.textContent = 'Iniciar mi Transmisión';
       window.pausarTimerPomodoro();
-      mostrarToast('⏹️ Transmisión de estudio finalizada');
+      mostrarToast('Transmisión finalizada');
     }
   };
 
@@ -1354,7 +1354,7 @@
         clearInterval(studyTimerInterval);
         isStudyTimerRunning = false;
         currentUser.horasSemana += 0.5;
-        mostrarToast('🎉 ¡Pomodoro de 25 min completado! +0.5h añadidas a tu récord.');
+        mostrarToast('¡Sesión de 25 min completada! +0.5h añadidas a tu récord.');
       }
     }, 1000);
   };
@@ -1386,23 +1386,23 @@
 
     table.innerHTML = ordenados.map((u, idx) => `
       <div class="ranking-row">
-        <div class="ranking-pos">${idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '#' + (idx + 1)}</div>
+        <div class="ranking-pos">${(idx + 1) + 'º'}</div>
         <div style="display: flex; align-items: center; gap: 10px;">
           <span style="font-size: 26px;">${u.avatar}</span>
           <div>
             <b style="font-size: 14.5px; color: var(--tinta);">${u.nombre}</b>
-            <div style="font-size: 11.5px; color: var(--tinta-2);">🎓 ${u.universidad || 'Universidad'} • ${u.carrera || u.ciudad}</div>
+            <div style="font-size: 11.5px; color: var(--tinta-2);">${u.universidad || 'Universidad'} • ${u.carrera || u.ciudad}</div>
           </div>
         </div>
         <div>
-          <span class="streak-pill">🔥 ${u.rachaDias} días</span>
+          <span class="streak-pill">${u.rachaDias} días de racha</span>
         </div>
         <div>
           <b style="font-size: 14px; color: var(--tinta);">${u.horasSemana} hrs</b>
         </div>
         <div>
           <button type="button" class="btn sm ghost" onclick="enviarAnimoEstudio('${u.nombre}')" style="width: 100%;">
-            👏 ¡Ánimo!
+            ¡Ánimo!
           </button>
         </div>
       </div>
@@ -1410,7 +1410,7 @@
   }
 
   window.enviarAnimoEstudio = function(nombre) {
-    mostrarToast('👏 Enviaste un mensaje de ánimo a ' + nombre);
+    mostrarToast('Enviaste un mensaje a ' + nombre);
   };
 
   /* ==========================================================================
@@ -1447,7 +1447,7 @@
     if (lista.length === 0) {
       grid.innerHTML = `
         <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background: var(--blanco); border: 1.5px solid var(--linea); border-radius: 18px;">
-          <div style="font-size: 36px; margin-bottom: 8px;">🔍</div>
+          <div style="font-size: 13px; font-weight:600; color: var(--tinta-2); margin-bottom: 8px;">Sin resultados</div>
           <b style="font-size: 15px; color: var(--tinta);">No se encontraron compañeros</b>
           <p style="font-size: 12.5px; color: var(--tinta-2); margin-top: 4px;">Prueba buscando por otra universidad, ciudad o nombre.</p>
         </div>
@@ -1465,14 +1465,14 @@
       if (isAmigo) {
         btnHtml = `
           <button type="button" class="btn sm ghost" onclick="abrirChatConAmigo('${u.id}')" style="flex: 1;">
-            💬 Chatear
+            Chatear
           </button>
-          <span style="font-size: 12px; font-weight: 700; color: var(--menta-2); align-self: center;">✓ Amigos</span>
+          <span style="font-size: 12px; font-weight: 700; color: var(--menta-2); align-self: center;">Amigos</span>
         `;
       } else if (recibida) {
         btnHtml = `
           <button type="button" class="btn sm btn-menta" onclick="aceptarSolicitudAmigo('${u.id}')" style="flex: 1;">
-            ✅ Aceptar
+            Aceptar
           </button>
           <button type="button" class="btn sm ghost" onclick="rechazarSolicitudAmigo('${u.id}')">
             ✕
@@ -1481,13 +1481,13 @@
       } else if (enviada) {
         btnHtml = `
           <button type="button" class="btn sm ghost" disabled style="flex: 1; opacity: .7;">
-            ⏳ Solicitud Enviada
+            Solicitud Enviada
           </button>
         `;
       } else {
         btnHtml = `
           <button type="button" class="btn sm btn-coral" onclick="enviarSolicitudAmigo('${u.id}')" style="flex: 1;">
-            ➕ Añadir Amigo
+            Añadir Amigo
           </button>
         `;
       }
@@ -1501,14 +1501,14 @@
             <div style="flex: 1;">
               <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <b style="font-size: 15px; color: var(--tinta); cursor: pointer;" onclick="abrirModalPerfilCompanero('${u.id}')" title="Ver perfil">${u.nombre}</b>
-                <span class="streak-pill">🔥 ${u.rachaDias}d</span>
+                <span class="streak-pill">${u.rachaDias} días racha</span>
               </div>
               <div style="font-size: 12px; color: var(--tinta-2); margin-top: 2px;">
-                🎓 ${u.universidad || u.colegio || 'Bolivia'} • ${u.carrera || u.ciudad}
+                ${u.universidad || u.colegio || 'Bolivia'} • ${u.carrera || u.ciudad}
               </div>
               <div style="display: flex; align-items: center; gap: 6px; margin-top: 6px;">
                 <span class="profile-rank-badge ${rango.clase}" style="font-size: 11px; padding: 2px 8px;">${rango.icono} ${rango.titulo}</span>
-                <span style="font-size: 11.5px; color: #F59E0B; font-weight: 700;">⭐ ${(u.rating || 0).toFixed(1)}</span>
+                <span style="font-size: 11.5px; color: #F59E0B; font-weight: 700;">${(u.rating || 0).toFixed(1)} / 5.0</span>
               </div>
             </div>
           </div>
@@ -1535,7 +1535,7 @@
     if (target && !target.solicitudesRecibidas.includes(currentUser.id)) {
       target.solicitudesRecibidas.push(currentUser.id);
     }
-    mostrarToast('🤝 Solicitud de amistad enviada a ' + (target ? target.nombre : 'usuario'));
+    mostrarToast('Solicitud de contacto enviada a ' + (target ? target.nombre : 'usuario'));
     renderizarAmigos();
   };
 
@@ -1549,7 +1549,7 @@
       if (!sender.amigos.includes(currentUser.id)) sender.amigos.push(currentUser.id);
     }
 
-    mostrarToast('🎉 ¡Ahora son amigos! Chat y sesiones habilitadas.');
+    mostrarToast('¡Conexión establecida! Chat y sesiones habilitadas.');
     renderizarAmigos();
   };
 
@@ -1699,7 +1699,7 @@
               <span style="font-size: 20px;">${s.estudianteAvatar}</span>
               <b style="font-size: 13.5px; color: var(--tinta);">${s.tema}</b>
               <span class="cm-chip" style="background: ${s.estado === 'confirmada' ? 'rgba(34, 184, 136, .18)' : 'rgba(245, 158, 11, .18)'}; color: ${s.estado === 'confirmada' ? 'var(--menta-2)' : '#D9770F'};">
-                ${s.estado === 'confirmada' ? '🟢 Confirmada' : '⏳ Pendiente'}
+                ${s.estado === 'confirmada' ? 'Confirmada' : 'Pendiente'}
               </span>
             </div>
             <div style="font-size: 12px; color: var(--tinta-2); margin-top: 4px;">
@@ -1709,7 +1709,7 @@
           <div>
             ${soyTutor && s.estado === 'pendiente' ? `
               <div style="display: flex; gap: 6px;">
-                <button type="button" class="btn sm btn-menta" onclick="responderSolicitudTutoria(${s.id}, 'aceptar')">✅ Aceptar</button>
+                <button type="button" class="btn sm btn-menta" onclick="responderSolicitudTutoria(${s.id}, 'aceptar')">Aceptar</button>
                 <button type="button" class="btn sm ghost" onclick="responderSolicitudTutoria(${s.id}, 'rechazar')">✕</button>
               </div>
             ` : `
@@ -1741,7 +1741,7 @@
     currentUser = found;
     actualizarHeaderUsuario();
     cerrarModalAuth();
-    mostrarToast('👤 Cambiaste de cuenta a: ' + currentUser.nombre + ' (' + (currentUser.universidad || 'Estudiante') + ')');
+    mostrarToast('Sesión iniciada como: ' + currentUser.nombre + ' (' + (currentUser.universidad || 'Estudiante') + ')');
 
     // Actualizar vista activa
     renderizarClases();
@@ -1756,7 +1756,7 @@
 
     if (nameEl) nameEl.textContent = currentUser.nombre;
     if (avatarEl) avatarEl.textContent = currentUser.avatar;
-    if (subEl) subEl.textContent = '🎓 ' + [currentUser.universidad || currentUser.colegio || 'Estudiante', currentUser.ciudad].filter(Boolean).join(' • ');
+    if (subEl) subEl.textContent = [currentUser.universidad || currentUser.colegio || 'Estudiante', currentUser.ciudad].filter(Boolean).join(' • ');
 
     actualizarBadgeSolicitudesNav();
   }
@@ -1769,7 +1769,7 @@
       currentUser = found;
       actualizarHeaderUsuario();
       cerrarModalAuth();
-      mostrarToast('👋 ¡Bienvenido de nuevo, ' + currentUser.nombre + '!');
+      mostrarToast('¡Bienvenido de nuevo, ' + currentUser.nombre + '!');
     } else {
       mostrarToast('Cuenta no encontrada, selecciona una cuenta demo o crea tu cuenta.');
     }
@@ -1789,7 +1789,7 @@
       email,
       password: pass,
       nombre,
-      avatar: '🧑‍🎓',
+      avatar: 'U',
       tipo: 'universidad',
       universidad: univ || 'Universidad de Bolivia',
       carrera: carrera || 'Estudiante',
@@ -1815,7 +1815,7 @@
     currentUser = nueva;
     actualizarHeaderUsuario();
     cerrarModalAuth();
-    mostrarToast('🚀 ¡Cuenta creada exitosamente! Bienvenido, ' + nombre);
+    mostrarToast('¡Cuenta creada exitosamente! Bienvenido, ' + nombre);
   };
 
   /* Toast Helper */
@@ -1855,7 +1855,7 @@
       id: u.id,
       email: u.email || '',
       nombre: u.username || (u.email || 'Estudiante').split('@')[0],
-      avatar: esColegio ? '🎒' : '🧑‍🎓',
+      avatar: (u.username || 'U').charAt(0).toUpperCase(),
       tipo: esColegio ? 'colegio' : 'universidad',
       universidad: esColegio ? '' : (u.institution || ''),
       carrera: u.career || '',
@@ -1918,11 +1918,11 @@
     if (avEl) avEl.textContent = currentUser.avatar;
     if (emailEl) emailEl.textContent = currentUser.email;
     if (univEl) univEl.textContent = (currentUser.universidad || currentUser.colegio || 'Bolivia') + ' • ' + (currentUser.carrera || currentUser.ciudad);
-    if (rachaEl) rachaEl.textContent = '🔥 ' + (currentUser.rachaDias || 0) + ' días de racha';
-    if (horasEl) horasEl.textContent = '⏱️ ' + (currentUser.horasSemana || 0) + ' hrs acumuladas';
+    if (rachaEl) rachaEl.textContent = (currentUser.rachaDias || 0) + ' días de racha';
+    if (horasEl) horasEl.textContent = (currentUser.horasSemana || 0) + ' hrs de estudio';
     
     const stars = currentUser.rating || 0;
-    if (starsEl) starsEl.textContent = '⭐ ' + (stars > 0 ? stars.toFixed(1) : '0.0') + ' (' + (currentUser.reviews || 0) + ' reseñas)';
+    if (starsEl) starsEl.textContent = (stars > 0 ? stars.toFixed(1) : '0.0') + ' / 5.0' + ' (' + (currentUser.reviews || 0) + ' reseñas)';
 
     const rango = getRangoDocente(stars);
     if (rankEl) {
@@ -1996,7 +1996,7 @@
 
     actualizarHeaderUsuario();
     abrirModalPerfilPropio();
-    mostrarToast('✅ Perfil actualizado exitosamente');
+    mostrarToast('Perfil actualizado exitosamente');
   };
 
   window.abrirModalPerfilCompanero = function(usuarioId) {
@@ -2009,9 +2009,9 @@
     document.getElementById('perfilCompaneroNombre').textContent = u.nombre;
     document.getElementById('perfilCompaneroAvatar').textContent = u.avatar;
     document.getElementById('perfilCompaneroUniv').textContent = (u.universidad || u.colegio || 'Bolivia') + ' • ' + (u.carrera || u.ciudad);
-    document.getElementById('perfilCompaneroRacha').textContent = '🔥 ' + u.rachaDias + ' días de racha';
-    document.getElementById('perfilCompaneroHoras').textContent = '⏱️ ' + u.horasSemana + ' hrs acumuladas';
-    document.getElementById('perfilCompaneroStars').textContent = '⭐ ' + (u.rating || 0).toFixed(1) + ' (' + (u.reviews || 0) + ' reseñas)';
+    document.getElementById('perfilCompaneroRacha').textContent = u.rachaDias + ' días de racha';
+    document.getElementById('perfilCompaneroHoras').textContent = u.horasSemana + ' hrs de estudio';
+    document.getElementById('perfilCompaneroStars').textContent = (u.rating || 0).toFixed(1) + ' / 5.0' + ' (' + (u.reviews || 0) + ' reseñas)';
 
     const rango = getRangoDocente(u.rating);
     const rankEl = document.getElementById('perfilCompaneroRango');

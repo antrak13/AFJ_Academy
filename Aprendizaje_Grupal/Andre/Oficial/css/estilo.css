@@ -168,6 +168,28 @@ button:disabled { cursor: default; opacity: .5; }
   border-bottom: 1px solid var(--linea);
   padding: 0 24px;
 }
+.btn-back-inicio {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: var(--blanco);
+  border: 1px solid var(--linea);
+  color: var(--tinta-2);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(44, 54, 74, 0.04);
+}
+.btn-back-inicio:hover {
+  background: #FFFFFF;
+  color: var(--coral);
+  border-color: var(--coral);
+  transform: translateX(-2px);
+  box-shadow: 0 3px 8px rgba(238, 140, 102, 0.18);
+}
 .logo {
   font-family: var(--display);
   font-weight: 700;
