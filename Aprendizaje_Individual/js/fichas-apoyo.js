@@ -1,5 +1,5 @@
 // Helpers compartidos para generar, calibrar por aceptación y mostrar fichas de estudio (en fichas.html y dentro de clase.html).
-import { TIPOS, limpiarFichaInicio, fichaInicioLocal, htmlFicha, svgIcono } from './fichas.js';
+import { TIPOS, NOMBRES_VISUAL, limpiarFichaInicio, fichaInicioLocal, htmlFicha, svgIcono } from './fichas.js';
 import { resumenAprendin } from './turno.js';
 
 export const CLAVE_ESTUDIO = 'aprendines.fichas.estudio';
@@ -120,7 +120,7 @@ export function calcularCalibracion(historial = [], ef = cargarEficacia()) {
   };
 }
 
-export async function solicitarFichaInicio({ ia, tema, gustos, nivel = 'algo', reaccion = 'inicio', nota = '', objetivo = '', aprendin = null, historial = [], calibracion = null }) {
+export async function solicitarFichaInicio({ ia, tema, gustos, nivel = 'algo', reaccion = 'inicio', nota = '', objetivo = '', dificultad = '', aprendin = null, historial = [], calibracion = null }) {
   const cal = calibracion || calcularCalibracion(historial);
   const aprendinResumen = aprendin?.nombre ? resumenAprendin(aprendin) : null;
   let datos = null, fuente = 'ia';
@@ -129,7 +129,7 @@ export async function solicitarFichaInicio({ ia, tema, gustos, nivel = 'algo', r
     const r = await fetch('/api/ficha-inicio', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tema, gustos, nivel, reaccion, nota, objetivo, aprendin: aprendinResumen, historial, calibracion: cal })
+      body: JSON.stringify({ tema, gustos, nivel, reaccion, nota, objetivo, dificultad, aprendin: aprendinResumen, historial: historial.slice(-6), calibracion: cal })
     });
     const j = await r.json();
     if (!j.ok || !j.ficha) throw new Error(j.error || r.status);
@@ -139,14 +139,14 @@ export async function solicitarFichaInicio({ ia, tema, gustos, nivel = 'algo', r
     await new Promise(ok => setTimeout(ok, 250));
     datos = fichaInicioLocal({ tema, gustos, nivel, reaccion, nota, objetivo, historial, calibracion: cal });
   }
-  if (datos?.visual?.tipo) registrarEventoVisual(datos.visual.tipo, 'vista');
+  if (datos?.visual?.tipo && datos.ejemplo.resultado) registrarEventoVisual(datos.visual.tipo, 'vista');
   return { datos, fuente, calibracion: cal };
 }
 
 function htmlBarraEnfoque(idx, tipoActual = 'pasos') {
   const opts = Object.entries(TIPOS).map(([k, desc]) => {
     const corto = desc.split('(')[0].trim();
-    return `<option value="${esc(k)}"${k === tipoActual ? ' selected' : ''}>${esc(k)} — ${esc(corto)}</option>`;
+    return `<option value="${esc(k)}"${k === tipoActual ? ' selected' : ''}>${esc(NOMBRES_VISUAL[k])} — ${esc(corto)}</option>`;
   }).join('');
   return `<div class="fi-enfoque-bar" hidden>
     <p class="fi-enfoque-ayuda">Elige otro enfoque visual (la nueva ficha aparecerá justo debajo):</p>
@@ -163,10 +163,11 @@ function htmlBarraEnfoque(idx, tipoActual = 'pasos') {
 
 export function renderizarFichaEstudio(item, idx, { esUltima, permitirEnfoque = false, gustos, avatar = '', tono, placeholder = 'Opcional: escribe qué parte no entendiste o qué ejemplo quieres…' }) {
   const tipoActual = item?.datos?.visual?.tipo || 'pasos';
+  const guia = item.fuente === 'local' && !item.datos.ejemplo?.resultado;
   const barraEnfoque = htmlBarraEnfoque(idx, tipoActual);
   let pieHtml = '';
 
-  if (esUltima) {
+  if (esUltima && !guia) {
     pieHtml = `<div class="fi-adapta-acc" data-idx="${idx}">
         <label class="solo-lector" for="notaDuda-${idx}">¿Qué duda tienes?</label>
         <input class="otra fi-nota-duda" id="notaDuda-${idx}" type="text" maxlength="160" placeholder="${esc(placeholder)}">
@@ -183,7 +184,7 @@ export function renderizarFichaEstudio(item, idx, { esUltima, permitirEnfoque = 
     const resHtml = item.reaccion
       ? `<p class="fi-reaccion-res">${svgIcono(item.reaccion === 'entendio' ? 'check' : 'chispa', { size: 14 })}<span>Tu respuesta: <b>${esc(ETIQUETAS_REACCION[item.reaccion] || item.reaccion)}</b>${item.nota ? ` — «${esc(item.nota)}»` : ''}</span></p>`
       : '';
-    if (permitirEnfoque) {
+    if (permitirEnfoque && !guia) {
       pieHtml = `${resHtml}
         <div class="fi-adapta-acc" data-idx="${idx}">
           <div class="cl-apoyo-otra-wrap">
@@ -199,10 +200,12 @@ export function renderizarFichaEstudio(item, idx, { esUltima, permitirEnfoque = 
 
   return htmlFicha(item.datos, {
     numero: idx + 1,
-    fase: `${item.datos.subtema || 'Adaptada'} · ${tipoActual}`,
+    fase: `${item.datos.subtema || 'Adaptada'} · ${NOMBRES_VISUAL[tipoActual] || tipoActual}${item.fuente === 'local' ? ' · Práctica' : ''}`,
+    rotuloAdaptacion: guia ? 'Guía de práctica' : undefined,
     mundo: gustos,
     avatar,
     tono,
+    reto: item.reaccionOrigen === 'reto',
     citaDe: 'Para recordar',
     pieHtml
   });
@@ -251,8 +254,9 @@ export function enlazarAccionesFicha(raiz, { alReaccionar, alEnfoque, alOtra, oc
 }
 
 export function historialDe(fichas = []) {
-  return fichas.slice(-6).map(f => ({
-    titulo: f.datos.titulo, subtema: f.datos.subtema, tipo: f.datos.visual.tipo, reaccion: f.reaccion || f.reaccionOrigen || 'vista'
+  return fichas.map(f => ({
+    titulo: f.datos.titulo, subtema: f.datos.subtema, tipo: f.datos.visual.tipo, reaccion: f.reaccion || 'vista',
+    idea: f.datos.idea, situacion: f.datos.ejemplo?.situacion, nota: f.reaccion ? f.nota : ''
   }));
 }
 
@@ -272,7 +276,7 @@ export function renderizarPanelCalibracion(cont, { historial = [], compacto = fa
         const fijado = cal.pinTipo === r.tipo;
         const estado = r.muestras >= 1 && r.tasa >= 0.62 ? 'alto' : (r.duda >= 1 && r.tasa <= 0.48 ? 'bajo' : 'medio');
         return `<button type="button" class="fi-cal-item est-${estado}${fijado ? ' fijado' : ''}" data-pin="${esc(r.tipo)}" title="${esc(TIPOS[r.tipo] || r.tipo)} · Clic para fijar o soltar">
-          <span class="fi-cal-nom">${fijado ? SVG_PIN : ''}${esc(r.tipo)}</span>
+          <span class="fi-cal-nom">${fijado ? SVG_PIN : ''}${esc(NOMBRES_VISUAL[r.tipo] || r.tipo)}</span>
           <span class="fi-cal-bar"><i style="width:${r.porcentaje}%"></i></span>
           <span class="fi-cal-pct">${r.porcentaje}%${r.exitosClase ? ` · ${r.exitosClase} en clase` : ''}</span>
         </button>`;

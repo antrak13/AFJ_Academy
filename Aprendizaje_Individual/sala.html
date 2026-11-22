@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sala de Aprendines</title>
+<meta name="description" content="Reúne a tus aprendines y enséñales una idea con preguntas, ejemplos y correcciones.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Nunito:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="css/aprendin.css">
+<link rel="stylesheet" href="css/taller.css">
+<link rel="stylesheet" href="css/fichas.css">
+<link rel="stylesheet" href="css/sala.css">
+</head>
+<body class="pag-sala">
+<header class="barra">
+  <a class="btn-inicio" href="../inicio.html" title="Volver al inicio de AFJ Academy"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Volver al inicio</span></a>
+  <a class="marca" href="taller.html"><span class="marca-av" id="marcaSala" aria-hidden="true"></span><span>Aprendines</span></a>
+  <nav class="nav" aria-label="Secciones"><a href="taller.html">Taller</a><a href="clase.html">Clase</a><a href="sala.html" aria-current="page">Sala</a><a href="fichas.html">Fichas</a><a href="disenos.html">Diseños</a></nav>
+  <span class="estado-ia" id="estadoSala" role="status">Conectando…</span>
+</header>
+
+<main class="sala-marco">
+  <section id="inicioSala" class="sala-inicio" aria-labelledby="tituloSala">
+    <div class="sala-bienvenida">
+      <h1 id="tituloSala">Sala de aprendines</h1>
+      <p>Reúne a tus aprendines. Unos querrán saber por qué funciona, otros probarán tu idea en su mundo.</p>
+      <div class="sala-demostracion" id="vistaSala" aria-hidden="true"></div>
+    </div>
+    <form id="formSala" class="sala-config">
+      <div class="sala-pedido">
+        <label for="temaSala">¿Qué les vas a enseñar?</label>
+        <input id="temaSala" name="tema" class="sala-campo" placeholder="Ej. fracciones equivalentes" required maxlength="80">
+        <details class="sala-meta">
+          <summary>Agregar una misión para la sala</summary>
+          <label class="solo-lector" for="metaSala">Misión de la sala</label>
+          <input id="metaSala" name="mision" class="sala-campo" placeholder="Ej. repartir comida entre tres tripulantes" maxlength="200">
+        </details>
+      </div>
+      <fieldset class="sala-eleccion">
+        <legend>Elige entre dos y tres aprendines</legend>
+        <div id="elencoSala" class="sala-elenco"></div>
+      </fieldset>
+      <div class="sala-config-pie">
+        <button class="sala-boton sala-principal" id="abrirSala" type="submit">Entrar a la sala</button>
+        <button class="sala-boton sala-secundario" id="traerAprendin" type="button">Importar un aprendín</button>
+        <input id="archivoAprendin" type="file" accept=".json,application/json" hidden>
+        <button class="sala-boton sala-secundario" id="volverSala" type="button" hidden>Volver a mi sala</button>
+        <p id="estadoConfig" class="sala-nota" role="status"></p>
+      </div>
+    </form>
+    <section class="sala-guardadas" id="guardadasSala" hidden aria-labelledby="tituloGuardadas">
+      <h2 id="tituloGuardadas">Tus salas</h2>
+      <div id="listaSalas"></div>
+    </section>
+  </section>
+
+  <section id="salaActiva" class="sala-viva" hidden aria-labelledby="temaActivo">
+    <section class="sala-escenario" aria-labelledby="temaActivo">
+      <div class="sala-escenario-cab">
+        <div>
+          <h1 id="temaActivo"></h1>
+          <p id="misionActiva" hidden></p>
+        </div>
+        <button id="otraSala" class="sala-boton sala-otra" type="button">Tus salas</button>
+      </div>
+      <div id="integrantesSala" class="sala-integrantes"></div>
+      <ol class="sala-rondas" id="rondasSala" aria-label="Rondas de enseñanza"></ol>
+    </section>
+
+    <aside class="sala-guia" aria-labelledby="tituloRonda">
+      <div class="sala-objetivo">
+        <span id="cuentaRonda"></span>
+        <h2 id="tituloRonda"></h2>
+        <p id="objetivoRonda"></p>
+        <p class="sala-nota" id="estadoRonda" role="status"></p>
+      </div>
+      <details class="sala-cuaderno" id="cuadernoSala">
+        <summary>Cuaderno de la sala <span id="cuentaCuaderno"></span></summary>
+        <div id="notasSala"></div>
+      </details>
+      <section class="sala-apoyo" aria-labelledby="tituloApoyo">
+        <div class="sala-apoyo-cab">
+          <h2 id="tituloApoyo">Apoyo visual</h2>
+          <label class="solo-lector" for="mundoApoyo">Mundo para el ejemplo</label>
+          <select id="mundoApoyo" class="sala-select"></select>
+        </div>
+        <div id="fichaSala"></div>
+      </section>
+    </aside>
+
+    <section class="sala-conversa" aria-labelledby="tituloConversa">
+      <div class="sala-conversa-cab"><h2 id="tituloConversa">Enséñales con tus palabras</h2><a class="sala-ir-apoyo" href="#tituloApoyo">Apoyo visual</a></div>
+      <div id="conversacionSala" class="sala-mensajes" tabindex="0" role="log" aria-live="polite" aria-relevant="additions"></div>
+      <div id="confirmacionesSala" class="sala-confirmaciones" hidden></div>
+      <form id="formEnsenar" class="sala-escribir">
+        <div class="sala-direccion">
+          <label for="destinoSala">Hablar con</label>
+          <select id="destinoSala" class="sala-select"></select>
+          <span class="sala-nota" id="avisoSala" role="status"></span>
+        </div>
+        <div class="sala-responder">
+          <label class="solo-lector" for="mensajeSala">Tu explicación</label>
+          <textarea class="sala-campo" id="mensajeSala" rows="2" maxlength="600" placeholder="Escribe tu explicación…" required></textarea>
+          <button type="submit" class="sala-boton sala-principal" id="ensenarSala">Enseñar</button>
+        </div>
+      </form>
+    </section>
+  </section>
+</main>
+<script type="module" src="js/sala.js"></script>
+</body>
+</html>

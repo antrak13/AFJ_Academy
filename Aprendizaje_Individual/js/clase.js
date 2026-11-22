@@ -9,17 +9,21 @@ import { activarFichas, animar } from './fichas-dom.js';
 import { DEMO } from './demo-aprendin.js';
 import { crearPrueba } from './prueba.js';
 import { demoClase } from './demo-clase.js';
-import { cargarEstudio, guardarEstudio, solicitarFichaInicio, renderizarFichaEstudio, enlazarAccionesFicha, historialDe, registrarEventoVisual, calcularCalibracion, renderizarPanelCalibracion } from './fichas-apoyo.js';
+import { descargarPostal } from './postal.js';
+import { descargarAprendin } from './intercambio.js';
+import { cargarEstudio, solicitarFichaInicio, renderizarFichaEstudio, enlazarAccionesFicha, historialDe, registrarEventoVisual, calcularCalibracion, renderizarPanelCalibracion } from './fichas-apoyo.js';
 
 const $ = s => document.querySelector(s);
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const espera = ms => new Promise(ok => setTimeout(ok, RM ? 0 : ms));
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-const EJEMPLO = new URLSearchParams(location.search).get('ejemplo');   // ?ejemplo=1 clase desde cero con Kori · ?ejemplo=prueba con los 4 pasos listos
-let A = EJEMPLO != null ? DEMO : cargarAprendin();
+const params = new URLSearchParams(location.search);
+const EJEMPLO = params.get('ejemplo');
+const DEMO_FASES = params.get('demo') === 'fases';
+let A = EJEMPLO != null ? DEMO : cargarAprendin(params.get('aprendin') || undefined);
 // Estado de la clase: paso que le enseñas (1 a 4; 5 = terminó), mensajes, fichas y lo que midió la IA.
-let C = null, estrella = null, ia = false, ocupado = false, hablarVoz = false;
+let C = null, estrella = null, ia = false, sttLocal = false, ocupado = false, hablarVoz = false, vistaFase = null;
 const nuevo = () => ({ paso: 1, chat: [], fichas: {}, medicion: {}, pista: '' });
 const guardar = () => guardarClase(A.id, C);
 const faseActual = () => Math.min(PASOS, C.paso - 1);
@@ -30,7 +34,7 @@ const turnosDe = paso => C.chat.filter(m => m.paso === paso && m.de === 'yo').le
 const prueba = crearPrueba({
   get A() { return A; }, get C() { return C; }, guardar: () => guardar(), ia: () => ia, aprendido: () => aprendido(),
   alAprobar: r => mostrarFinal(r), alCambiar: () => { pintarAhora(); pintarMedicion(); },
-  alRepasar: () => { $('#fichas').scrollIntoView({ behavior: RM ? 'auto' : 'smooth' }); document.querySelectorAll('#fichas .vis').forEach(animar); }
+  alRepasar: mostrarCuaderno
 });
 $('#btnPrueba').addEventListener('click', () => prueba.abrir());
 
@@ -39,7 +43,12 @@ const marca = crearAprendin({ look: { forma: 'bollo', color: 'coral', rasgos: { 
 $('#marcaAv').append(marca.el);
 
 async function estadoIA() {
-  try { const r = await fetch('/api/estado', { cache: 'no-store' }); const j = r.ok ? await r.json() : null; ia = !!j?.ia; } catch { ia = false; }
+  try {
+    const r = await fetch('/api/estado', { cache: 'no-store' });
+    const j = r.ok ? await r.json() : null;
+    ia = !!j?.ia;
+    sttLocal = !!j?.transcripcion;
+  } catch { ia = false; sttLocal = false; }
   const el = $('#estadoIA'); el.className = 'estado-ia' + (ia ? ' si' : ''); el.textContent = ia ? 'En línea' : 'Modo práctica';
 }
 
@@ -54,6 +63,12 @@ function verPanelDer(tab = 'apoyo') {
   tCu.setAttribute('aria-selected', String(!esAp)); tCu.tabIndex = esAp ? -1 : 0;
   pAp.hidden = !esAp; pCu.hidden = esAp;
   if (!esAp && $('#dotCuaderno')) $('#dotCuaderno').hidden = true;
+}
+function mostrarCuaderno(paso) {
+  verPanelDer('cuaderno');
+  const ficha = paso ? document.getElementById(`ficha-${paso}`) : $('#fichas');
+  ficha?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'start' });
+  ficha?.querySelectorAll('.vis').forEach(animar);
 }
 [$('#tabApoyo'), $('#tabCuaderno')].filter(Boolean).forEach((btn, i, arr) => {
   btn.addEventListener('click', () => verPanelDer(btn.id === 'tabCuaderno' ? 'cuaderno' : 'apoyo'));
@@ -71,6 +86,8 @@ function empezar() {
   if (!A) { $('#vacio').hidden = false; $('#clase').hidden = true; return; }
   $('#vacio').hidden = true; $('#clase').hidden = false;
   apoyoActivoId = null;
+  vistaFase = null;
+  $('#clCuidadoEstado').textContent = '';
   const guardada = cargarClase(A.id);
   C = EJEMPLO === 'prueba' && A === DEMO ? (guardada?.paso > PASOS ? guardada : demoClase(A)) : guardada || nuevo();
   document.title = `Clase de ${A.nombre} · Aprendines`;
@@ -85,7 +102,7 @@ function empezar() {
   verPanelDer('apoyo');
   pintarFases(); pintarAhora(); pintarChat(); pintarFichas(); pintarMedicion(); pintarApoyoLista(); pintarApoyoActivo(); pintarCalibracionClase();
   for (const [p, f] of Object.entries(C.fichas)) if (f.estado !== 'lista') pedirFicha(Number(p));   // quedó a medias al recargar
-  if (C.paso >= PASOS) prueba.preparar();
+  if (pruebaDisponible() && C.paso > PASOS) prueba.preparar();
   if (!C.chat.length) arrancar();
   else bloquear(false);
 }
@@ -101,16 +118,34 @@ async function arrancar() {
 /* ---------- Escenario: fases y paso actual ---------- */
 function pintarFases() {
   const caja = $('#fases'); caja.replaceChildren();
+  const faseVista = vistaFase ?? faseActual();
   A.fases.forEach((f, i) => {
-    const hecho = i <= faseActual(), meta = i === C.paso && C.paso <= PASOS;
+    const hecho = DEMO_FASES || i <= faseActual(), meta = !DEMO_FASES && i === C.paso && C.paso <= PASOS;
     const li = document.createElement('li');
-    li.className = 'cl-fase' + (hecho ? ' hecho' : '') + (meta ? ' meta' : '');
-    li.innerHTML = `<span class="mini" aria-hidden="true">${svgAprendin(f.look, { emocion: hecho ? 'feliz' : 'neutral' })}</span><span class="cl-fase-num">${i}</span>`;
-    li.title = i ? `${f.titulo}: ${f.concepto}` : f.titulo;
-    li.setAttribute('aria-label', `${f.titulo}${i ? ` (${f.concepto})` : ''}: ${hecho ? 'lograda' : meta ? 'la siguiente' : 'bloqueada'}`);
+    li.className = 'cl-fase' + (hecho ? ' hecho' : '') + (meta ? ' meta' : '') + (i === faseVista ? ' activa' : '');
+    const contenido = `<span class="mini" aria-hidden="true">${svgAprendin(f.look, { emocion: hecho ? 'feliz' : 'neutral' })}</span><span class="cl-fase-num">${i}</span>`;
+    if (hecho) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'cl-fase-btn';
+      btn.innerHTML = contenido;
+      btn.title = i ? `Ver fase ${i}: ${f.titulo} (${f.concepto})` : `Ver fase 0: ${f.titulo}`;
+      btn.setAttribute('aria-pressed', String(i === faseVista));
+      btn.addEventListener('click', () => {
+        vistaFase = i;
+        estrella?.evolucionar(f.look);
+        $('#foco').style.setProperty('--tono', tonos(f.look.color).claro);
+        pintarFases();
+      });
+      li.append(btn);
+    } else {
+      li.innerHTML = contenido;
+      li.title = i ? `${f.titulo}: ${f.concepto}` : f.titulo;
+      li.setAttribute('aria-label', `${f.titulo}${i ? ` (${f.concepto})` : ''}: ${meta ? 'la siguiente' : 'bloqueada'}`);
+    }
     caja.append(li);
   });
-  const ya = A.fases[faseActual()], sig = A.fases[C.paso];
+  const ya = A.fases[faseVista], sig = A.fases[C.paso];
   $('#faseTxt').innerHTML = `Es <b>${esc(ya.titulo)}</b>${sig && C.paso <= PASOS ? ` · siguiente: <b>${esc(sig.titulo)}</b>` : ''}`;
 }
 function ponerPista(texto) {
@@ -126,9 +161,12 @@ function pintarAhora() {
   ponerPista(C.pista || pistaBase());
   const pr = C.prueba, bp = $('#btnPrueba');
   bp.hidden = !fin;
-  bp.textContent = !pr?.respuestas?.length ? 'Hacer la prueba juntos' : !pr.terminado ? 'Seguir con la prueba' : pr.aprobado ? `Prueba aprobada: ${pr.puntaje} de ${pr.examen.preguntas.length}` : 'Ver la prueba e intentar otra vez';
+  bp.disabled = !pruebaDisponible();
+  document.querySelectorAll('.cl-sis-prueba button').forEach(b => { b.disabled = bp.disabled; });
+  bp.textContent = bp.disabled ? 'Preparando el cuaderno…' : !pr?.respuestas?.length ? 'Hacer la prueba juntos' : !pr.terminado ? 'Seguir con la prueba' : pr.aprobado ? `Prueba aprobada: ${pr.puntaje} de ${pr.examen.preguntas.length}` : 'Ver la prueba e intentar otra vez';
   if (fin) $('#ahoraTit').textContent = pr?.aprobado ? '¡Misión cumplida!' : 'Falta la prueba de su misión';
 }
+const pruebaDisponible = () => !!C.prueba?.examen || Object.values(C.fichas).filter(f => f.estado === 'lista').length >= PASOS;
 const pistaBase = () => `Empieza con un ejemplo de su mundo (${A.mundo || 'lo que le gusta'}) y dile por qué funciona. Después deja que lo intente.`;
 $('#btnPista').addEventListener('click', () => {
   const p = $('#pista'), b = $('#btnPista'); p.hidden = !p.hidden; b.setAttribute('aria-expanded', String(!p.hidden));
@@ -142,16 +180,23 @@ function burbuja(m) {
     const ico = m.tipo === 'evo' ? svgIcono('chispa', { size: 15 }) : m.tipo === 'ficha' ? svgIcono('libro', { size: 15 }) : m.tipo === 'prueba' ? svgIcono('meta', { size: 15 }) : '';
     el.className = `cl-sis cl-sis-${m.tipo || 'info'}`;
     el.innerHTML = `<span>${ico}${esc(m.texto)}</span>`;
-    if (m.tipo === 'prueba') { const b = document.createElement('button'); b.className = 'btn btn-crear cl-sis-btn'; b.type = 'button'; b.textContent = 'Hacer la prueba juntos'; b.addEventListener('click', () => prueba.abrir()); el.append(b); }
-    if (m.ficha) { el.classList.add('cl-sis-link'); el.addEventListener('click', () => { verPanelDer('cuaderno'); document.getElementById(`ficha-${m.ficha}`)?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'start' }); }); }
+    if (m.tipo === 'prueba') { const b = document.createElement('button'); b.className = 'btn btn-crear cl-sis-btn'; b.type = 'button'; b.textContent = 'Hacer la prueba juntos'; b.disabled = !pruebaDisponible(); b.addEventListener('click', () => prueba.abrir()); el.append(b); }
+    if (m.ficha) {
+      const b = document.createElement('button'); b.className = 'cl-sis-link'; b.type = 'button';
+      b.append(...el.childNodes);
+      b.addEventListener('click', () => mostrarCuaderno(m.ficha)); el.append(b);
+    }
     return el;
   }
   if (m.de === 'apoyo') {
     const item = buscarApoyoPorId(m.idApoyo);
     if (!item) { el.hidden = true; return el; }
-    el.className = 'cl-sis cl-sis-ficha cl-sis-link';
-    el.innerHTML = `<span>${svgIcono(item.datos.icono, { def: 'libro', size: 15 })}Abrir ficha · ${esc(item.datos.titulo)}</span>`;
-    el.addEventListener('click', () => mostrarApoyoEnChat(item));
+    el.className = 'cl-sis cl-sis-ficha';
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'cl-sis-link';
+    b.innerHTML = `<span>${svgIcono(item.datos.icono, { def: 'libro', size: 15 })}Abrir ficha · ${esc(item.datos.titulo)}</span>`;
+    b.addEventListener('click', () => mostrarApoyoEnChat(item));
+    el.append(b);
     return el;
   }
   el.className = `cl-msg cl-${m.de}`;
@@ -205,7 +250,13 @@ function pensando(si) {
   escribiendo.innerHTML = `<span class="cl-av" aria-hidden="true">${svgAprendin(look(), { emocion: 'pensando' })}</span><div class="cl-globo"><span class="cl-puntos" aria-label="${esc(A.nombre)} está pensando"><i></i><i></i><i></i></span></div>`;
   cajaMsg.append(escribiendo); bajar();
 }
-function bloquear(si) { ocupado = si; $('#btnEnviar').disabled = si || C?.paso > PASOS; $('#msg').disabled = C?.paso > PASOS; }
+function bloquear(si) {
+  ocupado = si;
+  $('#btnEnviar').disabled = si || C?.paso > PASOS;
+  $('#msg').disabled = C?.paso > PASOS;
+  $('#btnConfirmarPractica').hidden = si || C.paso > PASOS || !C.medicion[C.paso]?.turnos.at(-1)?.puedeConfirmar;
+  $('#btnReiniciar').disabled = si;
+}
 
 /* ---------- Enviar una explicación ---------- */
 const msg = $('#msg');
@@ -231,7 +282,7 @@ $('#formMsg').addEventListener('submit', async e => {
   } catch {
     fuente = 'local';
     const falta = 1200 - (performance.now() - t0); if (falta > 0) await espera(falta);
-    t = turnoLocal(A, paso, texto, turnos);
+    t = turnoLocal(A, paso, C.chat.filter(m => m.paso === paso && m.de === 'yo').map(m => m.texto));
   }
   pensando(false);
   medir(paso, t, fuente);
@@ -239,22 +290,58 @@ $('#formMsg').addEventListener('submit', async e => {
   if (t.estado === 'error') estrella.equivocarse();
   await decir(t.dice, t.emocion, t.intento ? { intento: t.intento } : {});
   if (t.estado === 'entendio') {
-    if (!C.apoyoContadoPaso?.[paso] && C.apoyoVistosPaso?.[paso]?.length) {
-      [...new Set(C.apoyoVistosPaso[paso])].forEach(tp => registrarEventoVisual(tp, 'exito_clase'));
+    const utiles = (C.apoyo || []).filter(f => f.paso === paso && f.reaccion === 'entendio');
+    if (!C.apoyoContadoPaso?.[paso] && utiles.length) {
+      new Set(utiles.map(f => f.datos.visual.tipo)).forEach(tp => registrarEventoVisual(tp, 'exito_clase'));
       (C.apoyoContadoPaso ||= {})[paso] = true; guardar(); pintarCalibracionClase();
     }
     await subirDeFase(paso, t);
   }
   bloquear(false); if (C.paso <= PASOS) msg.focus();
 });
+$('#btnConfirmarPractica').addEventListener('click', async () => {
+  if (ocupado || C.paso > PASOS || !C.medicion[C.paso]?.turnos.at(-1)?.puedeConfirmar) return;
+  bloquear(true);
+  await decir('Voy a guardar lo que me enseñaste en mi cuaderno.', 'eureka');
+  await subirDeFase(C.paso);
+  bloquear(false);
+  if (C.paso <= PASOS) msg.focus();
+});
+
+$('#btnAnimar').addEventListener('click', () => {
+  if (!estrella) return;
+  if (!ocupado) { estrella.sentir('feliz'); estrella.saludar(); }
+  $('#clCuidadoEstado').textContent = C.paso > PASOS ? '¡Gracias por acompañarme en mi misión!' : '¡Gracias! Con un ejemplo de mi mundo me animo a intentarlo.';
+});
+$('#btnPostal').addEventListener('click', async () => {
+  const b = $('#btnPostal');
+  b.disabled = true;
+  try {
+    await descargarPostal(A, faseActual(), Boolean(C.prueba?.aprobado));
+    $('#clCuidadoEstado').textContent = 'Postal descargada. Puedes enviarla a quien quieras.';
+  } catch {
+    $('#clCuidadoEstado').textContent = 'La postal no se pudo descargar. Vuelve a intentarlo.';
+  } finally { b.disabled = false; }
+});
+$('#btnCompartirAprendin').addEventListener('click', () => {
+  try {
+    descargarAprendin(A);
+    $('#clCuidadoEstado').textContent = 'Personaje descargado. Quien reciba el archivo puede traerlo a su sala desde «Importar un aprendín».';
+  } catch (e) {
+    $('#clCuidadoEstado').textContent = e.message;
+  }
+});
+
 const aprendido = () => Object.entries(C.fichas).filter(([, f]) => f.datos).map(([p, f]) => `Paso ${p}: ${f.datos.titulo}. ${f.datos.idea}`);
 
 /* ---------- Evolución ---------- */
-async function subirDeFase(paso, t) {
+async function subirDeFase(paso, t = {}) {
+  apoyoActivoId = null;
+  vistaFase = null;
+  $('#clCuidadoEstado').textContent = '';
   C.paso = paso + 1; guardar();
   const f = A.fases[paso];
   pedirFicha(paso);                     // la ficha se escribe mientras sigue la clase
-  if (paso === PASOS - 1 && ia) setTimeout(() => prueba.preparar(), 4000);   // el examen se arma mientras le enseñas el último paso
   await espera(500);
   $('#evoTxt').textContent = paso === PASOS ? '¡Transformación!' : '¡Evolucionó!';
   const evo = $('#evo'); evo.classList.remove('si'); void evo.offsetWidth; evo.classList.add('si');
@@ -263,17 +350,19 @@ async function subirDeFase(paso, t) {
   sistema(`${A.nombre} subió a ${f.titulo}`, 'evo');
   pintarFases(); pintarAhora(); C.pista = ''; ponerPista(pistaBase()); $('#pista').hidden = true; $('#btnPista').setAttribute('aria-expanded', 'false');
   await espera(1400);
-  if (paso < PASOS) { await decir(t.siguiente || preguntaInicial(A, paso + 1), 'curioso'); pintarApoyoActivo(); }
+  pintarApoyoActivo();
+  if (paso < PASOS) { await decir(t.siguiente || preguntaInicial(A, paso + 1), 'curioso'); }
   else {
     estrella.saltar();
     await decir(`¡Ya aprendí los ${PASOS} pasos! Ahora viene la prueba de mi misión… Solo no puedo: ¿la respondemos juntos?`, 'nervioso');
     sistema('La prueba de la misión: la responden en equipo', 'prueba');
-    pintarAhora(); if (ia || C.fichas[PASOS]?.estado === 'lista') prueba.preparar();
+    pintarAhora();
   }
 }
 
 /* ---------- Fichas ---------- */
 async function pedirFicha(paso) {
+  const clase = C;
   C.fichas[paso] = { estado: 'escribiendo' }; guardar(); pintarFichas();
   const historial = C.chat.filter(m => m.paso === paso && (m.de === 'apr' || m.de === 'yo')).map(m => ({ de: m.de, texto: m.texto }));
   let datos;
@@ -286,11 +375,15 @@ async function pedirFicha(paso) {
     await espera(1500);
     datos = fichaLocal(A.fases[paso].concepto, historial.filter(m => m.de === 'yo').map(m => m.texto));
   }
+  if (C !== clase) return;
   C.fichas[paso] = { estado: 'lista', datos: limpiarFicha(datos), nueva: true }; guardar();
   pintarFichas();
   if (panelDerActual !== 'cuaderno' && $('#dotCuaderno')) $('#dotCuaderno').hidden = false;
   sistema(`Nueva ficha: ${C.fichas[paso].datos.titulo}`, 'ficha', paso);
-  if (C.paso > PASOS && !ia) prueba.preparar();
+  if (C.paso > PASOS) {
+    pintarAhora();
+    if (pruebaDisponible()) prueba.preparar();
+  }
 }
 function pintarFichas() {
   const caja = $('#fichas'), hechas = Object.values(C.fichas).filter(f => f.estado === 'lista').length;
@@ -315,7 +408,7 @@ function pintarFichas() {
 /* ---------- Lo que midió la IA ---------- */
 function medir(paso, t, fuente) {
   const m = C.medicion[paso] ||= { turnos: [] };
-  m.turnos.push({ estado: t.estado, nota: t.nota, fuente });
+  m.turnos.push({ estado: t.estado, nota: t.nota, fuente, ...(t.puedeConfirmar ? { puedeConfirmar: true } : {}) });
   guardar(); pintarMedicion();
 }
 function pintarMedicion() {
@@ -351,7 +444,7 @@ function mostrarFinal(r) {
   $('#finFichas').focus();
 }
 function cerrarFinal() { $('#final').hidden = true; finMini?.destruir(); finMini = null; }
-$('#finFichas').addEventListener('click', () => { cerrarFinal(); $('#fichas').scrollIntoView({ behavior: RM ? 'auto' : 'smooth' }); document.querySelectorAll('#fichas .vis').forEach(animar); });
+$('#finFichas').addEventListener('click', () => { cerrarFinal(); mostrarCuaderno(); $('#tabCuaderno').focus({ preventScroll: true }); });
 $('#final').addEventListener('keydown', e => { if (e.key === 'Escape') cerrarFinal(); });
 
 /* ---------- Voz ---------- */
@@ -425,7 +518,7 @@ if (mic && (Rec || tieneAudio)) {
     if (g.muestras < g.sr * 0.25 || g.maxAmp < 0.002) {
       setMicEstado('No escuché voz clara; habla más cerca del micrófono.', 'err'); return;
     }
-    if (!ia) { setMicEstado('Activa el servidor local para transcribir tu voz.', 'err'); return; }
+    if (!sttLocal && !ia) { setMicEstado('Activa el servidor local para transcribir tu voz.', 'err'); return; }
     mic.disabled = true; setMicEstado('Transcribiendo tu voz…');
     try {
       const wav = codificarWav16k(g.chunks, g.sr);
@@ -508,7 +601,7 @@ let cargandoApoyo = false, apoyoActivoId = null, recienteApoyoId = null;
 const idUnicoApoyo = () => `ap-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 function fichasEstudioTema() {
   const s = cargarEstudio();
-  const prev = s && s.tema?.toLowerCase() === A.tema.toLowerCase() ? s.fichas : [];
+  const prev = s && s.aprendinId === A.id && s.tema?.toLowerCase() === A.tema.toLowerCase() ? s.fichas : [];
   const clase = C.apoyo || [];
   const mismo = (a, b) => a.datos.titulo === b.datos.titulo && a.datos.visual.tipo === b.datos.visual.tipo;
   return [...prev.filter(pf => !clase.some(cf => mismo(pf, cf))), ...clase].map((it, i) => it.id ? it : { ...it, id: `prev-${i}` });
@@ -516,30 +609,16 @@ function fichasEstudioTema() {
 function buscarApoyoPorId(id) {
   return (C.apoyo || []).find(f => f.id === id) || fichasEstudioTema().find(f => f.id === id);
 }
-function registrarVistaPaso(paso, tipo) {
-  if (!tipo || paso > PASOS) return;
-  const v = (C.apoyoVistosPaso ||= {})[paso] ||= [];
-  if (!v.includes(tipo)) { v.push(tipo); guardar(); }
-}
 function guardarApoyo(item) {
   if (!item.id) item.id = idUnicoApoyo();
   (C.apoyo ||= []).push(item);
-  registrarVistaPaso(item.paso || C.paso, item.datos.visual.tipo);
-  const s = cargarEstudio();
-  if (s && s.tema?.toLowerCase() === A.tema.toLowerCase()) { s.fichas.push(item); guardarEstudio(s); }
-  else guardarEstudio({ activo: true, tema: A.tema, gustos: A.gustos || A.mundo, nivel: 'algo', usaAprendin: true, fichas: [...(C.apoyo || [])] });
-  apoyoActivoId = item.id;
+  guardar();
   pintarApoyoLista(); pintarApoyoActivo(); pintarCalibracionClase();
   return item;
 }
 function marcarReaccionApoyo(id, r, nota) {
-  const target = (C.apoyo || []).find(f => f.id === id) || C.apoyo?.at(-1);
+  const target = (C.apoyo || []).find(f => f.id === id);
   if (target) { target.reaccion = r; target.nota = nota; guardar(); }
-  const s = cargarEstudio();
-  if (s?.fichas?.length && s.tema?.toLowerCase() === A.tema.toLowerCase()) {
-    const st = (id && s.fichas.find(f => f.id === id)) || s.fichas.at(-1);
-    if (st) { st.reaccion = r; st.nota = nota; guardarEstudio(s); }
-  }
 }
 function pintarApoyoActivo() {
   const host = $('#apoyoActivoHost');
@@ -582,19 +661,20 @@ function pintarApoyoActivo() {
 
   tarjetas.forEach((item, i) => {
     const esUltima = i === tarjetas.length - 1;
+    const esDelPaso = item.paso === C.paso;
     const idx = Math.max(0, todas.findIndex(f => f.id === item.id || (f.datos.titulo === item.datos.titulo && f.datos.visual.tipo === item.datos.visual.tipo)));
     const itemEl = document.createElement('div');
     itemEl.className = `cl-apoyo-stack-item${esUltima ? ' is-activa' : ' is-anterior'}${recienteApoyoId === item.id ? ' cl-nueva' : ''}`;
     itemEl.dataset.apoyoId = item.id;
     itemEl.innerHTML = renderizarFichaEstudio(item, idx, {
-      esUltima: esUltima && item.reaccion !== 'entendio',
-      permitirEnfoque: esUltima && item.reaccion === 'entendio',
+      esUltima: esUltima && esDelPaso && item.reaccion !== 'entendio',
+      permitirEnfoque: esUltima && esDelPaso && item.reaccion === 'entendio',
       gustos: A.gustos || A.mundo,
       avatar: av,
       tono,
       placeholder: 'Opcional: ¿qué parte de este paso no entiendes?'
     });
-    if (esUltima) {
+    if (esUltima && esDelPaso) {
       enlazarAccionesFicha(itemEl, {
         ocupado: () => cargandoApoyo,
         alReaccionar: (r, nota) => {
@@ -624,19 +704,16 @@ function pintarApoyoActivo() {
 
   host.querySelector('.cl-apoyo-ir')?.addEventListener('click', () => { if (C.paso <= PASOS) msg.focus(); });
 
-  activarFichas(stack, { autoPlay: false });
+  const activa = stack.querySelector('.cl-apoyo-stack-item.is-activa');
+  stack.querySelectorAll('.cl-apoyo-stack-item.is-anterior').forEach(el => activarFichas(el, { autoPlay: false }));
+  if (activa) activarFichas(activa, { autoPlay: !cargandoApoyo });
   if (cargandoApoyo) {
     stack.querySelector('.cl-apoyo-cargando')?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'nearest' });
   } else if (recienteApoyoId) {
-    const ultimaVis = stack.querySelector('.cl-apoyo-stack-item.is-activa .vis');
-    if (ultimaVis) animar(ultimaVis, { autoPlay: true });
     if (tarjetas.length > 1) {
-      stack.querySelector('.cl-apoyo-stack-item.is-activa')?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'nearest' });
+      activa?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'start' });
     }
     recienteApoyoId = null;
-  } else {
-    const ultimaVis = stack.querySelector('.cl-apoyo-stack-item.is-activa .vis');
-    if (ultimaVis) animar(ultimaVis, { autoPlay: true });
   }
 }
 function pintarApoyoLista() {
@@ -661,11 +738,10 @@ function pintarCalibracionClase() {
 function mostrarApoyoEnChat(item) {
   let guardado = (C.apoyo || []).find(f => f.id === item.id || (f.datos.titulo === item.datos.titulo && f.datos.visual.tipo === item.datos.visual.tipo));
   if (!guardado) guardado = guardarApoyo({ ...item, paso: item.paso || Math.min(PASOS, C.paso) });
-  registrarVistaPaso(C.paso, guardado.datos.visual.tipo);
   apoyoActivoId = guardado.id;
   verPanelDer('apoyo');
   pintarApoyoActivo();
-  if (window.innerWidth <= 1180) $('#panelDer')?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'start' });
+  $('#panelDer')?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'nearest' });
 }
 async function pedirApoyo(reaccion, nota = '', pinTipo = '') {
   if (cargandoApoyo || C.paso > PASOS) return;
@@ -673,21 +749,24 @@ async function pedirApoyo(reaccion, nota = '', pinTipo = '') {
   verPanelDer('apoyo');
   document.querySelectorAll('#apoyoActivoHost .fi-reaccion-btn, #apoyoActivoHost .fi-btn-enfoque, #apoyoActivoHost .fi-enfoque-chip, #apoyoActivoHost .fi-enfoque-send, #btnApoyo').forEach(b => { if (b) b.disabled = true; });
   pintarApoyoActivo();
-  if (window.innerWidth <= 1180) $('#panelDer')?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'start' });
   try {
     const pasoActual = C.paso, objetivo = A.fases[pasoActual]?.concepto || '';
-    const historial = historialDe(fichasEstudioTema());
-    const calBase = calcularCalibracion(historial);
+    const anteriores = fichasEstudioTema();
+    const historial = historialDe(anteriores.filter(f => f.paso === pasoActual));
+    const calBase = calcularCalibracion(historialDe(anteriores));
     const calibracion = pinTipo ? { ...calBase, pinTipo, estrategia: 'fijo' } : calBase;
     const { datos, fuente } = await solicitarFichaInicio({
-      ia, tema: A.tema, gustos: A.gustos || A.mundo, nivel: reaccion === 'inicio' ? 'cero' : 'algo',
-      reaccion, nota, objetivo, aprendin: A, historial, calibracion
+      ia, tema: A.tema, gustos: A.gustos || A.mundo,
+      nivel: reaccion === 'duda' || reaccion === 'inicio' ? 'cero' : reaccion === 'reto' ? 'bastante' : 'algo',
+      reaccion, nota, objetivo, dificultad: C.pista, aprendin: A, historial, calibracion
     });
     const nuevaId = idUnicoApoyo();
-    recienteApoyoId = nuevaId;
+    if (C.paso === pasoActual) {
+      recienteApoyoId = nuevaId;
+      apoyoActivoId = nuevaId;
+    }
     cargandoApoyo = false;
-    const item = guardarApoyo({ id: nuevaId, paso: pasoActual, datos, fuente, reaccionOrigen: reaccion, reaccion: null, nota });
-    apoyoActivoId = item.id;
+    guardarApoyo({ id: nuevaId, paso: pasoActual, datos, fuente, reaccionOrigen: reaccion, reaccion: null, nota });
   } finally {
     const quedoCargando = cargandoApoyo;
     cargandoApoyo = false;
@@ -706,7 +785,7 @@ $('#btnApoyo')?.addEventListener('click', () => abrirApoyoEnChat());
 
 /* ---------- Reiniciar y ejemplo ---------- */
 $('#btnReiniciar').addEventListener('click', () => {
-  if (!A || !confirm(`¿Empezar la clase de ${A.nombre} desde cero? Se borran sus fichas.`)) return;
+  if (!A || ocupado || cargandoApoyo || !confirm(`¿Empezar la clase de ${A.nombre} desde cero? Se borran sus fichas.`)) return;
   borrarClase(A.id); cerrarFinal(); empezar();
 });
 $('#btnEjemplo').addEventListener('click', () => { A = DEMO; guardarAprendin(A); empezar(); });

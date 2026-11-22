@@ -21,7 +21,7 @@ Un estudiante le acaba de enseñar un paso de un tema a su **aprendín** (un per
 - **barras** (items: texto, valor, icono; unidad): comparar cantidades.
 - **torta** (items: texto, valor, icono; unidad «%» u otra): partes de un total.
 - **fraccion** (fracciones: num, den, etiqueta; operacion; forma pizza o barra): fracciones dibujadas. Con «suma» o «resta» pon las dos fracciones y el resultado; con «igual», fracciones equivalentes; con «compara», dos fracciones. Denominadores de 1 a 12 para pizza, hasta 24 para barra.
-- **recta** (min, max, marcas: valor, texto; saltos): recta numérica. Con saltos dibuja flechas entre marcas seguidas (sumas y restas).
+- **recta** (min, max, marcas: valor, texto; saltos; recorrido): las marcas son etiquetas del eje. Con saltos, `recorrido` trae los valores visitados, en el orden de la operación. Para −3 − 2 usa `[-3, -5]` y escribe la igualdad en el resultado.
 - **linea_tiempo** (items: fecha, texto, detalle, icono): hechos en orden.
 - **ecuacion** (lineas: expresion, nota): una cuenta o ecuación resuelta línea por línea, con lo que se hizo en cada paso. La última línea es la respuesta.
 - **tabla** (columnas, filas): clasificaciones o datos.

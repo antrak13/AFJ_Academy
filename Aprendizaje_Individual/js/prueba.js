@@ -20,21 +20,23 @@ export function crearPrueba(ctx) {
   /* ---------- Pedir el examen (se pide antes, mientras sigue la clase) ---------- */
   function preparar() {
     A = ctx.A;
-    const p = P();
-    if (p.examen || pedido) return pedido;
-    pedido = (async () => {
+    const clase = ctx.C, p = P(), aprendin = A;
+    if (p.examen) return Promise.resolve(p.examen);
+    if (pedido?.p === p) return pedido.promesa;
+    const promesa = (async () => {
       let ex = null;
       if (ctx.ia()) {
         try {
-          const r = await fetch('/api/examen', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aprendin: resumenAprendin(A), fichas: ctx.aprendido(), intento: p.intento }) });
+          const r = await fetch('/api/examen', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aprendin: resumenAprendin(aprendin), fichas: ctx.aprendido(), intento: p.intento }) });
           const j = await r.json(); if (j.ok && j.examen?.preguntas?.length >= 3) ex = j.examen;
         } catch { /* sin IA: examen con sus fichas */ }
       }
-      if (!ex) ex = examenLocal(A, ctx.C.fichas);
-      p.examen = ex; ctx.guardar(); pedido = null;
+      if (!ex) ex = examenLocal(aprendin, clase.fichas);
+      if (ctx.C === clase && clase.prueba === p) { p.examen = ex; ctx.guardar(); }
       return ex;
-    })();
-    return pedido;
+    })().finally(() => { if (pedido?.p === p) pedido = null; });
+    pedido = { p, promesa };
+    return promesa;
   }
 
   /* ---------- Abrir y cerrar ---------- */
@@ -52,7 +54,7 @@ export function crearPrueba(ctx) {
       $('#prZona').innerHTML = `<div class="pr-cargando"><span></span><p>${esc(A.nombre)} está preparando la prueba con lo que le enseñaste…</p></div>`;
       decir('¡Qué nervios! Ya casi está la prueba.', 'nervioso');
       await preparar();
-      if (el.hidden) return;
+      if (el.hidden || ctx.C.prueba !== p) return;
     }
     if (!p.fallas.length) { p.fallas = decidirFallas(p.examen, ctx.C.medicion); ctx.guardar(); }
     $('#prTitulo').textContent = p.examen.titulo;

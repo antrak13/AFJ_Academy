@@ -48,12 +48,6 @@ function aplicarPaso(vis, idx, { terminado = false } = {}) {
     orb.style.opacity = terminado ? '0.45' : '1';
   }
 
-  const linea = vis.querySelector('.v-grafico .v-linea');
-  if (linea) {
-    const off = terminado ? 0 : Math.max(0, 1 - s / Math.max(1, est.total - 1));
-    linea.style.setProperty('--seg-off', String(off));
-  }
-
   vis.querySelectorAll('.vis-dots [data-i]').forEach(d => {
     const di = Number(d.dataset.i);
     d.classList.toggle('now', !terminado && di === s);
@@ -99,7 +93,7 @@ export function reproducirPasos(vis, desde = 0) {
   if (!vis) return;
   const est = obtenerEstado(vis);
   detenerAnimacion(vis);
-  if (RM || est.total <= 1) { aplicarPaso(vis, Math.max(0, est.total - 1), { terminado: true }); return; }
+  if (RM || est.total <= 1) { aplicarPaso(vis, desde); return; }
   est.reproduciendo = true;
   pintarPlayIcon(vis, true);
   aplicarPaso(vis, desde);
@@ -107,7 +101,7 @@ export function reproducirPasos(vis, desde = 0) {
 }
 
 export function animar(vis, { autoPlay = true } = {}) {
-  if (!vis) return;
+  if (!vis || vis.closest('details:not([open])')) return;
   const est = obtenerEstado(vis);
   detenerAnimacion(vis);
   if (RM) {
@@ -140,7 +134,10 @@ const io = 'IntersectionObserver' in window
 export function activarFichas(raiz, { autoPlay = true } = {}) {
   raiz.querySelectorAll('.vis:not([data-activa])').forEach(vis => {
     vis.dataset.activa = '1';
-    if (!autoPlay) {
+    const cerrada = vis.closest('details:not([open])');
+    if (cerrada) {
+      cerrada.addEventListener('toggle', () => { if (cerrada.open) animar(vis); }, { once: true });
+    } else if (!autoPlay) {
       const est = obtenerEstado(vis);
       if (est.total > 1) aplicarPaso(vis, est.total - 1, { terminado: true });
     } else if (io) {
@@ -154,7 +151,12 @@ export function activarFichas(raiz, { autoPlay = true } = {}) {
 document.addEventListener('click', e => {
   const t = e.target;
   const otra = t.closest?.('.vis-otra');
-  if (otra) { animar(otra.closest('.vis'), { autoPlay: true }); return; }
+  if (otra) {
+    const vis = otra.closest('.vis');
+    if (RM) reproducirPasos(vis, 0);
+    else animar(vis);
+    return;
+  }
 
   const vis = t.closest?.('.vis');
   if (!vis) return;
