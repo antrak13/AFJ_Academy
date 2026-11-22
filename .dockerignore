@@ -1,0 +1,7 @@
+**/node_modules
+**/.next
+**/.env
+**/.env*.local
+.git
+Aprendizaje_Individual/ia/cache
+Aprendizaje_Individual/.venv

@@ -18,6 +18,9 @@
 //   POST /api/examen     { aprendin, fichas: [texto], intento } → { ok, examen: { titulo, intro, preguntas } }
 //   POST /api/transcribir { audioBase64, idioma? } → { ok, texto }
 //
+//   GEMINI_API_KEY=… node servidor.mjs          → sin agy2, usa la API de Gemini directamente (sirve en un servidor)
+//   GEMINI_MODELOS=gemini-3.5-flash,…           → modelos de respaldo si el pedido está saturado (429/503)
+//
 //   MODO=piezas node servidor.mjs              → la IA elige piezas del catálogo en vez de dibujar el disfraz
 import http from 'node:http';
 import { spawn } from 'node:child_process';
@@ -37,7 +40,7 @@ import { esquemaExamen, limpiarExamen } from './js/examen.js';
 
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const RAIZ = path.resolve(DIR, '..');
-const PUERTO = Number(process.env.PUERTO) || 8080;
+const PUERTO = Number(process.env.PUERTO || process.env.PORT) || 8080;
 const HOST = process.env.HOST || '127.0.0.1';
 const AGY = process.env.AGY || 'agy2';
 const MODELO = process.env.MODELO || 'gemini-3.8-flash-low';            // preguntas: rápido
@@ -86,10 +89,22 @@ function resolverEstatico(pathname) {
 }
 
 /* ---------- ¿Está la IA y el dictado local? ---------- */
-let iaDisponible = false;
+// Dos caminos: el CLI de Antigravity (agy2, en la máquina de desarrollo) o la API de Gemini
+// con GEMINI_API_KEY (lo que se usa en un servidor). Si están los dos, manda agy2.
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const GEMINI_MODELOS = (process.env.GEMINI_MODELOS || 'gemini-3.5-flash,gemini-3.8-flash,gemini-2.5-flash').split(',').map(m => m.trim()).filter(Boolean);
+let agyDisponible = false;
+let iaDisponible = !!GEMINI_API_KEY;
+let PROVEEDOR = GEMINI_API_KEY ? 'gemini-api' : AGY;
 const probar = spawn(AGY, ['--help'], { stdio: 'ignore' });
-probar.on('error', () => { iaDisponible = false; console.log(`IA: no encontré «${AGY}». La página usará el creador sin IA.`); });
-probar.on('close', code => { iaDisponible = code === 0; if (iaDisponible) console.log(`IA: ${AGY} · preguntas con ${MODELO} · creación con ${MODELO_CREAR} · diseño: ${MODO}`); });
+const avisarSinAgy = () => console.log(GEMINI_API_KEY ? `IA: API de Gemini (${GEMINI_MODELOS.join(', ')}) · diseño: ${MODO}` : `IA: no encontré «${AGY}» ni GEMINI_API_KEY. La página usará el creador sin IA.`);
+probar.on('error', () => { agyDisponible = false; avisarSinAgy(); });
+probar.on('close', code => {
+  agyDisponible = code === 0;
+  if (!agyDisponible) return avisarSinAgy();
+  iaDisponible = true; PROVEEDOR = AGY;
+  console.log(`IA: ${AGY} · preguntas con ${MODELO} · creación con ${MODELO_CREAR} · diseño: ${MODO}`);
+});
 
 let sttDisponible = false;
 if (existsSync(STT_SCRIPT)) {
@@ -122,7 +137,50 @@ async function promptPreguntas(gustos, tema) {
   return `${instrucciones}\n\n## Pedido\n\n- Gustos del estudiante: ${gustos}\n- Tema que le va a enseñar: ${tema}\n\nResponde solo con el JSON.`;
 }
 
-function correrIA(prompt, esquema, modelo = MODELO, { archivos = null, permitirHerramientas = false, limiteS = null } = {}) {
+function correrIA(prompt, esquema, modelo = MODELO, opciones = {}) {
+  if (!agyDisponible && GEMINI_API_KEY) return correrGemini(prompt, esquema, modelo, opciones);
+  return correrAgy(prompt, esquema, modelo, opciones);
+}
+
+/* ---------- IA por la API de Gemini (sin agy2) ---------- */
+// Los modelos de agy2 traen el esfuerzo en el nombre (gemini-3.8-flash-low); en la API va aparte.
+function modeloGemini(modelo) {
+  const m = /^(gemini-[\d.]+-(?:flash|pro)(?:-lite)?)(?:-(low|medium|high))?/.exec(modelo);
+  return m ? { nombre: m[1], esfuerzo: m[2] || 'low' } : { nombre: GEMINI_MODELOS[0], esfuerzo: /thinking|opus/.test(modelo) ? 'high' : 'medium' };
+}
+
+async function correrGemini(prompt, esquema, modelo, { archivos = null, limiteS = null } = {}) {
+  const { nombre, esfuerzo } = modeloGemini(modelo);
+  const adjuntos = archivos ? Object.entries(archivos).map(([n, c]) => `\n\n## Archivo ${n}\n\n${c}`).join('') : '';
+  const limite = limiteS || (lento(modelo) ? LIMITE_LENTO_S : LIMITE_S);
+  const t0 = Date.now();
+  let ultimo = '';
+  for (const m of [nombre, ...GEMINI_MODELOS.filter(x => x !== nombre)]) {
+    const generationConfig = { responseMimeType: 'application/json', responseJsonSchema: esquema };
+    if (m.startsWith('gemini-3')) generationConfig.thinkingConfig = { thinkingLevel: esfuerzo === 'medium' ? 'medium' : esfuerzo };
+    let r;
+    try {
+      r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-goog-api-key': GEMINI_API_KEY },
+        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt + adjuntos }] }], generationConfig }),
+        signal: AbortSignal.timeout(limite * 1000)
+      });
+    } catch (e) { ultimo = `${m}: ${e.message}`; continue; }
+    const j = await r.json().catch(() => ({}));
+    if (r.status === 429 || r.status >= 500) { ultimo = `${m}: ${j.error?.message || r.status}`; continue; }
+    if (!r.ok) throw new Error(`Gemini (${m}): ${j.error?.message || r.status}`);
+    const cand = j.candidates?.[0];
+    if (!cand || cand.finishReason === 'SAFETY' || j.promptFeedback?.blockReason) throw new Error('la IA rechazó el pedido');
+    if (cand.finishReason === 'MAX_TOKENS') throw new Error('la respuesta de la IA quedó incompleta');
+    const texto = (cand.content?.parts || []).filter(x => !x.thought).map(x => x.text || '').join('');
+    const res = JSON.parse(texto.replace(/^```(json)?|```$/g, ''));
+    return { r: res, segundos: Math.round((Date.now() - t0) / 100) / 10, tokens: j.usageMetadata?.totalTokenCount, modelo: m };
+  }
+  throw new Error(`Gemini no disponible: ${ultimo}`);
+}
+
+function correrAgy(prompt, esquema, modelo = MODELO, { archivos = null, permitirHerramientas = false, limiteS = null } = {}) {
   return new Promise((ok, mal) => {
     mkdtemp(path.join(os.tmpdir(), 'aprendines-')).then(async caja => {
       try {
@@ -166,7 +224,7 @@ async function conCache(tipo, datos, hacer, modelo = MODELO) {
   await turno();
   try {
     const res = await hacer();
-    res.ia = { proveedor: AGY, modelo, segundos: Math.round((Date.now() - t0) / 100) / 10, ...res.ia };
+    res.ia = { proveedor: PROVEEDOR, modelo, segundos: Math.round((Date.now() - t0) / 100) / 10, ...res.ia };
     const resumen = tipo === 'turno' || tipo === 'ficha' || tipo === 'examen' ? { aprendin: datos.a?.nombre, paso: datos.paso, estado: res.turno?.estado, visual: res.ficha?.visual?.tipo } : tipo === 'ficha-inicio' ? { tema: datos.tema, nivel: datos.nivel, reaccion: datos.reaccion, visual: res.ficha?.visual?.tipo } : datos;
     appendFile(REGISTRO, JSON.stringify({ fecha: new Date().toISOString(), tipo, ...resumen, ...res.ia, nombre: res.aprendin?.nombre }) + '\n').catch(() => {});
     if (ENSAYO) { await mkdir(CACHE, { recursive: true }); await writeFile(archivo, JSON.stringify(res)); }
@@ -376,13 +434,13 @@ const json = (res, code, obj) => res.writeHead(code, { 'Content-Type': 'applicat
 const servidor = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
   try {
-    if (url.pathname === '/api/estado') return json(res, 200, { ia: iaDisponible, transcripcion: sttDisponible, modeloSTT: sttDisponible ? WHISPER_MODELO : null, proveedor: AGY, modelo: MODELO_CREAR, modeloPreguntas: MODELO, ensayo: ENSAYO, modo: MODO, modelos: MODELOS, modeloMaximo: MODELO_MAXIMO });
+    if (url.pathname === '/api/estado') return json(res, 200, { ia: iaDisponible, transcripcion: sttDisponible, modeloSTT: sttDisponible ? WHISPER_MODELO : null, proveedor: PROVEEDOR, modelo: MODELO_CREAR, modeloPreguntas: MODELO, ensayo: ENSAYO, modo: MODO, modelos: MODELOS, modeloMaximo: MODELO_MAXIMO });
     if (url.pathname === '/api/aprendin' || url.pathname === '/api/preguntas') {
       if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'usa POST' });
       const cuerpo = await leerCuerpo(req, 32768);
       const g = String(cuerpo.gustos || '').trim().slice(0, 160), t = String(cuerpo.tema || '').trim().slice(0, 80);
       if (!g || !t) return json(res, 400, { ok: false, error: 'faltan los gustos o el tema' });
-      if (!iaDisponible) return json(res, 503, { ok: false, error: `no está disponible ${AGY}` });
+      if (!iaDisponible) return json(res, 503, { ok: false, error: `no hay IA disponible (${AGY} o GEMINI_API_KEY)` });
       if (url.pathname === '/api/preguntas') {
         console.log(`→ preguntas · gustos: ${g} · tema: ${t}`);
         const r = await preguntarConIA(g, t);
@@ -400,7 +458,7 @@ const servidor = http.createServer(async (req, res) => {
     }
     if (url.pathname === '/api/examen') {
       if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'usa POST' });
-      if (!iaDisponible) return json(res, 503, { ok: false, error: `no está disponible ${AGY}` });
+      if (!iaDisponible) return json(res, 503, { ok: false, error: `no hay IA disponible (${AGY} o GEMINI_API_KEY)` });
       const cuerpo = await leerCuerpo(req, 65536), a = resumenAprendin(cuerpo.aprendin);
       if (!a.nombre || !a.tema || a.conceptos.length < PASOS) return json(res, 400, { ok: false, error: 'falta el aprendín o sus pasos' });
       const fichas = (Array.isArray(cuerpo.fichas) ? cuerpo.fichas : []).slice(0, PASOS).map(x => String(x).replace(/\s+/g, ' ').slice(0, 300));
@@ -412,7 +470,7 @@ const servidor = http.createServer(async (req, res) => {
     }
     if (url.pathname === '/api/ficha-inicio') {
       if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'usa POST' });
-      if (!iaDisponible) return json(res, 503, { ok: false, error: `no está disponible ${AGY}` });
+      if (!iaDisponible) return json(res, 503, { ok: false, error: `no hay IA disponible (${AGY} o GEMINI_API_KEY)` });
       const cuerpo = await leerCuerpo(req, 65536);
       const tema = String(cuerpo.tema || '').replace(/\s+/g, ' ').trim().slice(0, 80);
       const gustos = String(cuerpo.gustos || '').replace(/\s+/g, ' ').trim().slice(0, 140) || 'vida cotidiana';
@@ -451,7 +509,7 @@ const servidor = http.createServer(async (req, res) => {
     }
     if (url.pathname === '/api/turno' || url.pathname === '/api/ficha') {
       if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'usa POST' });
-      if (!iaDisponible) return json(res, 503, { ok: false, error: `no está disponible ${AGY}` });
+      if (!iaDisponible) return json(res, 503, { ok: false, error: `no hay IA disponible (${AGY} o GEMINI_API_KEY)` });
       let d;
       try { d = leerClase(await leerCuerpo(req, 65536)); } catch (e) { return json(res, e.codigo || 400, { ok: false, error: e.message }); }
       if (url.pathname === '/api/turno') {
