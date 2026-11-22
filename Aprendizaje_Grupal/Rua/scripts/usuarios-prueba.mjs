@@ -1,6 +1,6 @@
 // Crea cuentas de prueba ya confirmadas (sin correo), con la telemetría y la grabación de voz
 // aceptadas, y las hace amigas entre sí.
-// Uso: npm run db:usuarios   → ana@prueba.local, beto@prueba.local, caro@prueba.local / clave: prueba123
+// Uso: npm run db:usuarios   → ana@prueba.local, beto@prueba.local, caro@prueba.local y profe@prueba.local (docente) / clave: prueba123
 import { createClient } from "@supabase/supabase-js";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -54,4 +54,24 @@ for (let i = 0; i < ids.length; i++)
     }
   }
 console.log("✓ son amigos entre sí");
+
+// Cuenta docente para la demo del panel docente de Aprendines (al entrar va directo a docente.html).
+const DOCENTE = { email: "profe@prueba.local", nombre: "Profe Demo" };
+const metaDocente = { full_name: DOCENTE.nombre, rol: "docente", institucion: "AFJ Academy", carrera: "Docente de primaria" };
+let profe = lista.users.find((u) => u.email === DOCENTE.email);
+if (!profe) {
+  const { data, error } = await sb.auth.admin.createUser({ email: DOCENTE.email, password: CLAVE, email_confirm: true, user_metadata: metaDocente });
+  if (error) throw error;
+  profe = data.user;
+  console.log(`✓ creada ${DOCENTE.email} (docente)`);
+} else {
+  const { error } = await sb.auth.admin.updateUserById(profe.id, { user_metadata: { ...profe.user_metadata, ...metaDocente } });
+  if (error) throw error;
+  console.log(`· ya existía ${DOCENTE.email} (docente)`);
+}
+{
+  const { error } = await sb.from("profiles").upsert({ id: profe.id, nombre: DOCENTE.nombre, telemetria: true });
+  if (error) throw error;
+}
+
 console.log(`\nClave de todas: ${CLAVE}`);

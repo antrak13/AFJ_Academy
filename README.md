@@ -17,7 +17,7 @@ La plataforma completa se levanta desde la app de Next (`Aprendizaje_Grupal/Rua`
 cd Aprendizaje_Grupal/Rua
 npm install
 cp .env.example .env.local   # y completa las claves (Supabase, LiveKit, IA)
-npm run db:usuarios          # cuentas de prueba: ana@, beto@, caro@prueba.local / prueba123
+npm run db:usuarios          # cuentas de prueba: ana@, beto@, caro@prueba.local y profe@prueba.local (docente) / prueba123
 npm run dev                  # http://localhost:3000
 ```
 
