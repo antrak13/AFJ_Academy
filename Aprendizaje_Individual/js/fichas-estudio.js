@@ -1,7 +1,7 @@
 // Fichas de inicio / estudio adaptativo: genera fichas visuales animadas según tema, gustos y nivel,
 // y adapta cada nueva ficha según las reacciones del estudiante.
 import { limpiarFicha, htmlFicha, NOMBRES_VISUAL, TIPOS } from './fichas.js';
-import { activarFichas, animar } from './fichas-dom.js';
+import { activarFichas } from './fichas-dom.js';
 import { EJEMPLOS } from './fichas-ejemplo.js';
 import { svgAprendin } from './aprendin.js';
 import { MUNDOS } from './mundos.js';
@@ -190,12 +190,11 @@ function pintarEstudio({ animarUltima = false } = {}) {
   });
 
   if (animarUltima) {
-    activarFichas(lista, { autoPlay: false });
+    lista.querySelectorAll('.fi-anterior').forEach(card => activarFichas(card, { autoPlay: false }));
     const ultimaCard = lista.querySelector('.fi-activa');
-    const ultimaVis = ultimaCard?.querySelector('.vis');
-    if (ultimaVis) animar(ultimaVis, { autoPlay: true });
-    if (S.fichas.length > 1 && ultimaCard) {
-      ultimaCard.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest' });
+    if (ultimaCard) {
+      activarFichas(ultimaCard);
+      ultimaCard.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
     }
   } else {
     activarFichas(lista);

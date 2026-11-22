@@ -704,19 +704,16 @@ function pintarApoyoActivo() {
 
   host.querySelector('.cl-apoyo-ir')?.addEventListener('click', () => { if (C.paso <= PASOS) msg.focus(); });
 
-  activarFichas(stack, { autoPlay: false });
+  const activa = stack.querySelector('.cl-apoyo-stack-item.is-activa');
+  stack.querySelectorAll('.cl-apoyo-stack-item.is-anterior').forEach(el => activarFichas(el, { autoPlay: false }));
+  if (activa) activarFichas(activa, { autoPlay: !cargandoApoyo });
   if (cargandoApoyo) {
     stack.querySelector('.cl-apoyo-cargando')?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'nearest' });
   } else if (recienteApoyoId) {
-    const ultimaVis = stack.querySelector('.cl-apoyo-stack-item.is-activa .vis');
-    if (ultimaVis) animar(ultimaVis, { autoPlay: true });
     if (tarjetas.length > 1) {
-      stack.querySelector('.cl-apoyo-stack-item.is-activa')?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'nearest' });
+      activa?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'start' });
     }
     recienteApoyoId = null;
-  } else {
-    const ultimaVis = stack.querySelector('.cl-apoyo-stack-item.is-activa .vis');
-    if (ultimaVis) animar(ultimaVis, { autoPlay: true });
   }
 }
 function pintarApoyoLista() {
@@ -744,7 +741,7 @@ function mostrarApoyoEnChat(item) {
   apoyoActivoId = guardado.id;
   verPanelDer('apoyo');
   pintarApoyoActivo();
-  if (window.innerWidth <= 1180) $('#panelDer')?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'start' });
+  $('#panelDer')?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'nearest' });
 }
 async function pedirApoyo(reaccion, nota = '', pinTipo = '') {
   if (cargandoApoyo || C.paso > PASOS) return;
@@ -752,7 +749,6 @@ async function pedirApoyo(reaccion, nota = '', pinTipo = '') {
   verPanelDer('apoyo');
   document.querySelectorAll('#apoyoActivoHost .fi-reaccion-btn, #apoyoActivoHost .fi-btn-enfoque, #apoyoActivoHost .fi-enfoque-chip, #apoyoActivoHost .fi-enfoque-send, #btnApoyo').forEach(b => { if (b) b.disabled = true; });
   pintarApoyoActivo();
-  if (window.innerWidth <= 1180) $('#panelDer')?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'start' });
   try {
     const pasoActual = C.paso, objetivo = A.fases[pasoActual]?.concepto || '';
     const anteriores = fichasEstudioTema();

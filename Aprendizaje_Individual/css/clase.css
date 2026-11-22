@@ -18,10 +18,10 @@
 
 .clase {
   display: grid; gap: clamp(14px, 1.8vw, 22px); padding: 4px clamp(14px, 3vw, 28px) 28px; align-items: start;
-  grid-template-columns: minmax(250px, 295px) minmax(0, 1.15fr) minmax(340px, 450px);
-  grid-template-areas: "esc chat cuad";
+  grid-template-columns: minmax(205px, 240px) minmax(300px, .8fr) minmax(445px, 1.25fr);
+  grid-template-areas: "esc chat cuad"; max-width: 1720px; margin-inline: auto;
 }
-@media (max-width: 1180px) {
+@media (max-width: 1100px) {
   .clase { grid-template-columns: minmax(250px, 290px) minmax(0, 1fr); grid-template-areas: "esc chat" "cuad cuad"; }
 }
 @media (max-width: 760px) {
@@ -31,15 +31,15 @@
 /* Escenario */
 .cl-escenario { grid-area: esc; position: sticky; top: 12px; background: var(--papel); border: 1px solid color-mix(in srgb, var(--linea) 75%, transparent); border-radius: var(--r-l); box-shadow: var(--sombra-2); padding: 14px; display: grid; gap: 12px; min-width: 0; }
 @media (max-width: 760px) { .cl-escenario { position: static; } }
-.cl-foco { height: 240px; }
-.cl-foco .estrella { width: 205px; bottom: 12px; }
+.cl-foco { height: 220px; }
+.cl-foco .estrella { width: min(205px, 100%); bottom: 12px; }
 .cl-placa { text-align: center; }
 .cl-placa h1 { font: 800 1.55rem/1.1 var(--display); letter-spacing: -.02em; }
 .cl-placa span { color: var(--tinta-2); font-weight: 700; font-size: .9rem; }
 
 .cl-fases { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
 .cl-fase { display: grid; justify-items: center; gap: 1px; border-radius: 12px; padding: 3px 1px 5px; border: 2px solid transparent; position: relative; }
-.cl-fase .mini { width: 46px; height: 42px; display: flex; align-items: flex-end; }
+.cl-fase .mini { width: min(46px, 100%); height: 42px; display: flex; align-items: flex-end; }
 .cl-fase:not(.hecho) .mini { filter: brightness(0) opacity(.16); }
 .cl-fase.meta .mini { filter: brightness(0) opacity(.3); animation: cl-late 1.6s ease-in-out infinite; }
 @keyframes cl-late { 50% { transform: scale(1.08); } }
@@ -115,7 +115,7 @@
 .cl-enviar { flex: none; padding: 12px 20px; }
 
 /* Panel derecho con pestañas: Apoyo visual persistente + Cuaderno */
-.cl-panel-der { grid-area: cuad; min-width: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 12px; }
+.cl-panel-der { grid-area: cuad; min-width: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 12px; scroll-margin-top: 14px; }
 .cl-panel-tabs { display: flex; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 4px; border-bottom: 1.5px solid var(--linea); }
 .cl-panel-tabs::-webkit-scrollbar { display: none; }
 .cl-panel-tabs [role="tab"] {
@@ -144,7 +144,7 @@
 .cl-apoyo-panel-cuerpo { display: grid; gap: 8px; min-width: 0; }
 
 .cl-fichas { display: grid; gap: 16px; }
-@media (max-width: 1180px) { .cl-fichas { grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); align-items: start; } }
+@media (max-width: 1100px) { .cl-fichas { grid-template-columns: repeat(auto-fill, minmax(min(100%, 460px), 1fr)); align-items: start; } }
 .cl-ficha { scroll-margin-top: 14px; min-width: 0; }
 .cl-nueva { animation: cl-ficha-nueva .8s cubic-bezier(.3, 1.4, .5, 1) both; }
 @keyframes cl-ficha-nueva { from { opacity: 0; transform: translateY(-16px) rotate(-1.5deg) scale(.96); } }
@@ -190,14 +190,12 @@
 .cl-mic-estado.err { color: #B84226; }
 
 .cl-apoyo-stack { display: grid; gap: 16px; min-width: 0; }
-.cl-apoyo-stack-item { min-width: 0; }
+.cl-apoyo-stack-item { min-width: 0; scroll-margin-top: 14px; }
 .cl-apoyo-stack-item.is-anterior .ficha-ap { opacity: .94; border-style: solid; }
 .cl-apoyo-cnt { font: 800 .78rem var(--display); color: var(--tinta-2); }
 .cl-apoyo-cargando { background: var(--papel); border: 1.5px dashed var(--linea); border-radius: 16px; padding: 14px 16px; }
 .cl-apoyo-cargando .cargando { margin: 0; }
 .cl-apoyo-otra-wrap { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.cl-panel-der .v-ciclo { width: min(100%, 285px); }
-.cl-panel-der .vis-cap { font-size: .79rem; }
 .cl-panel-der .fi-enfoque-sel { max-width: 100%; }
 
 .cl-apoyo-minis { display: grid; gap: 6px; margin-top: 8px; }
