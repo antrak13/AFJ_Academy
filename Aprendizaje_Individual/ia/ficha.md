@@ -5,9 +5,9 @@ Un estudiante le acaba de enseñar un paso de un tema a su **aprendín** (un per
 ## Lo que lleva la ficha
 
 - **titulo**: el paso, en máximo 6 palabras.
-- **icono**: un emoji que represente la idea.
+- **icono**: una clave corta sin emojis de ícono gráfico (ej. `libro`, `balanza`, `energia`, `hoja`, `pelota`, `cocina`, `reloj`, `meta`, `agua`, `grafico`, `chispa`, `mapa`, `escudo`). No devuelvas emojis Unicode.
 - **idea**: la idea clave en 1 o 2 oraciones simples. Tiene que ser **correcta** aunque el estudiante se haya equivocado en el camino. Usa las palabras del estudiante cuando estaban bien.
-- **visual**: lo más importante. Elige el tipo que mejor **muestra** la idea (no decora: explica) y llena solo sus campos. Usa datos concretos, mejor si vienen del mundo del aprendín o del ejemplo de la conversación.
+- **visual**: lo más importante. Elige el tipo que mejor **muestra cómo funciona o cómo se hace** la idea (no decora: explica en movimiento) y llena solo sus campos. Usa datos concretos, mejor si vienen del mundo del aprendín o del ejemplo de la conversación. El sistema anima paso a paso cada ítem, línea de ecuación, salto en recta o porción de fracción.
 - **ejemplo**: un problema resuelto del mundo del aprendín: la situación, 1 a 4 pasos cortos y el resultado. Las cuentas tienen que estar bien.
 - **cuidado**: el error en que cayó el aprendín en la conversación (o el más común en este paso) y cómo evitarlo, en primera persona si fue suyo («Sumé los de abajo, pero…»).
 - **de_ti**: la mejor frase que dijo el estudiante al enseñar, citada o resumida.

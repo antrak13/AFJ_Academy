@@ -16,7 +16,7 @@
   <a class="marca" href="taller.html" aria-label="Aprendines: taller"><span class="marca-av" id="marcaAv"></span><span>Aprendines</span></a>
   <nav class="nav" aria-label="Secciones"><a href="taller.html">Taller</a><a href="clase.html">Clase</a><a href="fichas.html" aria-current="page">Fichas</a></nav>
   <p class="lema">Fichas visuales que <b>se adaptan</b> mientras aprendes.</p>
-  <div class="barra-acc"><span class="estado-ia" id="estadoIA">Buscando la IA…</span></div>
+  <div class="barra-acc"><span class="estado-ia" id="estadoIA">Conectando…</span></div>
 </header>
 
 <main class="fi-pag">
@@ -24,7 +24,7 @@
     <div class="tarjeta-tit">
       <h1 id="tInicio">Estudia con fichas adaptativas</h1>
     </div>
-    <p class="nota">Escribe qué tema quieres entender y qué te gusta. La IA genera una ficha con el visual animado que mejor lo explica (entre 13 tipos, cuando aplica) y cada nueva ficha se adapta a tu reacción.</p>
+    <p class="nota">Escribe qué tema quieres entender y qué te gusta. Se arma una ficha con el gráfico animado y las analogías que mejor lo explican (entre 13 formatos visuales) y cada nueva ficha se adapta a tu reacción.</p>
 
     <div class="fi-apr-ban" id="bannerAprendin" hidden>
       <span class="mini" id="aprMini" aria-hidden="true"></span>
@@ -49,6 +49,7 @@
         <label><input type="radio" name="nivelEstudio" value="algo" checked><span>Sé algo</span></label>
         <label><input type="radio" name="nivelEstudio" value="bastante"><span>Sé bastante</span></label>
       </fieldset>
+      <div class="fi-cal-host fi-cal-full" id="calibracionInicio"></div>
       <button class="btn btn-crear" id="btnGenerar" type="submit">Generar primera ficha</button>
     </form>
   </section>
@@ -61,16 +62,19 @@
         <div class="fi-tipos-usados" id="estTipos" aria-label="Tipos visuales usados"></div>
       </div>
       <div class="fi-barra-acc">
+        <button class="btn btn-chico" id="btnCalibracion" type="button" aria-expanded="false" aria-controls="calibracionEstudio">Estilo visual</button>
         <button class="btn" id="btnNuevoTema" type="button">Cambiar tema</button>
         <a class="btn btn-fuerte fi-ir-clase" id="btnIrClase" href="clase.html">Enseñarle a tu aprendín →</a>
       </div>
     </div>
 
-    <div class="fi-cargando" id="estudioCargando" hidden>
-      <p class="cargando">Armando tu ficha adaptada con el mejor diseño visual…</p>
-    </div>
+    <div class="fi-cal-host" id="calibracionEstudio" hidden></div>
 
     <div class="fi-feed" id="estudioLista"></div>
+
+    <div class="fi-cargando" id="estudioCargando" hidden>
+      <p class="cargando">Armando una nueva ficha visual adaptada debajo…</p>
+    </div>
   </section>
 
   <section class="fi-sec" id="secClase" hidden aria-labelledby="claseTit">
@@ -80,7 +84,7 @@
 
   <section class="fi-sec" aria-labelledby="tEjemplos">
     <h2 id="tEjemplos">Ejemplos de los 13 tipos de visual</h2>
-    <p class="intro">Cuando le enseñas bien un paso del tema o estudias con fichas, la IA elige el visual que mejor explica la idea entre estos 13 tipos y el código lo dibuja y anima.</p>
+    <p class="intro">Cuando le enseñas bien un paso del tema o estudias con fichas, se elige el formato visual que mejor explica la idea entre estos 13 tipos y se dibuja animado al instante.</p>
     <div class="galeria" id="galeria"></div>
   </section>
 </main>
