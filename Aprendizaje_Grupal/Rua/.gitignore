@@ -1,0 +1,12 @@
+# Dependencias y builds
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+.vercel
+
+# Entorno y logs
+.env
+.env*.local
+*.log

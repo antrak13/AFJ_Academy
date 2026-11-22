@@ -13,8 +13,9 @@
 </head>
 <body>
 <header class="barra">
+  <a class="btn-inicio" href="../inicio.html" title="Volver al inicio de AFJ Academy"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Volver al inicio</span></a>
   <a class="marca" href="taller.html" aria-label="Aprendines: taller"><span class="marca-av" id="marcaAv"></span><span>Aprendines</span></a>
-  <nav class="nav" aria-label="Secciones"><a href="taller.html" aria-current="page">Taller</a><a href="clase.html">Clase</a><a href="fichas.html">Fichas</a></nav>
+  <nav class="nav" aria-label="Secciones"><a href="taller.html" aria-current="page">Taller</a><a href="clase.html">Clase</a><a href="sala.html">Sala</a><a href="fichas.html">Fichas</a><a href="disenos.html">Diseños</a></nav>
   <p class="lema">Tú le enseñas, tu aprendín aprende y, mientras aprende, <b>se transforma</b>.</p>
 </header>
 
@@ -33,6 +34,7 @@
       <input id="nombre" maxlength="20" autocomplete="off" spellcheck="false">
       <span class="placa-mundo" id="placaMundo"></span>
     </div>
+    <a class="btn btn-fuerte taller-salto" href="#crearAprendin" id="saltoCrear">Crear mi aprendín</a>
 
     <div class="bloque">
       <div class="bloque-tit"><h2 id="tFases">Fases de evolución</h2><span class="nivel-nombre" id="faseNombre"></span></div>
@@ -52,8 +54,13 @@
   </section>
 
   <section class="panel">
-    <div class="tarjeta crear">
-      <div class="tarjeta-tit"><h2>Crea tu aprendín</h2><span class="estado-ia" id="estadoIA">Buscando la IA…</span></div>
+    <section class="tarjeta coleccion" id="coleccion" aria-labelledby="tColeccion" hidden>
+      <h2 id="tColeccion">Mis aprendines</h2>
+      <div class="coleccion-lista" id="coleccionLista"></div>
+    </section>
+    <div class="tarjeta crear" id="crearAprendin">
+      <div class="tarjeta-tit"><h2>Crea tu aprendín</h2><span class="estado-ia" id="estadoIA">Conectando…</span></div>
+      <div class="mi-aula" id="miAula" hidden aria-live="polite"></div>
       <form id="formCrear" class="form-crear" autocomplete="off">
         <div class="pregunta">
           <label for="gustos">¿Qué te gusta?</label>
@@ -73,7 +80,7 @@
         <div class="lista-preguntas" id="listaPreguntas" aria-live="polite"></div>
         <div class="pregunta-ia nombre-propio">
           <label class="pregunta-txt" for="nombrePropio">¿Quieres ponerle nombre?</label>
-          <input class="otra" id="nombrePropio" maxlength="14" autocomplete="off" placeholder="Si lo dejas vacío, la IA elige uno">
+          <input class="otra" id="nombrePropio" maxlength="14" autocomplete="off" placeholder="Si lo dejas vacío, se elige uno automáticamente">
         </div>
         <div class="calidad" role="radiogroup" aria-labelledby="tCalidad">
           <span class="campo-nombre" id="tCalidad">Diseño</span>
@@ -87,11 +94,12 @@
         </div>
       </div>
       <div class="ficha" id="ficha" hidden></div>
+      <p class="nota" id="estadoGuardado" role="status" hidden></p>
     </div>
 
     <div class="tarjeta">
       <h2>O elige un mundo listo</h2>
-      <p class="nota">Cada aprendín viene del mundo que te gusta. En la clase, la IA lo viste para cualquier mundo que escribas.</p>
+      <p class="nota">Cada aprendín viene del mundo que te gusta. En la clase se adapta a cualquier mundo que escribas.</p>
       <div class="mundos" id="mundos"></div>
     </div>
 
@@ -107,7 +115,7 @@
       <div class="piezas" id="piezas" role="tabpanel"></div>
       <div class="campo" id="campoColoresPieza"><span class="campo-nombre" id="tColorPieza">Colores de la pieza</span><div class="colores-pieza" id="coloresPieza"></div></div>
       <details class="json">
-        <summary id="tJson">Ver el JSON (esto es lo que arma la IA)</summary>
+        <summary id="tJson">Ver detalles técnicos (JSON)</summary>
         <pre id="json"></pre>
       </details>
     </div>

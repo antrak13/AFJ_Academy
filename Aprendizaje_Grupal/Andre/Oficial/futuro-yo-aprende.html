@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Futuro Yo Aprende · Aprendizaje Grupal</title>
-  <meta name="description" content="Feed de aprendizaje adaptativo personalizado con IA, clases colaborativas en vivo y tutorías.">
+  <title>AFJ Academy Conecta · Clases Grupales &amp; Social</title>
+  <meta name="description" content="AFJ Academy Conecta: clases colaborativas en vivo, estudio en equipo y tutorías.">
   
   <!-- Tipografías del Sistema (Fraunces + Atkinson Hyperlegible + Caveat) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,21 +20,34 @@
      CABECERA PRINCIPAL
      ========================================================================== -->
 <header class="wrap top">
-  <div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;">
-    <span class="logo">Futuro Yo <em>Aprende</em></span>
-    <span class="ai" id="ai" data-state="pending"><span class="dot"></span><span id="ai-text">IA en vivo: conectando…</span></span>
+  <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+    <a href="../../../inicio.html" class="btn-back-inicio" title="Volver al menú principal de AFJ Academy">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      <span>Volver al inicio</span>
+    </a>
+    <a class="logo" href="../../../inicio.html" title="Volver al inicio de AFJ Academy" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+      <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 7px; background: #FFF4E6; border: 1px solid #FAD1A0; color: var(--coral);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+        </svg>
+      </span>
+      <span>AFJ Academy <em>Conecta</em></span>
+    </a>
   </div>
   <div style="display: flex; align-items: center; gap: 10px;">
     <!-- Al presionar el badge o botón de perfil se abre la información del perfil con racha y estrellas -->
     <div class="user-badge-header" onclick="abrirModalPerfilPropio()" title="Ver mi perfil y estadísticas">
-      <div class="user-avatar-circle" id="headerAvatar">👨‍💻</div>
+      <div class="user-avatar-circle" id="headerAvatar">A</div>
       <div class="user-info-text">
         <b id="headerUserName">Andre</b>
-        <span id="headerUserSubtitle">🎓 UMSS • Cochabamba</span>
+        <span id="headerUserSubtitle">UMSS • Cochabamba</span>
       </div>
     </div>
     <button type="button" class="auth-btn-header" onclick="abrirModalPerfilPropio()" title="Ver perfil y rangos">
-      <span>👤 Mi Perfil</span>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Mi Perfil</span>
     </button>
   </div>
 </header>
@@ -45,32 +58,23 @@
 <div class="wrap">
   <nav class="main-nav-bar" aria-label="Navegación principal">
     <div class="main-tabs" style="overflow-x: auto; max-width: 100%;">
-      <button type="button" class="main-tab-btn active" id="tab-btn-feed" onclick="switchAppTab('feed')">
-        <span>🧠</span>
-        <span>Feed IA</span>
-      </button>
-      <button type="button" class="main-tab-btn" id="tab-btn-comunidad" onclick="switchAppTab('comunidad')">
-        <span>👥</span>
-        <span>Grupos & Clases</span>
-        <span class="main-tab-pill pulse-badge">● En vivo</span>
+      <button type="button" class="main-tab-btn active" id="tab-btn-comunidad" onclick="switchAppTab('comunidad')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.8;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Grupos & Clases</span>
+        <span class="main-tab-pill">En vivo</span>
       </button>
       <button type="button" class="main-tab-btn" id="tab-btn-cuaderno" onclick="switchAppTab('cuaderno')">
-        <span>📝</span>
-        <span>Cuaderno</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.8;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span>Cuaderno</span>
       </button>
       <button type="button" class="main-tab-btn" id="tab-btn-focus" onclick="switchAppTab('focus')">
-        <span>⏱️</span>
-        <span>Modo Estudio</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.8;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Modo Estudio</span>
         <span class="main-tab-pill">Live</span>
       </button>
       <button type="button" class="main-tab-btn" id="tab-btn-amigos" onclick="switchAppTab('amigos')">
-        <span>🤝</span>
-        <span>Conectar Amigos</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.8;"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg><span>Conectar Amigos</span>
         <span class="main-tab-pill" id="badgeSolicitudesNav" style="display: none; background: #EF4444; color: white;">0</span>
       </button>
       <button type="button" class="main-tab-btn" id="tab-btn-mensajes" onclick="switchAppTab('mensajes')">
-        <span>💬</span>
-        <span>Mensajes</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.8;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Mensajes</span>
         <span class="main-tab-pill" id="badgeMensajesPrivados" style="background: var(--coral); color: white;">1</span>
       </button>
     </div>
@@ -80,7 +84,7 @@
 <!-- ==========================================================================
      VISTA 1: FEED DE APRENDIZAJE ADAPTATIVO CON IA
      ========================================================================== -->
-<main class="wrap layout" id="vista-feed-adaptativo">
+<main class="wrap layout" id="vista-feed-adaptativo" style="display: none;">
   <section class="feed-col" aria-label="Tu feed">
     <form class="start" id="start">
       <label class="q" for="topic"><span class="paso-num">1</span>¿Qué quieres aprender?</label>
@@ -145,13 +149,13 @@
 <!-- ==========================================================================
      VISTA 2: GRUPOS DE ESTUDIO Y CLASES EN VIVO (EFECTO PROTÉGÉ)
      ========================================================================== -->
-<section class="wrap layout-comunidad" id="vista-comunidad" style="display: none; padding-bottom: 60px;">
+<section class="wrap layout-comunidad" id="vista-comunidad" style="display: block; padding-bottom: 60px;">
   <!-- Hero Banner -->
   <div class="cm-hero">
     <div class="cm-hero-top">
       <div>
         <div class="cm-chip" style="margin-bottom: 8px; background: rgba(255, 107, 77, 0.12); color: var(--coral);">
-          <span>💡 El Efecto Protégé</span>
+          <span>El Efecto Protégé</span>
           <span>• Enseñar para Aprender el Doble</span>
         </div>
         <h2 class="cm-hero-title">Grupos de Estudio & <em>Clases en Vivo</em></h2>
@@ -162,11 +166,9 @@
       <div>
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
           <button type="button" class="btn btn-coral" onclick="openProponerModal('clase')">
-            <span>✨</span>
-            <span>Proponer una Clase</span>
+            <span>+ Proponer una Clase</span>
           </button>
           <button type="button" class="btn btn-menta" onclick="openProponerModal('grupo')">
-            <span>👥</span>
             <span>Crear Grupo de Estudio</span>
           </button>
         </div>
@@ -179,13 +181,13 @@
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
       <div class="cm-filter-tabs">
         <button type="button" class="cm-filter-btn active" data-area="todos" onclick="filtrarGrupos('todos', this)">Todos</button>
-        <button type="button" class="cm-filter-btn" data-area="programacion" onclick="filtrarGrupos('programacion', this)">💻 Programación</button>
-        <button type="button" class="cm-filter-btn" data-area="finanzas" onclick="filtrarGrupos('finanzas', this)">💵 Finanzas</button>
-        <button type="button" class="cm-filter-btn" data-area="matematicas" onclick="filtrarGrupos('matematicas', this)">📐 Matemáticas</button>
-        <button type="button" class="cm-filter-btn" data-area="idiomas" onclick="filtrarGrupos('idiomas', this)">🗣️ Idiomas</button>
+        <button type="button" class="cm-filter-btn" data-area="programacion" onclick="filtrarGrupos('programacion', this)">Programación</button>
+        <button type="button" class="cm-filter-btn" data-area="finanzas" onclick="filtrarGrupos('finanzas', this)">Finanzas</button>
+        <button type="button" class="cm-filter-btn" data-area="matematicas" onclick="filtrarGrupos('matematicas', this)">Matemáticas</button>
+        <button type="button" class="cm-filter-btn" data-area="idiomas" onclick="filtrarGrupos('idiomas', this)">Idiomas</button>
       </div>
       <button type="button" class="btn sm ghost" onclick="openProponerModal()">
-        ➕ Nueva Sesión
+        + Nueva Sesión
       </button>
     </div>
 
@@ -224,12 +226,12 @@
       <!-- Tarjeta del Facilitador -->
       <div class="cm-facilitador-card">
         <div class="cm-facilitador-head">
-          <div class="cm-facilitador-avatar" id="cmDetalleFacilitadorAvatar">👨‍💻</div>
+          <div class="cm-facilitador-avatar" id="cmDetalleFacilitadorAvatar">A</div>
           <div>
             <b id="cmDetalleFacilitadorNombre" style="font-size: 15px; color: var(--tinta);">Facilitador</b>
             <div style="font-size: 12px; color: var(--tinta-2);" id="cmDetalleFacilitadorRol">Estudiante Facilitador</div>
           </div>
-          <span class="cm-rating-pill" id="cmDetalleRating">⭐ 4.9</span>
+          <span class="cm-rating-pill" id="cmDetalleRating">4.9 / 5.0</span>
         </div>
         <p style="font-size: 12.5px; color: var(--tinta-2); margin: 10px 0 0 0;" id="cmDetalleDesc">
           Explicación y resolución práctica paso a paso.
@@ -237,21 +239,21 @@
 
         <!-- BOTÓN DIRECTO: CALIFICAR Y AGENDAR CLASE PRIVADA 1 A 1 CON EL FACILITADOR REAL -->
         <button type="button" class="btn sm ghost" onclick="abrirModalCalificacionDesdeGrupo()" style="width: 100%; margin-top: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px;">
-          <span>⭐</span>
+          <span></span>
           <span>Calificar / Agendar Clase 1 a 1</span>
         </button>
       </div>
 
       <!-- Encuesta de Horario -->
       <div class="cm-poll-card">
-        <h4 style="margin: 0 0 6px 0; font-size: 14px; color: var(--tinta);">📅 Votación de Horario Tentativo</h4>
+        <h4 style="margin: 0 0 6px 0; font-size: 14px; color: var(--tinta);">Votación de Horario Tentativo</h4>
         <p style="font-size: 12px; color: var(--tinta-2); margin-bottom: 12px;">Vota la mejor opción para fijar la sesión oficial en vivo.</p>
         <div id="cmPollOptionsList" style="display: flex; flex-direction: column; gap: 8px;">
           <!-- Opciones de votación -->
         </div>
         <div id="cmFijarHorarioBox" style="margin-top: 12px; display: none;">
           <button type="button" class="btn sm btn-menta" onclick="fijarReunionOficial()" style="width: 100%;">
-            📌 Fijar horario más votado
+            Fijar horario más votado
           </button>
         </div>
       </div>
@@ -260,12 +262,12 @@
       <div class="cm-vr-link-box">
         <div id="cmVrScheduledInfo">
           <span class="cm-chip" style="background: rgba(255, 107, 77, 0.12); color: var(--coral); margin-bottom: 6px;">
-            🔴 Sesión Lista
+            Sesión Confirmada
           </span>
           <b style="display: block; font-size: 13.5px; color: var(--tinta);" id="cmFechaReunionOficial">Por coordinar</b>
         </div>
         <button type="button" class="btn btn-coral" style="width: 100%; padding: 12px; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="abrirSalaVirtual()">
-          <span style="font-size: 18px;">🎥</span>
+          <span style="font-size: 18px;"></span>
           <span style="font-weight: 800;">Entrar a la Sala Virtual en Vivo</span>
         </button>
       </div>
@@ -282,7 +284,7 @@
     <div class="cm-hero-top">
       <div>
         <div class="cm-chip" style="margin-bottom: 8px; background: rgba(34, 184, 136, 0.12); color: var(--menta-2);">
-          <span>📝 Cuaderno Compartido & Apuntes</span>
+          <span>Cuaderno Compartido & Apuntes</span>
           <span>• Gestión por Materia & Comunidad</span>
         </div>
         <h2 class="cm-hero-title">Cuadernos de Estudio & <em>Apuntes Colaborativos</em></h2>
@@ -292,7 +294,7 @@
       </div>
       <div>
         <button type="button" class="btn btn-coral" onclick="abrirModalNuevoCuaderno()">
-          <span>➕</span>
+          <span>+</span>
           <span>Nuevo Cuaderno</span>
         </button>
       </div>
@@ -302,11 +304,11 @@
   <!-- Pestañas internas del Cuaderno: Mis Cuadernos vs Otros Cuadernos -->
   <div class="notebook-subtabs">
     <button type="button" class="notebook-subtab-btn active" id="btnSubCuadernoMis" onclick="switchCuadernoSubTab('mis')">
-      <span>📓</span>
+      
       <span>Mis Cuadernos</span>
     </button>
     <button type="button" class="notebook-subtab-btn" id="btnSubCuadernoComunidad" onclick="switchCuadernoSubTab('comunidad')">
-      <span>🌐</span>
+      
       <span>Ver Otros Cuadernos (Comunidad)</span>
     </button>
   </div>
@@ -329,10 +331,10 @@
         </div>
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
           <button type="button" class="btn sm ghost" id="btnTogglePublicoCuaderno" onclick="togglePublicoCuadernoActual()">
-            🌐 Público
+            Público
           </button>
           <button type="button" class="btn sm btn-coral" onclick="exportarCuadernoMarkdown()">
-            📥 Exportar .MD
+            Exportar Markdown
           </button>
         </div>
       </div>
@@ -347,8 +349,8 @@
           <button type="button" class="btn sm ghost" onclick="aplicarFormatoCuaderno('code')" title="Bloque de código">&lt;/&gt; Código</button>
         </div>
         <div style="display: flex; gap: 10px; align-items: center;">
-          <span class="notebook-status" id="cuadernoSavedStatus">✓ Guardado localmente</span>
-          <button type="button" class="btn sm ghost" onclick="limpiarCuaderno()" style="color: #EF4444;">🗑️ Limpiar</button>
+          <span class="notebook-status" id="cuadernoSavedStatus">Guardado localmente</span>
+          <button type="button" class="btn sm ghost" onclick="limpiarCuaderno()" style="color: #EF4444;">Limpiar</button>
         </div>
       </div>
 
@@ -357,7 +359,7 @@
       <!-- Galería de Capturas de Pizarra Guardadas -->
       <div style="margin-top: 14px; border-top: 1.5px solid var(--linea); padding-top: 14px;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <b style="font-size: 14px; color: var(--tinta);">📸 Pizarras de la Sesión (<span id="cuadernoCapturasCount">0</span>)</b>
+          <b style="font-size: 14px; color: var(--tinta);">Pizarras de la Sesión (<span id="cuadernoCapturasCount">0</span>)</b>
           <span style="font-size: 11.5px; color: var(--tinta-2);">Las capturas desde la sala virtual aparecen aquí</span>
         </div>
         <div class="notebook-capturas-gallery" id="cuadernoCapturasGallery">
@@ -372,7 +374,7 @@
     <!-- Buscador de Cuadernos Públicos -->
     <div style="background: var(--blanco); border: 1.5px solid var(--linea); border-radius: 18px; padding: 16px; margin-bottom: 20px;">
       <div style="display: flex; gap: 10px; align-items: center;">
-        <span style="font-size: 20px;">🔍</span>
+        <span style="font-size: 20px;"></span>
         <input type="text" id="inputBuscarCuadernos" placeholder="Buscar por título, contenido o autor del cuaderno..." oninput="filtrarCuadernosComunidad(this.value)" style="flex: 1; border: none; background: transparent; font-family: var(--texto); font-size: 14.5px; color: var(--tinta); outline: none;">
       </div>
     </div>
@@ -391,12 +393,12 @@
   <div class="focus-top-switcher">
     <div class="focus-switcher-tabs">
       <button type="button" class="focus-tab-btn active" id="btnFocusSubLive" onclick="switchFocusSubTab('live')">
-        <span>🔴</span>
+        <span>●</span>
         <span>Study With Me (En Vivo)</span>
         <span class="focus-tab-pill">5 en directo</span>
       </button>
       <button type="button" class="focus-tab-btn" id="btnFocusSubRanking" onclick="switchFocusSubTab('ranking')">
-        <span>🏆</span>
+        
         <span>Podio & Ranking Semanal</span>
         <span class="focus-tab-pill" style="background: rgba(255, 203, 61, 0.25); color: #B45309;">Top Estudiantes</span>
       </button>
@@ -409,7 +411,7 @@
       <div class="cm-hero-top">
         <div>
           <div class="cm-chip" style="margin-bottom: 8px; background: rgba(255, 107, 77, 0.12); color: var(--coral);">
-            <span>⏱️ Pomodoro Colaborativo</span>
+            <span>Temporizador de Estudio</span>
             <span>• Modo Silencioso</span>
           </div>
           <h2 class="cm-hero-title">Espacio de <em>Estudio Silencioso</em></h2>
@@ -419,7 +421,7 @@
         </div>
         <div>
           <button type="button" class="btn btn-coral" id="btnIniciarTransmisionFocus" onclick="toggleIniciarTransmisionEstudio()">
-            📹 Activar Mi Cámara de Estudio
+            Activar Cámara de Estudio
           </button>
         </div>
       </div>
@@ -431,14 +433,14 @@
       <div>
         <div style="background: var(--papel-2); border: 1.5px solid var(--linea); border-radius: 18px 18px 0 0; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center;">
           <div style="display: flex; align-items: center; gap: 10px;">
-            <div style="font-size: 28px;" id="focusPlayerStreamAvatar">👩‍🎓</div>
+            <div style="font-size: 28px;" id="focusPlayerStreamAvatar">S</div>
             <div>
               <b style="font-size: 14.5px; color: var(--tinta); display: block;" id="focusPlayerStreamTitle">Estudiando con Sofía Gutiérrez</b>
               <span style="font-size: 11.5px; color: var(--tinta-2);" id="focusPlayerStreamSub">Cálculo II · UMSA La Paz</span>
             </div>
           </div>
           <div style="display: flex; gap: 8px; align-items: center;">
-            <span class="streak-pill" id="focusPlayerStreamRacha">🔥 12 días</span>
+            <span class="streak-pill" id="focusPlayerStreamRacha">12 días de racha</span>
             <span class="cm-chip" id="focusPlayerStreamViewers" style="background: rgba(34, 184, 136, 0.12); color: var(--menta-2);">● 6 espectadores</span>
           </div>
         </div>
@@ -446,7 +448,7 @@
         <div class="focus-screen-frame" style="border-radius: 0 0 18px 18px; height: 360px;">
           <video id="focusLiveVideo" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover; display: none;"></video>
           <div id="focusLivePlaceholder" style="text-align: center; color: #FFFFFF; padding: 20px;">
-            <div style="font-size: 64px; margin-bottom: 10px;">📚</div>
+            <div style="font-size: 64px; margin-bottom: 10px;"></div>
             <b style="font-size: 17px; display: block;">Sesión de Estudio Concentrado en Vivo</b>
             <span style="font-size: 13px; opacity: 0.85; margin-top: 4px; display: block;">
               Estudiante enfocado en silencio con el método Pomodoro.
@@ -462,7 +464,7 @@
           </div>
           <div style="display: flex; gap: 8px;">
             <button type="button" class="btn sm ghost" onclick="iniciarTimerPomodoro()">▶ Iniciar</button>
-            <button type="button" class="btn sm ghost" onclick="pausarTimerPomodoro()">⏸ Pausar</button>
+            <button type="button" class="btn sm ghost" onclick="pausarTimerPomodoro()">Pausar</button>
             <button type="button" class="btn sm ghost" onclick="reiniciarTimerPomodoro()">↺ Reset</button>
           </div>
         </div>
@@ -475,7 +477,7 @@
             <b style="font-size: 13.5px; color: var(--tinta);" id="focusSpectatorChatTitle">Chat de Espectadores · Ánimos</b>
             <div style="font-size: 10.5px; color: var(--tinta-2);">Envía apoyo sin interrumpir la concentración</div>
           </div>
-          <span style="font-size: 16px;">👏</span>
+          <span style="font-size: 16px;"></span>
         </div>
 
         <div class="focus-spectator-messages" id="focusSpectatorMessages">
@@ -484,10 +486,10 @@
 
         <!-- Reacciones Rápidas -->
         <div class="focus-quick-reactions">
-          <button type="button" class="btn sm ghost" style="font-size: 11px; white-space: nowrap;" onclick="enviarReaccionRapidaEspectador('👏 ¡Fuerza!')">👏 ¡Fuerza!</button>
-          <button type="button" class="btn sm ghost" style="font-size: 11px; white-space: nowrap;" onclick="enviarReaccionRapidaEspectador('🔥 ¡Gran racha!')">🔥 ¡Gran racha!</button>
-          <button type="button" class="btn sm ghost" style="font-size: 11px; white-space: nowrap;" onclick="enviarReaccionRapidaEspectador('☕ Ánimo')">☕ Ánimo</button>
-          <button type="button" class="btn sm ghost" style="font-size: 11px; white-space: nowrap;" onclick="enviarReaccionRapidaEspectador('💪 Dale con todo')">💪 Dale con todo</button>
+          <button type="button" class="btn sm ghost" style="font-size: 11px; white-space: nowrap;" onclick="enviarReaccionRapidaEspectador(' ¡Fuerza!')"> ¡Fuerza!</button>
+          <button type="button" class="btn sm ghost" style="font-size: 11px; white-space: nowrap;" onclick="enviarReaccionRapidaEspectador(' ¡Gran racha!')"> ¡Gran racha!</button>
+          <button type="button" class="btn sm ghost" style="font-size: 11px; white-space: nowrap;" onclick="enviarReaccionRapidaEspectador(' Ánimo')"> Ánimo</button>
+          <button type="button" class="btn sm ghost" style="font-size: 11px; white-space: nowrap;" onclick="enviarReaccionRapidaEspectador(' Dale con todo')"> Dale con todo</button>
         </div>
 
         <form class="focus-spectator-input-bar" onsubmit="enviarMensajeEspectador(event)">
@@ -518,7 +520,7 @@
       <div class="cm-hero-top">
         <div>
           <div class="cm-chip" style="margin-bottom: 8px; background: rgba(255, 203, 61, 0.25); color: #B45309;">
-            <span>🏆 Reconocimiento a la Constancia</span>
+            <span>Reconocimiento a la Constancia</span>
             <span>• Rachas de Estudio</span>
           </div>
           <h2 class="cm-hero-title">Podio de Honor & <em>Ranking Semanal</em></h2>
@@ -534,12 +536,12 @@
       <!-- 2do Lugar -->
       <div class="podium-step p2">
         <div class="podium-avatar">
-          👨‍💻
-          <span class="podium-medal">🥈</span>
+          A
+          <span class="podium-medal" style="font-weight:700; color:#64748B;">2º</span>
         </div>
         <b style="font-size: 14.5px; color: var(--tinta);">Andre</b>
         <span style="font-size: 11px; color: var(--tinta-2);">UMSS • Cochabamba</span>
-        <span class="streak-pill" style="margin: 6px 0;">🔥 9 días</span>
+        <span class="streak-pill" style="margin: 6px 0;">9 días racha</span>
         <div class="podium-pillar pillar-2">
           <span style="font-size: 13px; font-weight: 800; color: #fff;">2º Lugar</span>
           <span style="font-size: 11px; color: rgba(255,255,255,0.85);">32 hrs</span>
@@ -549,12 +551,12 @@
       <!-- 1er Lugar -->
       <div class="podium-step p1">
         <div class="podium-avatar">
-          👩‍🎓
-          <span class="podium-medal">🥇</span>
+          S
+          <span class="podium-medal" style="font-weight:700; color:#D97706;">1º</span>
         </div>
         <b style="font-size: 15.5px; color: var(--tinta);">Sofía Gutiérrez</b>
         <span style="font-size: 11px; color: var(--tinta-2);">UMSA • La Paz</span>
-        <span class="streak-pill" style="margin: 6px 0;">🔥 14 días</span>
+        <span class="streak-pill" style="margin: 6px 0;">14 días racha</span>
         <div class="podium-pillar pillar-1">
           <span style="font-size: 14px; font-weight: 800; color: #fff;">1er Lugar</span>
           <span style="font-size: 11.5px; color: rgba(255,255,255,0.9);">41 hrs</span>
@@ -564,12 +566,12 @@
       <!-- 3er Lugar -->
       <div class="podium-step p3">
         <div class="podium-avatar">
-          👨‍🎓
-          <span class="podium-medal">🥉</span>
+          M
+          <span class="podium-medal" style="font-weight:700; color:#B45309;">3º</span>
         </div>
         <b style="font-size: 14px; color: var(--tinta);">Mateo Justiniano</b>
         <span style="font-size: 11px; color: var(--tinta-2);">UMSS • Cochabamba</span>
-        <span class="streak-pill" style="margin: 6px 0;">🔥 7 días</span>
+        <span class="streak-pill" style="margin: 6px 0;">7 días racha</span>
         <div class="podium-pillar pillar-3">
           <span style="font-size: 13px; font-weight: 800; color: #fff;">3er Lugar</span>
           <span style="font-size: 11px; color: rgba(255,255,255,0.85);">26 hrs</span>
@@ -598,7 +600,7 @@
     <div class="cm-hero-top">
       <div>
         <div class="cm-chip" style="margin-bottom: 8px; background: rgba(34, 184, 136, 0.12); color: var(--menta-2);">
-          <span>🤝 Red Social Universitaria & Escolar</span>
+          <span>Comunidad Académica</span>
           <span>• Conexión Local</span>
         </div>
         <h2 class="cm-hero-title">Conectar con <em>Compañeros & Amigos</em></h2>
@@ -612,14 +614,14 @@
   <!-- Buscador y Filtros Rápidos -->
   <div style="background: var(--blanco); border: 1.5px solid var(--linea); border-radius: 18px; padding: 16px; margin-bottom: 18px; display: flex; flex-direction: column; gap: 12px;">
     <div style="display: flex; gap: 10px; align-items: center; border-bottom: 1.5px solid var(--linea); padding-bottom: 10px;">
-      <span style="font-size: 20px;">🔍</span>
+      <span style="font-size: 20px;"></span>
       <input type="text" id="searchAmigosInput" placeholder="Buscar compañeros por nombre, carrera, universidad o ciudad en Bolivia..." oninput="filtrarDirectorioAmigosTexto(this.value)" style="flex: 1; border: none; background: transparent; font-family: var(--texto); font-size: 14.5px; color: var(--tinta); outline: none;">
     </div>
     <div class="cm-filter-tabs">
       <button type="button" class="cm-filter-btn active" onclick="filtrarDirectorioAmigos('todos', this)">Todos</button>
-      <button type="button" class="cm-filter-btn" onclick="filtrarDirectorioAmigos('univ', this)">🎓 Mi Universidad</button>
-      <button type="button" class="cm-filter-btn" onclick="filtrarDirectorioAmigos('ciudad', this)">📍 Mi Ciudad</button>
-      <button type="button" class="cm-filter-btn" onclick="filtrarDirectorioAmigos('mis_amigos', this)">⭐ Mis Amigos</button>
+      <button type="button" class="cm-filter-btn" onclick="filtrarDirectorioAmigos('univ', this)">Mi Universidad</button>
+      <button type="button" class="cm-filter-btn" onclick="filtrarDirectorioAmigos('ciudad', this)">Mi Ciudad</button>
+      <button type="button" class="cm-filter-btn" onclick="filtrarDirectorioAmigos('mis_amigos', this)">Mis Amigos</button>
     </div>
   </div>
 
@@ -637,7 +639,7 @@
     <div class="cm-hero-top">
       <div>
         <div class="cm-chip" style="margin-bottom: 8px; background: rgba(255, 107, 77, 0.12); color: var(--coral);">
-          <span>💬 Mensajería & Tutorías 1 a 1</span>
+          <span>Mensajería & Tutorías</span>
           <span>• Monetización Estudiantil</span>
         </div>
         <h2 class="cm-hero-title">Mensajes Privados & <em>Tutorías</em></h2>
@@ -651,7 +653,7 @@
   <!-- Banner de Solicitudes de Tutoría Pendientes / Recibidas -->
   <div style="margin-bottom: 20px;">
     <h3 style="font-family: var(--font-title); font-size: 16px; margin-bottom: 10px; color: var(--tinta);">
-      💎 Solicitudes de Tutoría 1 a 1 Recibidas & Enviadas
+      Solicitudes de Tutoría 1 a 1 Recibidas & Enviadas
     </h3>
     <div id="listaSolicitudesClasesCards" style="display: grid; gap: 10px;">
       <!-- Tarjetas de tutoría renderizadas dinámicamente -->
@@ -665,7 +667,7 @@
       <div style="padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1.5px solid var(--linea);">
         <b style="font-size: 14px; color: var(--tinta); display: block; margin-bottom: 8px;">Conversaciones</b>
         <div style="background: var(--papel); border: 1.5px solid var(--linea); border-radius: 10px; padding: 6px 10px; display: flex; align-items: center; gap: 6px;">
-          <span style="font-size: 13px;">🔍</span>
+          <span style="font-size: 13px;"></span>
           <input type="text" id="searchMensajesInput" placeholder="Buscar chat por nombre..." oninput="filtrarConversacionesMensajes(this.value)" style="border: none; background: transparent; font-family: var(--texto); font-size: 12.5px; color: var(--tinta); outline: none; width: 100%;">
         </div>
       </div>
@@ -677,7 +679,7 @@
     <!-- Área de Chat Activo -->
     <div style="display: flex; flex-direction: column; height: 100%; background: var(--blanco);">
       <div style="display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1.5px solid var(--linea); background: var(--papel);">
-        <div style="font-size: 28px;" id="pchatActiveAvatar">👩‍🎓</div>
+        <div style="font-size: 28px;" id="pchatActiveAvatar">S</div>
         <div>
           <b style="font-size: 14.5px; color: var(--tinta); display: block;" id="pchatActiveName">Sofía Gutiérrez</b>
           <span style="font-size: 11.5px; color: var(--tinta-2);" id="pchatActiveRole">UMSA • La Paz</span>
@@ -707,7 +709,7 @@
     <div class="cm-modal-head">
       <div>
         <span class="cm-chip" style="margin-bottom: 4px; background: rgba(34, 184, 136, 0.12); color: var(--menta-2);">
-          👤 Perfil del Estudiante
+          Perfil del Estudiante
         </span>
         <h3 class="cm-modal-title">Tu Información & Rango</h3>
       </div>
@@ -718,14 +720,14 @@
     <div id="perfilPropioViewVer">
       <!-- Tarjeta Principal de Perfil -->
       <div style="text-align: center; padding: 10px 0 16px 0; border-bottom: 1.5px solid var(--linea);">
-        <div style="font-size: 58px; margin-bottom: 6px;" id="perfilPropioAvatar">👨‍💻</div>
+        <div style="font-size: 58px; margin-bottom: 6px;" id="perfilPropioAvatar">A</div>
         <h3 style="font-family: var(--font-title); font-size: 20px; color: var(--tinta); margin: 0 0 2px 0;" id="perfilPropioNombre">Andre</h3>
-        <span style="font-size: 13px; color: var(--tinta-2); display: block;" id="perfilPropioUniv">🎓 UMSS • Cochabamba</span>
+        <span style="font-size: 13px; color: var(--tinta-2); display: block;" id="perfilPropioUniv">UMSS • Cochabamba</span>
         <span style="font-size: 12px; color: var(--tinta-2);" id="perfilPropioEmail">andre@gmail.com</span>
 
         <div style="margin-top: 12px;">
           <span id="perfilPropioRangoDocente" class="profile-rank-badge profile-rank-maestro">
-            🧙‍♂️✨ Maestro
+            Maestro
           </span>
         </div>
       </div>
@@ -734,11 +736,11 @@
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0;">
         <div style="background: var(--papel-2); border: 1.5px solid var(--linea); border-radius: 14px; padding: 12px; text-align: center;">
           <span style="font-size: 11px; font-weight: 700; color: var(--tinta-2); text-transform: uppercase;">Racha de Estudio</span>
-          <div style="font-size: 16px; font-weight: 800; color: var(--coral); margin-top: 4px;" id="perfilPropioRacha">🔥 6 días seguidos</div>
+          <div style="font-size: 16px; font-weight: 800; color: var(--coral); margin-top: 4px;" id="perfilPropioRacha"> 6 días seguidos</div>
         </div>
         <div style="background: var(--papel-2); border: 1.5px solid var(--linea); border-radius: 14px; padding: 12px; text-align: center;">
           <span style="font-size: 11px; font-weight: 700; color: var(--tinta-2); text-transform: uppercase;">Horas Acumuladas</span>
-          <div style="font-size: 16px; font-weight: 800; color: var(--tinta); margin-top: 4px;" id="perfilPropioHoras">⏱️ 24.2 hrs</div>
+          <div style="font-size: 16px; font-weight: 800; color: var(--tinta); margin-top: 4px;" id="perfilPropioHoras"> 24.2 hrs</div>
         </div>
       </div>
 
@@ -747,18 +749,18 @@
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <div>
             <b style="font-size: 13.5px; color: var(--tinta); display: block;">Reputación Docente (Pares)</b>
-            <span style="font-size: 11.5px; color: var(--tinta-2);">0⭐: Estudiante | &lt;3⭐: Aprendiz | 3-4⭐: Profesor | &gt;4⭐: Maestro</span>
+            <span style="font-size: 11.5px; color: var(--tinta-2);">0: Estudiante | &lt;3: Aprendiz | 3-4: Profesor | &gt;4: Maestro</span>
           </div>
-          <div style="font-size: 16px; font-weight: 800; color: #F59E0B;" id="perfilPropioStars">⭐ 4.9 (18)</div>
+          <div style="font-size: 16px; font-weight: 800; color: #F59E0B;" id="perfilPropioStars"> 4.9 (18)</div>
         </div>
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
         <button type="button" class="btn sm" onclick="iniciarEdicionPerfil()" style="background: var(--papel-2); border: 1.5px solid var(--linea); color: var(--tinta); font-weight: 700;">
-          ✏️ Editar Mi Perfil
+          Editar Perfil
         </button>
         <button type="button" class="btn sm ghost" onclick="cerrarModalPerfilPropio(); abrirModalAuth();" style="border: 1.5px solid var(--linea);">
-          🔄 Cambiar Cuenta
+          Cambiar Cuenta
         </button>
       </div>
       <button type="button" class="btn sm btn-coral" onclick="cerrarModalPerfilPropio()" style="width: 100%;">
@@ -791,10 +793,10 @@
         </div>
 
         <!-- SECCIÓN CONDICIONAL DE TARIFA DOCENTE -->
-        <!-- Caso A: Rango Profesor o Maestro (>= 3.0 ⭐) -> Campo habilitado -->
+        <!-- Caso A: Rango Profesor o Maestro (>= 3.0 ) -> Campo habilitado -->
         <div id="editTarifaHabilitadaBox" style="background: rgba(34, 184, 136, 0.08); border: 1.5px solid var(--menta); border-radius: 12px; padding: 12px;">
           <label style="display: block; font-weight: 700; font-size: 13px; color: var(--menta-2); margin-bottom: 6px;">
-            🎓 Tarifa de Enseñanza (Cobro por Hora):
+            Tarifa de Enseñanza (Cobro por Hora):
           </label>
           <div style="display: flex; align-items: center; gap: 8px;">
             <span style="font-weight: 800; color: var(--tinta); font-size: 15px;">Bs</span>
@@ -806,13 +808,13 @@
           </small>
         </div>
 
-        <!-- Caso B: Rango Estudiante o Aprendiz (< 3.0 ⭐) -> Tarifa bloqueada -->
+        <!-- Caso B: Rango Estudiante o Aprendiz (< 3.0 ) -> Tarifa bloqueada -->
         <div id="editTarifaBloqueadaBox" style="display: none; background: rgba(255, 107, 77, 0.08); border: 1.5px dashed var(--coral); border-radius: 12px; padding: 12px;">
           <b style="font-size: 12.5px; color: var(--coral); display: block; margin-bottom: 4px;">
-            ⚠️ Tarifa de Cobro Bloqueada
+            Tarifa de Cobro Bloqueada
           </b>
           <span style="font-size: 12px; color: var(--tinta-2); line-height: 1.4; display: block;">
-            Aún no has alcanzado el rango de <strong>Profesor</strong> (mínimo 3.0 ⭐ con reseñas de compañeros). Hasta alcanzar este rango, el precio de cualquier tutoría o ayuda <strong>se coordina por privado mediante mensajes</strong>.
+            Aún no has alcanzado el rango de <strong>Profesor</strong> (mínimo 3.0  con reseñas de compañeros). Hasta alcanzar este rango, el precio de cualquier tutoría o ayuda <strong>se coordina por privado mediante mensajes</strong>.
           </span>
         </div>
 
@@ -821,7 +823,7 @@
             Cancelar
           </button>
           <button type="submit" class="btn sm btn-menta" style="flex: 1.5;">
-            💾 Guardar Perfil
+            Guardar Perfil
           </button>
         </div>
       </form>
@@ -837,7 +839,7 @@
     <div class="cm-modal-head">
       <div>
         <span class="cm-chip" style="margin-bottom: 4px; background: rgba(78, 157, 255, 0.15); color: #2563EB;">
-          🎓 Perfil Académico
+          Perfil Académico
         </span>
         <h3 class="cm-modal-title">Información del Compañero</h3>
       </div>
@@ -845,13 +847,13 @@
     </div>
 
     <div style="text-align: center; padding: 10px 0 16px 0; border-bottom: 1.5px solid var(--linea);">
-      <div style="font-size: 58px; margin-bottom: 6px;" id="perfilCompaneroAvatar">👩‍🎓</div>
+      <div style="font-size: 58px; margin-bottom: 6px;" id="perfilCompaneroAvatar">S</div>
       <h3 style="font-family: var(--font-title); font-size: 20px; color: var(--tinta); margin: 0 0 2px 0;" id="perfilCompaneroNombre">Sofía Gutiérrez</h3>
-      <span style="font-size: 13px; color: var(--tinta-2); display: block;" id="perfilCompaneroUniv">🎓 UMSA • La Paz</span>
+      <span style="font-size: 13px; color: var(--tinta-2); display: block;" id="perfilCompaneroUniv">UMSA • La Paz</span>
 
       <div style="margin-top: 12px;">
         <span id="perfilCompaneroRango" class="profile-rank-badge profile-rank-maestro">
-          🧙‍♂️✨ Maestro
+          Maestro
         </span>
       </div>
     </div>
@@ -859,11 +861,11 @@
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0;">
       <div style="background: var(--papel-2); border: 1.5px solid var(--linea); border-radius: 14px; padding: 12px; text-align: center;">
         <span style="font-size: 11px; font-weight: 700; color: var(--tinta-2); text-transform: uppercase;">Racha de Estudio</span>
-        <div style="font-size: 16px; font-weight: 800; color: var(--coral); margin-top: 4px;" id="perfilCompaneroRacha">🔥 12 días</div>
+        <div style="font-size: 16px; font-weight: 800; color: var(--coral); margin-top: 4px;" id="perfilCompaneroRacha">12 días de racha</div>
       </div>
       <div style="background: var(--papel-2); border: 1.5px solid var(--linea); border-radius: 14px; padding: 12px; text-align: center;">
         <span style="font-size: 11px; font-weight: 700; color: var(--tinta-2); text-transform: uppercase;">Tiempo Dedicado</span>
-        <div style="font-size: 16px; font-weight: 800; color: var(--tinta); margin-top: 4px;" id="perfilCompaneroHoras">⏱️ 28.5 hrs</div>
+        <div style="font-size: 16px; font-weight: 800; color: var(--tinta); margin-top: 4px;" id="perfilCompaneroHoras"> 28.5 hrs</div>
       </div>
     </div>
 
@@ -873,16 +875,16 @@
           <b style="font-size: 13.5px; color: var(--tinta); display: block;">Calificación Docente</b>
           <span style="font-size: 11.5px; color: var(--tinta-2);">Evaluación de otros alumnos</span>
         </div>
-        <div style="font-size: 16px; font-weight: 800; color: #F59E0B;" id="perfilCompaneroStars">⭐ 5.0 (32)</div>
+        <div style="font-size: 16px; font-weight: 800; color: #F59E0B;" id="perfilCompaneroStars"> 5.0 (32)</div>
       </div>
     </div>
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
       <button type="button" class="btn sm btn-menta" id="btnPerfilPedirTutoria">
-        💎 Solicitar Tutoría 1 a 1
+        Solicitar Tutoría 1 a 1
       </button>
       <button type="button" class="btn sm ghost" id="btnPerfilChatear" style="border: 1.5px solid var(--linea);">
-        💬 Chatear
+        Chatear
       </button>
     </div>
   </div>
@@ -896,7 +898,7 @@
     <div class="cm-modal-head">
       <div>
         <span class="cm-chip" style="margin-bottom: 4px; background: rgba(34, 184, 136, 0.12); color: var(--menta-2);">
-          📝 Nuevo Cuaderno
+          Nuevo Cuaderno
         </span>
         <h3 class="cm-modal-title">Crear Cuaderno de Estudio</h3>
       </div>
@@ -930,7 +932,7 @@
           Cancelar
         </button>
         <button type="submit" class="btn btn-coral" style="flex: 2;">
-          ✨ Crear Cuaderno
+           Crear Cuaderno
         </button>
       </div>
     </form>
@@ -982,7 +984,7 @@
     <div class="cm-modal-head">
       <div>
         <span class="cm-chip" style="margin-bottom: 4px; background: rgba(255, 107, 77, 0.12); color: var(--coral);">
-          ✨ Aprendizaje Social & Efecto Protégé
+           Aprendizaje Social & Efecto Protégé
         </span>
         <h3 class="cm-modal-title" id="proponerModalTitulo">Proponer Sesión de Estudio</h3>
         <p style="font-size: 13px; color: var(--tinta-2); margin-top: 4px;" id="proponerModalDesc">
@@ -1000,14 +1002,14 @@
           <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 12.5px; line-height: 1.3; background: var(--blanco); border: 1.5px solid var(--linea); border-radius: 10px; padding: 8px 10px;">
             <input type="radio" name="radioTipoSesion" id="radioTipoClase" value="clase" checked onchange="cambiarTipoSesionEnForm('clase')" style="margin-top: 2px;">
             <span>
-              <strong style="color: var(--coral); display: block;">🎓 Clase con Facilitador</strong>
+              <strong style="color: var(--coral); display: block;">Clase con Facilitador</strong>
               <small style="color: var(--tinta-2);">Solo tú enciendes cámara para enseñar (Efecto Protégé); alumnos por chat y micrófono.</small>
             </span>
           </label>
           <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 12.5px; line-height: 1.3; background: var(--blanco); border: 1.5px solid var(--linea); border-radius: 10px; padding: 8px 10px;">
             <input type="radio" name="radioTipoSesion" id="radioTipoGrupo" value="grupo" onchange="cambiarTipoSesionEnForm('grupo')" style="margin-top: 2px;">
             <span>
-              <strong style="color: var(--menta-2); display: block;">👥 Grupo de Estudio</strong>
+              <strong style="color: var(--menta-2); display: block;">Grupo de Estudio</strong>
               <small style="color: var(--tinta-2);">Todos los miembros pueden encender sus cámaras y debatir activamente.</small>
             </span>
           </label>
@@ -1017,10 +1019,10 @@
       <div class="cm-form-group">
         <label>Área o Materia:</label>
         <select id="inputArea" required>
-          <option value="matematicas">📐 Matemáticas & Cálculo</option>
-          <option value="programacion">💻 Programación & Algoritmos</option>
-          <option value="finanzas">💵 Finanzas & Contabilidad</option>
-          <option value="idiomas">🗣️ Idiomas (Inglés/Francés)</option>
+          <option value="matematicas">Matemáticas & Cálculo</option>
+          <option value="programacion">Programación & Algoritmos</option>
+          <option value="finanzas">Finanzas & Contabilidad</option>
+          <option value="idiomas">Idiomas (Inglés/Francés)</option>
         </select>
       </div>
 
@@ -1060,7 +1062,7 @@
 
       <div style="display: flex; gap: 10px; margin-top: 10px;">
         <button type="button" class="btn sm ghost" onclick="closeProponerModal()" style="flex: 1; border: 1.5px solid var(--linea);">Cancelar</button>
-        <button type="submit" class="btn btn-coral" style="flex: 2;">🚀 Publicar en Cartelera</button>
+        <button type="submit" class="btn btn-coral" style="flex: 2;"> Publicar en Cartelera</button>
       </div>
     </form>
   </div>
@@ -1085,7 +1087,7 @@
       </div>
       <div style="display: flex; gap: 8px;">
         <button type="button" class="btn sm btn-menta" onclick="finalizarReunionYCalificar()">
-          ⭐ Calificar Facilitador & Agendar
+          Calificar Facilitador & Agendar
         </button>
         <button type="button" class="btn sm ghost" onclick="finalizarReunionYCalificar()">
           ✕ Finalizar Reunión
@@ -1102,12 +1104,12 @@
           <div class="cm-video-grid">
             <!-- Box Facilitador (ÚNICO CON CÁMARA TRANSMITIENDO) -->
             <div class="cm-video-box is-speaking" id="boxFacilitadorContainer">
-              <span class="cm-speaking-tag" id="vrFacilitadorTag">👨‍🏫 Facilitador Explicando</span>
+              <span class="cm-speaking-tag" id="vrFacilitadorTag">Facilitador Explicando</span>
               <video id="vrFacilitadorVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; display: none;"></video>
-              <div class="cm-video-avatar" id="vrFacilitadorAvatar">👨‍🏫</div>
+              <div class="cm-video-avatar" id="vrFacilitadorAvatar">F</div>
               <div class="cm-video-name">
                 <span id="vrFacilitadorNombre">Facilitador</span>
-                <span style="color: var(--menta-2);">🎙️ En vivo</span>
+                <span style="color: var(--menta-2);">En vivo</span>
               </div>
             </div>
 
@@ -1115,28 +1117,28 @@
             <div class="cm-video-box">
               <span class="cm-speaking-tag" style="background: rgba(35,38,74,0.85);">Tú</span>
               <video id="vrMiVideo" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover; display: none;"></video>
-              <div class="cm-video-avatar" id="vrMiAvatar">👨‍💻</div>
+              <div class="cm-video-avatar" id="vrMiAvatar">A</div>
               <div class="cm-video-name">
                 <span id="vrMiNombre">Tú</span>
-                <span id="vrMiMicStatus">🎙️ Mic Activo</span>
+                <span id="vrMiMicStatus">Mic Activo</span>
               </div>
             </div>
 
             <!-- Box Compañero 1 -->
             <div class="cm-video-box">
-              <div class="cm-video-avatar">👩‍🎓</div>
+              <div class="cm-video-avatar">S</div>
               <div class="cm-video-name">
                 <span>Sofía Gutiérrez</span>
-                <span>🎙️ Escuchando</span>
+                <span>Escuchando</span>
               </div>
             </div>
 
             <!-- Box Compañero 2 -->
             <div class="cm-video-box">
-              <div class="cm-video-avatar">👨‍🎓</div>
+              <div class="cm-video-avatar">M</div>
               <div class="cm-video-name">
                 <span>Mateo Justiniano</span>
-                <span>🎙️ Escuchando</span>
+                <span>Escuchando</span>
               </div>
             </div>
           </div>
@@ -1146,9 +1148,9 @@
         <div id="vrModoPizarra" style="display: none; height: 100%; flex-direction: column; gap: 10px;">
           <div class="cm-pizarra-toolbar">
             <div style="display: flex; gap: 6px; align-items: center;">
-              <button type="button" class="btn sm" onclick="setCanvasTool('pen')" id="btnToolPen" style="background: var(--tinta); color: #fff;">✏️ Lápiz</button>
-              <button type="button" class="btn sm ghost" onclick="setCanvasTool('eraser')" id="btnToolEraser">🧹 Borrador</button>
-              <button type="button" class="btn sm ghost" onclick="limpiarPizarra()">🗑️ Limpiar</button>
+              <button type="button" class="btn sm" onclick="setCanvasTool('pen')" id="btnToolPen" style="background: var(--tinta); color: #fff;">Lápiz</button>
+              <button type="button" class="btn sm ghost" onclick="setCanvasTool('eraser')" id="btnToolEraser">Borrador</button>
+              <button type="button" class="btn sm ghost" onclick="limpiarPizarra()">Limpiar</button>
             </div>
             <div style="display: flex; gap: 8px; align-items: center;">
               <span style="font-size: 12px; color: var(--tinta-2); font-weight: 700;">Color:</span>
@@ -1160,7 +1162,7 @@
             </div>
             <div>
               <button type="button" class="btn sm btn-coral" onclick="capturarPizarraParaCuaderno()">
-                📸 Guardar en Cuaderno
+                Guardar en Cuaderno
               </button>
             </div>
           </div>
@@ -1185,13 +1187,13 @@
       <!-- Barra lateral: Chat & Cuaderno -->
       <div class="cm-vr-chat">
         <div class="cm-vr-chat-tabs">
-          <button type="button" class="cm-vr-tab-btn active" onclick="setVrModo('camaras')">📹 Cámaras</button>
-          <button type="button" class="cm-vr-tab-btn" onclick="setVrModo('pizarra')">🎨 Pizarra</button>
-          <button type="button" class="cm-vr-tab-btn" onclick="setVrModo('apuntes')">📝 Apuntes</button>
+          <button type="button" class="cm-vr-tab-btn active" onclick="setVrModo('camaras')">Cámaras</button>
+          <button type="button" class="cm-vr-tab-btn" onclick="setVrModo('pizarra')">Pizarra</button>
+          <button type="button" class="cm-vr-tab-btn" onclick="setVrModo('apuntes')">Apuntes</button>
         </div>
         <div class="cm-vr-chat-list" id="vrChatList">
           <div class="cm-msg">
-            <div class="cm-msg-avatar">🔔</div>
+            <div class="cm-msg-avatar"></div>
             <div class="cm-msg-content">
               <div class="cm-msg-bubble">¡Bienvenidos a la sesión! Puedes hacer preguntas aquí o levantar la mano.</div>
             </div>
@@ -1206,11 +1208,11 @@
 
     <!-- Pie de Controles -->
     <div class="cm-vr-controls-footer">
-      <button type="button" class="cm-vr-ctrl-btn active" id="btnVrMic" onclick="toggleVrMic()">🎙️ Micrófono Activo</button>
-      <button type="button" class="cm-vr-ctrl-btn" id="btnVrCam" onclick="toggleVrCam()">📹 Cámara</button>
-      <button type="button" class="cm-vr-ctrl-btn" id="btnVrHand" onclick="toggleVrHand()">✋ Levantar Mano</button>
+      <button type="button" class="cm-vr-ctrl-btn active" id="btnVrMic" onclick="toggleVrMic()">Micrófono Activo</button>
+      <button type="button" class="cm-vr-ctrl-btn" id="btnVrCam" onclick="toggleVrCam()">Cámara</button>
+      <button type="button" class="cm-vr-ctrl-btn" id="btnVrHand" onclick="toggleVrHand()">Levantar Mano</button>
       <button type="button" class="btn sm btn-coral" style="margin-left: auto;" onclick="finalizarReunionYCalificar()">
-        ⭐ Salir y Calificar Facilitador
+        Salir y Calificar Facilitador
       </button>
     </div>
   </div>
@@ -1220,13 +1222,13 @@
       <div class="cm-vr-notebook-head">
         <div>
           <span class="cm-chip" style="margin-bottom: 2px; font-size: 11px; padding: 2px 8px; background: rgba(34, 184, 136, 0.12); color: var(--menta-2);">
-            📒 Cuaderno en Vivo
+            Cuaderno en Vivo
           </span>
           <h4 style="font-family: var(--font-title); font-size: 15px; margin: 0; color: var(--tinta);" id="vrDockCuadernoTitulo">Apuntes de la Sesión</h4>
           <span style="font-size: 11.5px; color: var(--tinta-2);" id="vrDockCuadernoMateria">Cálculo II · En tiempo real</span>
         </div>
         <div style="text-align: right;">
-          <span style="font-size: 11px; color: var(--tinta-2);" id="vrDockSavedIndicator">💾 Guardado</span>
+          <span style="font-size: 11px; color: var(--tinta-2);" id="vrDockSavedIndicator">Guardado</span>
         </div>
       </div>
 
@@ -1236,10 +1238,10 @@
         <button type="button" class="cm-tb-btn" onclick="aplicarFormatoCuadernoDock('italic')" title="Cursiva"><i>I</i></button>
         <button type="button" class="cm-tb-btn" onclick="aplicarFormatoCuadernoDock('h2')" title="Subtítulo">H2</button>
         <button type="button" class="cm-tb-btn" onclick="aplicarFormatoCuadernoDock('list')" title="Lista Viñetas">• Lista</button>
-        <button type="button" class="cm-tb-btn" onclick="aplicarFormatoCuadernoDock('check')" title="Tarea">☑ Tarea</button>
+        <button type="button" class="cm-tb-btn" onclick="aplicarFormatoCuadernoDock('check')" title="Tarea"> Tarea</button>
         <button type="button" class="cm-tb-btn" onclick="aplicarFormatoCuadernoDock('formula')" title="Fórmula">∑ fx</button>
         <button type="button" class="cm-tb-btn" onclick="capturarPizarraParaCuaderno()" title="Tomar captura de pizarra a mi cuaderno" style="margin-left: auto; background: var(--coral-pastel); color: var(--coral); border-color: var(--coral);">
-          📸 Capturar Pizarra
+          Capturar Pizarra
         </button>
       </div>
 
@@ -1255,7 +1257,7 @@
           <span style="font-size: 10.5px; color: var(--tinta-2);">Click para ampliar</span>
         </div>
         <div id="vrDockCapturasGallery" class="cm-notebook-gallery">
-          <span style="font-size: 11px; color: var(--tinta-2); font-style: italic;">Sin capturas aún. Pulsa «📸 Capturar Pizarra» para guardar el dibujo actual.</span>
+          <span style="font-size: 11px; color: var(--tinta-2); font-style: italic;">Sin capturas aún. Pulsa «Capturar Pizarra» para guardar el dibujo actual.</span>
         </div>
       </div>
     </aside>
@@ -1274,7 +1276,7 @@
     <div class="cm-modal-head">
       <div>
         <span class="cm-chip" style="margin-bottom: 4px; background: rgba(34, 184, 136, 0.12); color: var(--menta-2);">
-          ⭐ Retroalimentación de la Sesión
+          Retroalimentación de la Sesión
         </span>
         <h3 class="cm-modal-title">¿Cómo estuvo la sesión?</h3>
       </div>
@@ -1287,14 +1289,14 @@
       </p>
 
       <div style="display: flex; justify-content: center; gap: 8px; font-size: 28px; margin-bottom: 8px;">
-        <button type="button" class="star-btn active" onclick="setRatingStars(1)" style="background: none; border: none; cursor: pointer; font-size: 28px;">⭐</button>
-        <button type="button" class="star-btn active" onclick="setRatingStars(2)" style="background: none; border: none; cursor: pointer; font-size: 28px;">⭐</button>
-        <button type="button" class="star-btn active" onclick="setRatingStars(3)" style="background: none; border: none; cursor: pointer; font-size: 28px;">⭐</button>
-        <button type="button" class="star-btn active" onclick="setRatingStars(4)" style="background: none; border: none; cursor: pointer; font-size: 28px;">⭐</button>
-        <button type="button" class="star-btn active" onclick="setRatingStars(5)" style="background: none; border: none; cursor: pointer; font-size: 28px;">⭐</button>
+        <button type="button" class="star-btn active" onclick="setRatingStars(1)" style="background: none; border: none; cursor: pointer; font-size: 28px;"></button>
+        <button type="button" class="star-btn active" onclick="setRatingStars(2)" style="background: none; border: none; cursor: pointer; font-size: 28px;"></button>
+        <button type="button" class="star-btn active" onclick="setRatingStars(3)" style="background: none; border: none; cursor: pointer; font-size: 28px;"></button>
+        <button type="button" class="star-btn active" onclick="setRatingStars(4)" style="background: none; border: none; cursor: pointer; font-size: 28px;"></button>
+        <button type="button" class="star-btn active" onclick="setRatingStars(5)" style="background: none; border: none; cursor: pointer; font-size: 28px;"></button>
       </div>
       <div id="ratingStarsText" style="font-weight: 700; color: var(--coral); font-size: 13.5px; margin-bottom: 16px;">
-        ⭐⭐⭐⭐⭐ ¡Facilitador de nivel magistral!
+         ¡Facilitador de nivel magistral!
       </div>
 
       <div class="cm-form-group" style="text-align: left;">
@@ -1308,7 +1310,7 @@
         Omitir
       </button>
       <button type="button" class="btn sm btn-menta" onclick="pasarAAgendarClasePrivada()">
-        ⭐ Enviar y Agendar 1 a 1
+         Enviar y Agendar 1 a 1
       </button>
     </div>
   </div>
@@ -1319,7 +1321,7 @@
     <div class="cm-modal-head">
       <div>
         <span class="cm-chip" style="margin-bottom: 4px; background: rgba(255, 107, 77, 0.12); color: var(--coral);">
-          💎 Tutoría Personalizada 1 a 1
+          Tutoría Personalizada 1 a 1
         </span>
         <h3 class="cm-modal-title" id="tituloModalAgendar">Agendar Clase Privada</h3>
       </div>
@@ -1328,14 +1330,14 @@
 
     <!-- Tarjeta del Tutor Dinámico (el facilitador real de la reunión) -->
     <div style="background: var(--papel-2); border: 1.5px solid var(--linea); border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; margin: 12px 0;">
-      <div style="font-size: 34px;" id="agendarTutorAvatar">👨‍🎓</div>
+      <div style="font-size: 34px;" id="agendarTutorAvatar">M</div>
       <div style="flex: 1;">
         <div style="display: flex; justify-content: space-between; align-items: baseline;">
           <b style="font-size: 15px; color: var(--tinta);" id="agendarTutorNombre">Mateo Justiniano</b>
           <span style="font-size: 13px; font-weight: 800; color: var(--menta-2);" id="agendarTutorTarifa">Bs 25 / hora</span>
         </div>
         <p style="font-size: 12px; color: var(--tinta-2); margin-top: 2px;" id="agendarTutorRol">
-          Facilitador de Cálculo II • ⭐ 4.8 (9 reseñas)
+          Facilitador de Cálculo II •  4.8 (9 reseñas)
         </p>
       </div>
     </div>
@@ -1357,7 +1359,7 @@
       </div>
 
       <div style="background: rgba(245, 158, 11, 0.08); border-left: 3px solid #F59E0B; padding: 10px 14px; border-radius: 6px; font-size: 12px; color: var(--tinta-2); line-height: 1.4;">
-        ℹ️ Tu solicitud se enviará en estado <strong>⏳ Pendiente</strong> al facilitador. Podrá aceptarla y coordinar contigo en mensajes.
+        ℹ️ Tu solicitud se enviará en estado <strong>Pendiente</strong> al facilitador. Podrá aceptarla y coordinar contigo en mensajes.
       </div>
 
       <div style="display: flex; gap: 10px; margin-top: 6px;">
@@ -1365,7 +1367,7 @@
           Cancelar
         </button>
         <button type="submit" class="btn btn-menta" style="flex: 2; padding: 12px; font-weight: 800; font-size: 13.5px;">
-          📨 Enviar Solicitud de Tutoría
+           Enviar Solicitud de Tutoría
         </button>
       </div>
     </form>
@@ -1399,17 +1401,17 @@
         <input type="password" id="loginPassword" required value="123" placeholder="••••••••">
       </div>
       <button type="submit" class="btn" style="background: var(--tinta); color: #fff; padding: 12px; margin-top: 6px; font-weight: 800;">
-        Entrar a Futuro Yo Aprende
+        Entrar a AFJ Academy Conecta
       </button>
 
       <div style="font-size: 12px; color: var(--tinta-2); text-align: center; margin-top: 6px;">
         Cambio rápido de cuenta para demostración del jurado:
       </div>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-        <button type="button" class="btn sm ghost" style="font-size: 12px;" onclick="cargarCuentaDemo('andre')">👨‍💻 Andre (UMSS)</button>
-        <button type="button" class="btn sm ghost" style="font-size: 12px;" onclick="cargarCuentaDemo('sofia')">👩‍🎓 Sofía (UMSA)</button>
-        <button type="button" class="btn sm ghost" style="font-size: 12px;" onclick="cargarCuentaDemo('mateo')">👨‍🎓 Mateo (UMSS)</button>
-        <button type="button" class="btn sm ghost" style="font-size: 12px;" onclick="cargarCuentaDemo('andrea')">👩‍💻 Andrea Claros (Santa Cruz)</button>
+        <button type="button" class="btn sm ghost" style="font-size: 12px;" onclick="cargarCuentaDemo('andre')">A Andre (UMSS)</button>
+        <button type="button" class="btn sm ghost" style="font-size: 12px;" onclick="cargarCuentaDemo('sofia')">👩‍Sofía (UMSA)</button>
+        <button type="button" class="btn sm ghost" style="font-size: 12px;" onclick="cargarCuentaDemo('mateo')">👨‍Mateo (UMSS)</button>
+        <button type="button" class="btn sm ghost" style="font-size: 12px;" onclick="cargarCuentaDemo('andrea')">AC Andrea Claros (Santa Cruz)</button>
       </div>
     </form>
 
@@ -1433,8 +1435,8 @@
       <div class="cm-form-group">
         <label>¿Dónde estudias actualmente?:</label>
         <div style="display: flex; gap: 10px;">
-          <button type="button" class="btn sm" id="roleOptUniv" onclick="setNivelEstudio('univ')" style="flex: 1; background: var(--tinta); color: #fff;">🎓 Universidad</button>
-          <button type="button" class="btn sm ghost" id="roleOptColegio" onclick="setNivelEstudio('colegio')" style="flex: 1;">🏫 Colegio</button>
+          <button type="button" class="btn sm" id="roleOptUniv" onclick="setNivelEstudio('univ')" style="flex: 1; background: var(--tinta); color: #fff;">Universidad</button>
+          <button type="button" class="btn sm ghost" id="roleOptColegio" onclick="setNivelEstudio('colegio')" style="flex: 1;"> Colegio</button>
         </div>
       </div>
 
@@ -1472,7 +1474,7 @@
       </div>
 
       <button type="submit" class="btn btn-coral" style="padding: 12px; margin-top: 6px; font-weight: 800;">
-        🚀 Crear Mi Cuenta & Empezar
+         Crear Mi Cuenta & Empezar
       </button>
     </form>
   </div>

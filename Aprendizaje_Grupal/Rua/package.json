@@ -1,0 +1,35 @@
+{
+  "name": "plataforma-estudio",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:aplicar": "bash scripts/db.sh",
+    "db:usuarios": "node --env-file=.env.local scripts/usuarios-prueba.mjs",
+    "verificar": "node --env-file=.env.local scripts/verificar-entorno.mjs",
+    "simular": "node --env-file=.env.local scripts/simular-integrante.mjs",
+    "demo:fantasma": "node --env-file=.env.local scripts/demo-fantasma.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.11.0",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.119.2",
+    "livekit-server-sdk": "^2.20.1",
+    "next": "^16.4.6",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "server-only": "^0.0.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5.9",
+    "vitest": "^5.1.1"
+  }
+}

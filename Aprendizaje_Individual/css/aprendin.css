@@ -26,9 +26,9 @@
 
 /* Destello al entender o evolucionar */
 .apr-destello { position: absolute; left: 50%; top: 55%; width: 0; height: 0; pointer-events: none; }
-.apr-destello i { position: absolute; width: 10px; height: 10px; margin: -5px; border-radius: 50%; background: #FFC83D; transform: rotate(var(--ang)); animation: apr-chispa 1s cubic-bezier(.2, .7, .3, 1) forwards; }
-.apr-destello i:nth-child(3n) { background: #FF6FB1; }
-.apr-destello i:nth-child(3n + 1) { background: #6C63FF; width: 7px; height: 7px; }
+.apr-destello i { position: absolute; width: 10px; height: 10px; margin: -5px; border-radius: 50%; background: #F2B233; transform: rotate(var(--ang)); animation: apr-chispa 1s cubic-bezier(.2, .7, .3, 1) forwards; }
+.apr-destello i:nth-child(3n) { background: #E86A4A; }
+.apr-destello i:nth-child(3n + 1) { background: #2F5EA8; width: 7px; height: 7px; }
 @keyframes apr-chispa { to { transform: rotate(var(--ang)) translateY(calc(-1 * var(--dist))); opacity: 0; } }
 
 @media (prefers-reduced-motion: reduce) {

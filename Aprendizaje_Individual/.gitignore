@@ -1,4 +1,5 @@
 ia/cache/
 ia/registro.jsonl
 node_modules/
+.venv/
 _*.html

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Voces y Sonidos de los Aprendines - AFJ Academy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #F7F5F0;
+      --card-bg: #FFFFFF;
+      --navy: #1E1B3A;
+      --coral: #FF6B5B;
+      --coral-light: #FFEBE8;
+      --gold: #FFC83D;
+      --border: rgba(30, 27, 58, 0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--navy);
+      padding: 40px 20px 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .header {
+      text-align: center;
+      max-width: 680px;
+      margin-bottom: 28px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 6px 14px;
+      background: var(--coral-light);
+      color: var(--coral);
+      border-radius: 99px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.3rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+      letter-spacing: -0.5px;
+    }
+    p {
+      color: #6C6882;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 16px;
+      max-width: 960px;
+      width: 100%;
+    }
+    .sound-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      box-shadow: 0 4px 12px rgba(30, 27, 58, 0.04);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      cursor: pointer;
+      user-select: none;
+    }
+    .sound-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(30, 27, 58, 0.08);
+      border-color: rgba(255, 107, 91, 0.4);
+    }
+    .sound-card.playing {
+      border-color: var(--coral);
+      box-shadow: 0 0 0 3px rgba(255, 107, 91, 0.22);
+    }
+    .sound-info {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .sound-title {
+      font-weight: 700;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sound-dur {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #FF6B5B;
+      background: #FFEBE8;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+    .sound-desc {
+      font-size: 0.82rem;
+      color: #7B7791;
+    }
+    .play-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--coral);
+      color: white;
+      border: none;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform 0.15s ease, background 0.2s ease;
+    }
+    .sound-card:hover .play-btn {
+      transform: scale(1.08);
+      background: #E85B4B;
+    }
+    .sound-card.playing .play-btn {
+      background: #2E7D32;
+      animation: pulseBtn 0.45s infinite alternate;
+    }
+    @keyframes pulseBtn {
+      from { transform: scale(1); }
+      to { transform: scale(1.15); }
+    }
+    .footer-note {
+      margin-top: 36px;
+      font-size: 0.85rem;
+      color: #8C88A3;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="badge">VOCES & EFECTOS INFANTILES</div>
+    <h1>Voces de los Aprendines</h1>
+    <p>Sonidos ultracortos (0.3s - 0.4s) con estilo <strong>bouncy/pop/boing</strong> y entonación vocal infantil como la voz de los Aprendines. Haz clic en cualquiera para escucharlo.</p>
+  </div>
+
+  <div class="grid" id="soundsGrid"></div>
+
+  <div class="footer-note">
+    ✓ 12 audios PCM 16-bit de 0.3 a 0.4 segundos listos en <code>recursos/</code>
+  </div>
+
+  <script>
+    const sounds = [
+      { file: '01_pop_vocal.wav', title: '1. Pop Vocal', dur: '0.4s', desc: 'Pop clásico con balbuceo vocal estilo Pou' },
+      { file: '02_boing_vocal.wav', title: '2. Boing Elástico', dur: '0.4s', desc: 'Rebote de resorte con tono infantil ascendente' },
+      { file: '03_squish_vocal.wav', title: '3. Squish Pop', dur: '0.4s', desc: 'Textura gelatinosa suave con voz tierna' },
+      { file: '04_squeaky_vocal.wav', title: '4. Squeaky Toy', dur: '0.3s', desc: 'Chirridito juguetón y agudo de mascota' },
+      { file: '05_voz_yey.wav', title: '5. ¡Yeeey!', dur: '0.4s', desc: 'Vocita alegre de celebración o salto' },
+      { file: '06_voz_pipi.wav', title: '6. Pi-pí!', dur: '0.3s', desc: 'Dos sílabas cortas y cantarinas' },
+      { file: '07_voz_wahu.wav', title: '7. ¡Wahu!', dur: '0.4s', desc: 'Voz infantil al hacer acrobacia o esquivar' },
+      { file: '08_voz_chibi.wav', title: '8. ¡Chi-bí!', dur: '0.4s', desc: 'Balbuceo tierno de Aprendín' },
+      { file: '09_voz_awi.wav', title: '9. ¡Awwi!', dur: '0.4s', desc: 'Expresión dulce y cariñosa de afecto' },
+      { file: '10_voz_jeje.wav', title: '10. ¡He-he!', dur: '0.4s', desc: 'Risita pícara y traviesa' },
+      { file: '11_voz_uhoh.wav', title: '11. ¡Uh-oh!', dur: '0.4s', desc: 'Susto o sorpresa cómica al rozar el cursor' },
+      { file: '12_bloop_vocal.wav', title: '12. Bloop Vocal', dur: '0.3s', desc: 'Gota/burbuja redonda con resonancia vocal' }
+    ];
+
+    const grid = document.getElementById('soundsGrid');
+    sounds.forEach(s => {
+      const card = document.createElement('div');
+      card.className = 'sound-card';
+      card.innerHTML = `
+        <div class="sound-info">
+          <div class="sound-title">
+            <span>${s.title}</span>
+            <span class="sound-dur">${s.dur}</span>
+          </div>
+          <span class="sound-desc">${s.desc}</span>
+        </div>
+        <button class="play-btn" title="Reproducir ${s.title}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+        </button>
+      `;
+
+      const audio = new Audio(s.file + '?t=' + Date.now());
+
+      audio.addEventListener('play', () => {
+        card.classList.add('playing');
+      });
+      audio.addEventListener('ended', () => {
+        card.classList.remove('playing');
+      });
+      audio.addEventListener('pause', () => {
+        card.classList.remove('playing');
+      });
+
+      card.addEventListener('click', () => {
+        audio.currentTime = 0;
+        audio.play().catch(e => {
+          console.error('Error al reproducir:', s.file, e);
+          new Audio(s.file).play();
+        });
+      });
+
+      grid.appendChild(card);
+    });
+  </script>
+</body>
+</html>
