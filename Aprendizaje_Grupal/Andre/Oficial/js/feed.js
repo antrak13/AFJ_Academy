@@ -87,9 +87,10 @@
   })();
   async function getSample() { await samplePromise; return aiOff ? null : sampleFn; }
   function renderAi() {
+    if (!el.ai) return;
     const st = !aiResolved ? "pending" : aiOff ? "off" : "ready";
     el.ai.dataset.state = st;
-    el.aiText.textContent = st === "pending" ? "IA en vivo: conectando…" : st === "ready" ? "IA en vivo: lista" : "Modo offline (tarjetas precargadas)";
+    if (el.aiText) el.aiText.textContent = st === "pending" ? "Sincronizando..." : st === "ready" ? "En línea" : "";
   }
   function markPermanent(e) { if (e && PERMANENT.includes(e.code)) { aiOff = true; renderAi(); return true; } return false; }
 
