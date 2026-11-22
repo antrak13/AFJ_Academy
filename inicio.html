@@ -491,6 +491,8 @@
       clip-path: inset(0 100% 0 0);
       opacity: 0;
       transition: clip-path 1.15s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s ease;
+      position: relative;
+      z-index: 1;
     }
 
     body.stage-hero .hero-title {
@@ -525,8 +527,29 @@
     @keyframes sweepAcross {
       0% { left: 2%; opacity: 0; }
       20% { opacity: 1; }
-      80% { opacity: 0.9; }
-      100% { left: 82%; opacity: 0; }
+      80% { opacity: 0.95; }
+      100% { left: 93%; opacity: 0; }
+    }
+
+    /* ==============================================================
+       LÍNEA BRILLANTE LUMINOSA ESTILO WTM SUCRE
+       (Cinta de energía con estela, brillo neón y núcleo blanco que teje en 3D entre las letras)
+       ============================================================== */
+    .ribbon-canvas {
+      position: absolute;
+      top: -60px;
+      left: -70px;
+      width: calc(100% + 140px);
+      height: calc(100% + 120px);
+      pointer-events: none;
+    }
+
+    .ribbon-back {
+      z-index: 0; /* Pasa por detrás del texto de AFJ Academy */
+    }
+
+    .ribbon-front {
+      z-index: 2; /* Pasa por delante del texto de AFJ Academy */
     }
 
     .hero-underline {
@@ -892,8 +915,10 @@
   <!-- Contenido Principal -->
   <main>
     <section class="hero-block">
-      <div class="logo-wrapper">
+      <div class="logo-wrapper" id="logoWrapper">
+        <canvas id="ribbonCanvasBack" class="ribbon-canvas ribbon-back"></canvas>
         <h1 class="hero-title">AFJ<span class="academy">Academy</span></h1>
+        <canvas id="ribbonCanvasFront" class="ribbon-canvas ribbon-front"></canvas>
         <div class="light-sweep"></div>
         <div class="hero-underline"></div>
       </div>
@@ -1159,6 +1184,7 @@
     function clearTimers() {
       timers.forEach(t => clearTimeout(t));
       timers = [];
+      stopGlowingRibbon();
     }
 
     function startIntroSequence() {
@@ -1176,6 +1202,11 @@
         body.classList.add('stage-hero');
       }, 450));
 
+      // 1.b. La línea brillante WTM arranca exactamente cuando el destello dorado llega a la 'y'
+      timers.push(setTimeout(() => {
+        startGlowingRibbon();
+      }, 1750));
+
       // 2. El subtítulo cambia suavemente al lema en cursiva
       timers.push(setTimeout(() => {
         body.classList.add('stage-quote');
@@ -1189,6 +1220,305 @@
 
     function replayAnimation() {
       startIntroSequence();
+    }
+
+    /* ==============================================================
+       MOTOR DE LÍNEA BRILLANTE EN 3D (ESTILO WTM SUCRE REFINADO)
+       Cinta luminosa sutil, ultrarrápida y fluida en blanco perla y destellos dorados suaves,
+       con curvatura armónica continua que teje con elegancia entre las letras de AFJ Academy.
+       ============================================================== */
+    let ribbonAnimId = null;
+    let ribbonActive = false;
+    let ribbonStartTime = 0;
+    let ribbonParticles = [];
+
+    // 14 Puntos de control 3D con curvatura amplia, suave y continua (sin quiebres)
+    const RIBBON_CTRL_POINTS = [
+      { x: 1.00, y: 0.45, z: 0.85 },  // 0: Nace en la 'y' de Academy (al frente)
+      { x: 1.06, y: 0.18, z: 0.40 },  // 1: Curva ascendente amplia rodeando la 'y'
+      { x: 0.90, y: -0.16, z: -0.50 },// 2: Suave planeo superior sumergiéndose DETRÁS de 'my'
+      { x: 0.72, y: 0.38, z: -0.85 }, // 3: Pasa limpiamente DETRÁS de 'de'
+      { x: 0.58, y: 0.86, z: 0.25 },  // 4: Curva inferior emergiendo al FRENTE bajo 'ad'
+      { x: 0.48, y: 0.42, z: 0.85 },  // 5: Planeo central al FRENTE cruzando hacia 'J'
+      { x: 0.32, y: -0.14, z: -0.45 },// 6: Asciende suavemente sobre 'J' sumergiéndose DETRÁS
+      { x: 0.15, y: 0.32, z: -0.85 }, // 7: Cruza DETRÁS de 'F'
+      { x: -0.05, y: 0.76, z: 0.30 }, // 8: Desciende y emerge al FRENTE bajo la gran 'A'
+      { x: -0.12, y: 0.24, z: 0.85 }, // 9: Curva amplia rodeando la 'A' por la izquierda
+      { x: 0.10, y: -0.18, z: 0.65 }, // 10: Vuela al FRENTE sobre el arco de 'A' y 'F'
+      { x: 0.38, y: 0.26, z: 0.75 },  // 11: Desciende con elegancia al FRENTE entre 'J' y 'Ac'
+      { x: 0.68, y: 0.82, z: -0.55 }, // 12: Se desliza DETRÁS de 'Academy' bajo 'c' y 'a'
+      { x: 0.88, y: 0.72, z: 0.50 }   // 13: Emerge al FRENTE conectando armónicamente con 'y'
+    ];
+
+    // Interpolador Catmull-Rom para splines tridimensionales continuas
+    function catmullRom3D(p0, p1, p2, p3, t) {
+      const t2 = t * t;
+      const t3 = t2 * t;
+      return {
+        x: 0.5 * ((2 * p1.x) + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3),
+        y: 0.5 * ((2 * p1.y) + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3),
+        z: 0.5 * ((2 * p1.z) + (-p0.z + p2.z) * t + (2 * p0.z - 5 * p1.z + 4 * p2.z - p3.z) * t2 + (-p0.z + 3 * p1.z - 3 * p2.z + p3.z) * t3)
+      };
+    }
+
+    // Evaluación matemática continua a lo largo de la spline sin saltos discretos
+    function getSplinePoint(progress) {
+      const m = RIBBON_CTRL_POINTS.length;
+      const u = ((progress % m) + m) % m;
+      const i = Math.floor(u);
+      const t = u - i;
+      const p0 = RIBBON_CTRL_POINTS[(i - 1 + m) % m];
+      const p1 = RIBBON_CTRL_POINTS[i];
+      const p2 = RIBBON_CTRL_POINTS[(i + 1) % m];
+      const p3 = RIBBON_CTRL_POINTS[(i + 2) % m];
+      return catmullRom3D(p0, p1, p2, p3, t);
+    }
+
+    function stopGlowingRibbon() {
+      ribbonActive = false;
+      if (ribbonAnimId) {
+        cancelAnimationFrame(ribbonAnimId);
+        ribbonAnimId = null;
+      }
+      const cBack = document.getElementById('ribbonCanvasBack');
+      const cFront = document.getElementById('ribbonCanvasFront');
+      if (cBack) {
+        const ctx = cBack.getContext('2d');
+        ctx && ctx.clearRect(0, 0, cBack.width, cBack.height);
+      }
+      if (cFront) {
+        const ctx = cFront.getContext('2d');
+        ctx && ctx.clearRect(0, 0, cFront.width, cFront.height);
+      }
+      ribbonParticles = [];
+    }
+
+    function startGlowingRibbon() {
+      stopGlowingRibbon();
+      ribbonActive = true;
+      ribbonStartTime = performance.now();
+      ribbonParticles = [];
+
+      const canvasBack = document.getElementById('ribbonCanvasBack');
+      const canvasFront = document.getElementById('ribbonCanvasFront');
+      const wrapper = document.getElementById('logoWrapper');
+      if (!canvasBack || !canvasFront || !wrapper) return;
+
+      const ctxBack = canvasBack.getContext('2d');
+      const ctxFront = canvasFront.getContext('2d');
+
+      const padX = 70;
+      const padY = 60;
+
+      function resizeCanvases() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const rect = wrapper.getBoundingClientRect();
+        const displayW = rect.width + padX * 2;
+        const displayH = rect.height + padY * 2;
+
+        if (canvasBack.width !== Math.round(displayW * dpr) || canvasBack.height !== Math.round(displayH * dpr)) {
+          canvasBack.width = Math.round(displayW * dpr);
+          canvasBack.height = Math.round(displayH * dpr);
+          canvasFront.width = Math.round(displayW * dpr);
+          canvasFront.height = Math.round(displayH * dpr);
+        }
+      }
+
+      resizeCanvases();
+
+      // Dibuja un sutil destello de 4 puntas estilo diamante
+      function drawFlareStar(ctx, x, y, rOuter, rInner, angle, color, shadowColor, blur) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+        ctx.beginPath();
+        for (let i = 0; i < 8; i++) {
+          const r = (i % 2 === 0) ? rOuter : rInner;
+          const a = (i * Math.PI) / 4;
+          const px = Math.cos(a) * r;
+          const py = Math.sin(a) * r;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.shadowColor = shadowColor;
+        ctx.shadowBlur = blur;
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Parámetros de velocidad y estela (más rápido y fluido)
+      const SPEED = 0.22;           // Velocidad rápida y enérgica (órbita en ~4.5s)
+      const TRAIL_STEPS = 90;       // Resolución fina de segmentos
+      const TRAIL_SPAN = 3.4;       // Longitud de la estela en unidades de spline
+
+      function renderFrame(now) {
+        if (!ribbonActive) return;
+
+        resizeCanvases();
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const rect = wrapper.getBoundingClientRect();
+        const textW = rect.width;
+        const textH = rect.height;
+
+        ctxBack.clearRect(0, 0, canvasBack.width, canvasBack.height);
+        ctxFront.clearRect(0, 0, canvasFront.width, canvasFront.height);
+
+        ctxBack.save();
+        ctxBack.scale(dpr, dpr);
+        ctxFront.save();
+        ctxFront.scale(dpr, dpr);
+
+        const elapsed = (now - ribbonStartTime) / 1000;
+        const headU = elapsed * SPEED * RIBBON_CTRL_POINTS.length;
+
+        // Generar partículas sutiles de polvo de estrellas desde la cabeza
+        if (Math.random() < 0.45) {
+          const headSample = getSplinePoint(headU);
+          const hx = padX + headSample.x * textW;
+          const hy = padY + headSample.y * textH;
+          const pAngle = Math.random() * Math.PI * 2;
+          const pSpd = 0.3 + Math.random() * 0.8;
+          ribbonParticles.push({
+            x: hx + (Math.random() - 0.5) * 4,
+            y: hy + (Math.random() - 0.5) * 4,
+            vx: Math.cos(pAngle) * pSpd,
+            vy: Math.sin(pAngle) * pSpd,
+            life: 1.0,
+            decay: 0.025 + Math.random() * 0.035,
+            size: 0.8 + Math.random() * 1.4,
+            z: headSample.z
+          });
+        }
+
+        // 1. Dibujar la línea brillante sutil con estela cónica (Blanco perla + aura champagne suave)
+        for (let i = 0; i < TRAIL_STEPS; i++) {
+          const p1 = i / TRAIL_STEPS;
+          const p2 = (i + 1) / TRAIL_STEPS;
+
+          const u1 = headU - TRAIL_SPAN * (1 - p1);
+          const u2 = headU - TRAIL_SPAN * (1 - p2);
+
+          const s1 = getSplinePoint(u1);
+          const s2 = getSplinePoint(u2);
+
+          const alpha = Math.pow(p2, 1.45);
+          // Grosor sutil: desde 0.4px en la cola hasta 2.6px en la cabeza
+          const strokeWidth = 0.4 + Math.pow(p2, 1.6) * 2.2;
+
+          const x1 = padX + s1.x * textW;
+          const y1 = padY + s1.y * textH;
+          const x2 = padX + s2.x * textW;
+          const y2 = padY + s2.y * textH;
+
+          // Separación 3D: Z >= 0 frente / Z < 0 detrás
+          const targetContexts = [];
+          if (s2.z >= -0.15) targetContexts.push(ctxFront);
+          if (s2.z <= 0.15) targetContexts.push(ctxBack);
+
+          targetContexts.forEach(ctx => {
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            // Capa 1: Resplandor suave champagne / perla (sutil, sin amarillo pesado)
+            ctx.shadowColor = 'rgba(255, 230, 160, 0.6)';
+            ctx.shadowBlur = 6 * p2;
+            ctx.strokeStyle = `rgba(255, 240, 195, ${alpha * 0.4})`;
+            ctx.lineWidth = strokeWidth * 2.2;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+
+            // Capa 2: Cuerpo luminoso blanco cálido suave
+            ctx.shadowColor = '#FFFFFF';
+            ctx.shadowBlur = 3 * p2;
+            ctx.strokeStyle = `rgba(255, 252, 245, ${alpha * 0.9})`;
+            ctx.lineWidth = strokeWidth * 1.25;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+
+            // Capa 3: Núcleo filoso blanco puro incandescente
+            ctx.shadowColor = '#FFFFFF';
+            ctx.shadowBlur = 2;
+            ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+            ctx.lineWidth = Math.max(0.7, strokeWidth * 0.6);
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+          });
+        }
+
+        // 2. Partículas sutiles de polvo estelar
+        for (let j = ribbonParticles.length - 1; j >= 0; j--) {
+          const pt = ribbonParticles[j];
+          pt.x += pt.vx;
+          pt.y += pt.vy;
+          pt.life -= pt.decay;
+
+          if (pt.life <= 0) {
+            ribbonParticles.splice(j, 1);
+            continue;
+          }
+
+          const ptCtx = pt.z >= 0 ? ctxFront : ctxBack;
+          ptCtx.save();
+          ptCtx.shadowColor = 'rgba(255, 245, 210, 0.7)';
+          ptCtx.shadowBlur = 3;
+          ptCtx.fillStyle = `rgba(255, 255, 255, ${pt.life * 0.85})`;
+          ptCtx.beginPath();
+          ptCtx.arc(pt.x, pt.y, pt.size * pt.life, 0, Math.PI * 2);
+          ptCtx.fill();
+          ptCtx.restore();
+        }
+
+        // 3. Cabeza de destello estelar (delicada y nítida)
+        const headSample = getSplinePoint(headU);
+        const hX = padX + headSample.x * textW;
+        const hY = padY + headSample.y * textH;
+        const hCtx = headSample.z >= 0 ? ctxFront : ctxBack;
+
+        const pulse = 1 + Math.sin(elapsed * 12) * 0.15;
+        const starRotation = elapsed * 3.6;
+
+        // Aura radial suave en blanco y champagne tenue
+        const radGrad = hCtx.createRadialGradient(hX, hY, 0, hX, hY, 13 * pulse);
+        radGrad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+        radGrad.addColorStop(0.35, 'rgba(255, 250, 230, 0.65)');
+        radGrad.addColorStop(0.7, 'rgba(255, 235, 175, 0.2)');
+        radGrad.addColorStop(1, 'rgba(255, 235, 175, 0)');
+
+        hCtx.save();
+        hCtx.fillStyle = radGrad;
+        hCtx.beginPath();
+        hCtx.arc(hX, hY, 13 * pulse, 0, Math.PI * 2);
+        hCtx.fill();
+        hCtx.restore();
+
+        // Destello de 4 puntas diamante sutil
+        drawFlareStar(hCtx, hX, hY, 7.5 * pulse, 2 * pulse, starRotation, '#FFFFFF', 'rgba(255, 245, 215, 0.8)', 6);
+
+        // Núcleo central blanco puro
+        hCtx.save();
+        hCtx.fillStyle = '#FFFFFF';
+        hCtx.shadowColor = '#FFFFFF';
+        hCtx.shadowBlur = 4;
+        hCtx.beginPath();
+        hCtx.arc(hX, hY, 1.8 * pulse, 0, Math.PI * 2);
+        hCtx.fill();
+        hCtx.restore();
+
+        ctxBack.restore();
+        ctxFront.restore();
+
+        ribbonAnimId = requestAnimationFrame(renderFrame);
+      }
+
+      ribbonAnimId = requestAnimationFrame(renderFrame);
     }
 
         // ==============================================================
@@ -1214,6 +1544,66 @@
     let aprendinUID = 0;
     const activeAprendines = [];
     const TOTAL_APRENDINES = 9; // Cantidad óptima simultánea en pantalla
+
+    // Rastreo del cursor del usuario para la física interactiva
+    let mousePos = { x: -9999, y: -9999 };
+    let mouseActive = false;
+    let mouseInactiveTimer = null;
+
+    window.addEventListener('mousemove', (e) => {
+      mousePos.x = e.clientX;
+      mousePos.y = e.clientY;
+      mouseActive = true;
+      clearTimeout(mouseInactiveTimer);
+      mouseInactiveTimer = setTimeout(() => { mouseActive = false; }, 1800);
+    });
+
+    window.addEventListener('mouseleave', () => {
+      mousePos.x = -9999;
+      mousePos.y = -9999;
+      mouseActive = false;
+    });
+
+    // Función de escape y giro aleatorio al tocar o acercarse al Aprendín
+    function scareAprendin(p, cursorX, cursorY, force = false) {
+      const now = performance.now();
+      if (!force && p.lastScareTime && now - p.lastScareTime < 240) return;
+      p.lastScareTime = now;
+
+      const cx = p.x + p.w / 2;
+      const cy = p.y + p.h / 2;
+      let dx = cx - cursorX;
+      let dy = cy - cursorY;
+      let dist = Math.hypot(dx, dy);
+
+      if (dist < 1) {
+        const randAngle = Math.random() * Math.PI * 2;
+        dx = Math.cos(randAngle);
+        dy = Math.sin(randAngle);
+      } else {
+        dx /= dist;
+        dy /= dist;
+      }
+
+      // Dirección contraria con desviación angular aleatoria (-50° a +50°)
+      const baseAngle = Math.atan2(dy, dx);
+      const angleJitter = (Math.random() - 0.5) * 1.6; // Desviación en ángulo
+      const escapeAngle = baseAngle + angleJitter;
+
+      // Impulso de escape rápido en gravedad cero (6.2 a 10.2 px/frame)
+      const escapeSpeed = 6.2 + Math.random() * 4.0;
+      p.vx = Math.cos(escapeAngle) * escapeSpeed;
+      p.vy = Math.sin(escapeAngle) * escapeSpeed;
+
+      // Giro rápido en dirección aleatoria (horario o antihorario)
+      const spinSign = Math.random() < 0.5 ? 1 : -1;
+      p.rotVelocity = spinSign * (22 + Math.random() * 26);
+
+      // Estado de susto para rebotes elásticos y feedback
+      p.scaredTimer = 50;
+      // Nueva dirección aleatoria de giro para futuras aproximaciones
+      p.approachSpinDir = Math.random() < 0.5 ? 1 : -1;
+    }
 
     function spawnAprendin(isInitial) {
       const container = document.getElementById('aprendinesLayer');
@@ -1310,6 +1700,7 @@
       if (Math.abs(vx) < 0.15) vx = vx >= 0 ? 0.25 : -0.25;
       if (Math.abs(vy) < 0.15) vy = vy >= 0 ? 0.25 : -0.25;
 
+      const baseCruiseSpeed = 0.35 + Math.random() * 0.45;
       const pObj = {
         el: div,
         x: startX,
@@ -1318,6 +1709,7 @@
         h: h,
         vx: vx,
         vy: vy,
+        cruiseSpeed: baseCruiseSpeed,
         time: Math.random() * 1000,
         swaySpeedX: 0.007 + Math.random() * 0.012,
         swayAmpX: 12 + Math.random() * 18,
@@ -1325,23 +1717,29 @@
         swayAmpY: 12 + Math.random() * 18,
         rotSpeed: 0.008 + Math.random() * 0.012,
         rotAmp: 9 + Math.random() * 12,
-        spinBonus: 0,
-        targetOpacity: 0.55 + Math.random() * 0.25,
-        opacity: isInitial ? (0.55 + Math.random() * 0.25) : 0,
-        hovered: false
+        currentRot: Math.random() * 360,
+        rotVelocity: 0,
+        approachSpinDir: Math.random() < 0.5 ? 1 : -1,
+        targetOpacity: 0.65 + Math.random() * 0.25,
+        opacity: isInitial ? (0.65 + Math.random() * 0.25) : 0,
+        hovered: false,
+        scaredTimer: 0,
+        lastScareTime: 0
       };
 
-      // Interacción juguetona al hacer click o pasar el mouse
-      div.addEventListener('mouseenter', () => {
+      // Interacción interactiva: al pasar el cursor o hacer click escapa girando
+      div.addEventListener('mouseenter', (e) => {
         pObj.hovered = true;
+        scareAprendin(pObj, e.clientX, e.clientY, true);
+      });
+      div.addEventListener('mousemove', (e) => {
+        scareAprendin(pObj, e.clientX, e.clientY, false);
       });
       div.addEventListener('mouseleave', () => {
         pObj.hovered = false;
       });
-      div.addEventListener('click', () => {
-        pObj.spinBonus += 360; // Giro alegre en gravedad cero
-        pObj.vx = -pObj.vx * (0.8 + Math.random() * 0.4);
-        pObj.vy = -pObj.vy * (0.8 + Math.random() * 0.4);
+      div.addEventListener('click', (e) => {
+        scareAprendin(pObj, e.clientX, e.clientY, true);
       });
 
       container.appendChild(div);
@@ -1354,23 +1752,76 @@
 
       for (let i = activeAprendines.length - 1; i >= 0; i--) {
         const p = activeAprendines[i];
+        const cx = p.x + p.w / 2;
+        const cy = p.y + p.h / 2;
 
-        // En gravedad cero avanzan libremente según su vector (vx, vy)
-        const moveFactor = p.hovered ? 0.35 : 1;
-        p.x += p.vx * moveFactor;
-        p.y += p.vy * moveFactor;
+        // Comportamiento de escape y giro interactivo al interactuar con el mouse
+        if (mouseActive) {
+          const dx = cx - mousePos.x;
+          const dy = cy - mousePos.y;
+          const dist = Math.hypot(dx, dy);
+
+          const escapeRadius = p.w * 0.85; // radio de toque/escape directo (~70-95px)
+          const approachRadius = p.w * 1.6; // radio de alerta al acercar el cursor (~130-180px)
+
+          if (dist < escapeRadius) {
+            // El cursor pasó por encima: escape reactivo en dirección contraria aleatoria girando
+            scareAprendin(p, mousePos.x, mousePos.y, false);
+          } else if (dist < approachRadius && dist > 0) {
+            // "al acercar el cursor se vaya girando hacia una dirección aleatoria"
+            const proximity = 1 - (dist - escapeRadius) / (approachRadius - escapeRadius);
+            p.rotVelocity += p.approachSpinDir * proximity * 1.4;
+
+            // Repulsión sutil alejándose gradualmente del cursor
+            const repel = proximity * 0.45;
+            p.vx += (dx / dist) * repel;
+            p.vy += (dy / dist) * repel;
+          }
+        }
+
+        // Avance en gravedad cero
+        p.x += p.vx;
+        p.y += p.vy;
         p.time += 1;
+
+        // Fricción gradual en el impulso de escape para volver a su velocidad cósmica de flotación
+        const curSpeed = Math.hypot(p.vx, p.vy);
+        if (curSpeed > p.cruiseSpeed) {
+          p.vx *= 0.965;
+          p.vy *= 0.965;
+        }
+
+        // Inercia rotacional continua
+        p.currentRot += p.rotVelocity;
+        p.rotVelocity *= 0.94; // Amortiguación del giro
+
+        // Rebotes elásticos en los bordes de la pantalla durante el susto/escape rápido
+        if (p.scaredTimer > 0) {
+          p.scaredTimer--;
+          const pad = 15;
+          if (p.x < pad && p.vx < 0) {
+            p.vx = Math.abs(p.vx) * 0.85;
+            p.rotVelocity *= -1;
+          } else if (p.x > W - p.w - pad && p.vx > 0) {
+            p.vx = -Math.abs(p.vx) * 0.85;
+            p.rotVelocity *= -1;
+          }
+          if (p.y < pad && p.vy < 0) {
+            p.vy = Math.abs(p.vy) * 0.85;
+            p.rotVelocity *= -1;
+          } else if (p.y > H - p.h - pad && p.vy > 0) {
+            p.vy = -Math.abs(p.vy) * 0.85;
+            p.rotVelocity *= -1;
+          }
+        }
 
         // Ondulación senoidal orgánica (turbulencia espacial suave)
         const swayX = Math.sin(p.time * p.swaySpeedX) * p.swayAmpX;
         const swayY = Math.cos(p.time * p.swaySpeedY) * p.swayAmpY;
 
-        // Balanceo/inclinación cósmica en gravedad cero
+        // Balanceo cósmico sumado al giro libre acumulado
         const tilt = Math.sin(p.time * p.rotSpeed) * p.rotAmp;
-        if (p.spinBonus > 0) {
-          p.spinBonus = Math.max(0, p.spinBonus - 8);
-        }
-        const totalRot = tilt + p.spinBonus;
+        const totalRot = p.currentRot + tilt;
 
         // Transición de opacidad suave al entrar
         if (p.opacity < p.targetOpacity) {
@@ -1380,13 +1831,13 @@
         // Renderizado 3D por GPU
         const renderX = p.x + swayX;
         const renderY = p.y + swayY;
-        const scaleHover = p.hovered ? 1.15 : 1;
+        const scaleEffect = p.scaredTimer > 0 ? (1 + Math.sin(p.scaredTimer * 0.28) * 0.12) : 1;
 
-        p.el.style.transform = `translate3d(${renderX.toFixed(1)}px, ${renderY.toFixed(1)}px, 0) rotate(${totalRot.toFixed(1)}deg) scale(${scaleHover})`;
-        p.el.style.opacity = p.hovered ? Math.min(1, p.targetOpacity + 0.3) : p.opacity;
+        p.el.style.transform = `translate3d(${renderX.toFixed(1)}px, ${renderY.toFixed(1)}px, 0) rotate(${totalRot.toFixed(1)}deg) scale(${scaleEffect.toFixed(2)})`;
+        p.el.style.opacity = p.opacity;
 
-        // Límites de pantalla para reciclaje suave fuera de vista
-        const margin = 170;
+        // Límites de pantalla para reciclaje suave fuera de vista cuando ya no está escapando
+        const margin = 180;
         const isOutOfBounds = (
           (p.vx > 0 && p.x > W + margin) ||
           (p.vx < 0 && p.x < -p.w - margin) ||
