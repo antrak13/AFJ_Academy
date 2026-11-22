@@ -18,7 +18,7 @@
       materia: 'Matemáticas',
       autorId: 'andre',
       autorNombre: 'Andre',
-      autorAvatar: '👨‍💻',
+      autorAvatar: 'A',
       autorUniv: 'UMSS • Cochabamba',
       esPublico: true,
       fecha: '20 Nov 2026',
@@ -44,7 +44,7 @@ function areaSector(r, dTheta) {
       materia: 'Programación',
       autorId: 'andre',
       autorNombre: 'Andre',
-      autorAvatar: '👨‍💻',
+      autorAvatar: 'A',
       autorUniv: 'UMSS • Cochabamba',
       esPublico: false,
       fecha: '19 Nov 2026',
@@ -61,7 +61,7 @@ Notas privadas para preparar el laboratorio:
       materia: 'Finanzas',
       autorId: 'sofia',
       autorNombre: 'Sofía Gutiérrez',
-      autorAvatar: '👩‍🎓',
+      autorAvatar: 'S',
       autorUniv: 'UMSA • La Paz',
       esPublico: true,
       fecha: '19 Nov 2026',
@@ -78,7 +78,7 @@ Notas privadas para preparar el laboratorio:
       materia: 'Matemáticas',
       autorId: 'mateo',
       autorNombre: 'Mateo Justiniano',
-      autorAvatar: '👨‍🎓',
+      autorAvatar: 'M',
       autorUniv: 'UMSS • Cochabamba',
       esPublico: true,
       fecha: '18 Nov 2026',
@@ -128,7 +128,7 @@ Reglas fundamentales explicadas en la sala virtual para resolución rápida en p
     const el = document.getElementById('cuadernoSavedStatus');
     const elRoom = document.getElementById('cuadernoSavedStatusRoom');
     const elDock = document.getElementById('vrDockSavedIndicator');
-    const msg = '✓ Guardado ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const msg = 'Guardado ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     if (el) el.textContent = msg;
     if (elRoom) elRoom.textContent = msg;
     if (elDock) elDock.textContent = msg;
@@ -172,13 +172,13 @@ Reglas fundamentales explicadas en la sala virtual para resolución rápida en p
           <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
             <span class="cm-chip" style="background: var(--papel-2);">${c.materia}</span>
             <span class="cm-chip" style="background: ${c.esPublico ? 'rgba(34, 184, 136, 0.12)' : 'rgba(35, 38, 74, 0.08)'}; color: ${c.esPublico ? 'var(--menta-2)' : 'var(--tinta-2)'}; font-weight: 700;">
-              ${c.esPublico ? '🌐 Público' : '🔒 Privado'}
+              ${c.esPublico ? 'Público' : 'Privado'}
             </span>
           </div>
           <b style="font-size: 14.5px; color: var(--tinta); margin: 8px 0 4px 0; display: block;">${c.titulo}</b>
           <div style="font-size: 11.5px; color: var(--tinta-2); display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-            <span>📅 ${c.fecha}</span>
-            <span>📸 ${c.capturas ? c.capturas.length : 0} pizarras</span>
+            <span>${c.fecha}</span>
+            <span>${c.capturas ? c.capturas.length : 0} pizarras</span>
           </div>
         </div>
       `).join('');
@@ -197,8 +197,8 @@ Reglas fundamentales explicadas en la sala virtual para resolución rápida en p
       if (materiaEl) materiaEl.textContent = cActivo.materia;
       if (toggleBtn) {
         toggleBtn.innerHTML = cActivo.esPublico 
-          ? '🌐 Público (Visible para todos)' 
-          : '🔒 Privado (Solo tú)';
+          ? 'Público (Visible para todos)' 
+          : 'Privado (Solo tú)';
         toggleBtn.className = cActivo.esPublico ? 'btn sm btn-menta' : 'btn sm ghost';
       }
       if (textarea && textarea.value !== cActivo.contenido) {
@@ -222,7 +222,7 @@ Reglas fundamentales explicadas en la sala virtual para resolución rápida en p
     if (galCount) galCount.textContent = capturas.length;
 
     const htmlCards = capturas.length === 0
-      ? '<div style="font-size: 12px; color: var(--tinta-2); padding: 8px 0; font-style: italic;">Sin capturas de pizarra aún. Pulsa «📸 Pizarra» para capturar aquí.</div>'
+      ? '<div style="font-size: 12px; color: var(--tinta-2); padding: 8px 0; font-style: italic;">Sin capturas de pizarra aún. Pulsa « Pizarra» para capturar aquí.</div>'
       : capturas.map((cap, idx) => `
         <div class="notebook-captura-item" title="Captura de pizarra">
           <img src="${cap.dataUrl}" alt="Pizarra" onclick="verImagenEnGrande('${cap.dataUrl}')">
@@ -264,7 +264,7 @@ Reglas fundamentales explicadas en la sala virtual para resolución rápida en p
     guardarCuadernos();
     renderizarMisCuadernosUI();
     if (window.mostrarToast) {
-      window.mostrarToast(c.esPublico ? '🌐 Cuaderno ahora es Público' : '🔒 Cuaderno ahora es Privado');
+      window.mostrarToast(c.esPublico ? 'Cuaderno ahora es Público' : 'Cuaderno ahora es Privado');
     }
   };
 
@@ -283,7 +283,7 @@ Reglas fundamentales explicadas en la sala virtual para resolución rápida en p
     const titulo = document.getElementById('inputNuevoCuadernoTitulo').value.trim();
     const materia = document.getElementById('inputNuevoCuadernoMateria').value.trim();
     const esPublico = document.getElementById('inputNuevoCuadernoPublico').checked;
-    const u = window.currentUser || { id: 'andre', nombre: 'Andre', avatar: '👨‍💻', universidad: 'UMSS' };
+    const u = window.currentUser || { id: 'andre', nombre: 'Andre', avatar: 'A', universidad: 'UMSS' };
 
     const nuevo = {
       id: 'cuaderno-' + Date.now(),
@@ -305,7 +305,7 @@ Reglas fundamentales explicadas en la sala virtual para resolución rápida en p
     cerrarModalNuevoCuaderno();
     renderizarMisCuadernosUI();
     if (window.mostrarToast) {
-      window.mostrarToast('✨ Cuaderno «' + nuevo.titulo + '» creado exitosamente');
+      window.mostrarToast('Cuaderno «' + nuevo.titulo + '» creado exitosamente');
     }
   };
 
@@ -335,7 +335,7 @@ Reglas fundamentales explicadas en la sala virtual para resolución rápida en p
     if (publicos.length === 0) {
       grid.innerHTML = `
         <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; background: var(--blanco); border: 1.5px solid var(--linea); border-radius: 18px;">
-          <div style="font-size: 38px; margin-bottom: 8px;">🔍</div>
+          <div style="font-size: 13px; font-weight:600; color: var(--tinta-2); margin-bottom: 8px;">Sin cuadernos guardados</div>
           <b style="font-size: 15px; color: var(--tinta);">No se encontraron cuadernos públicos</b>
           <p style="font-size: 12.5px; color: var(--tinta-2); margin-top: 4px;">Intenta con otra palabra clave en el buscador o revisa más tarde.</p>
         </div>
@@ -348,7 +348,7 @@ Reglas fundamentales explicadas en la sala virtual para resolución rápida en p
         <div>
           <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px;">
             <span class="cm-chip" style="background: var(--papel-2);">${c.materia}</span>
-            <span class="cm-chip" style="background: rgba(34, 184, 136, 0.12); color: var(--menta-2); font-weight: 700;">🌐 Público</span>
+            <span class="cm-chip" style="background: rgba(34, 184, 136, 0.12); color: var(--menta-2); font-weight: 700;"> Público</span>
           </div>
           <b style="font-size: 15px; color: var(--tinta); margin-bottom: 6px; display: block; line-height: 1.3;">${c.titulo}</b>
           <p style="font-size: 12px; color: var(--tinta-2); margin: 0 0 10px 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
@@ -357,13 +357,13 @@ Reglas fundamentales explicadas en la sala virtual para resolución rápida en p
         </div>
         <div style="border-top: 1.5px solid var(--linea); padding-top: 10px; display: flex; justify-content: space-between; align-items: center;">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 20px;">${c.autorAvatar || '👨‍🎓'}</span>
+            <span style="font-size: 20px;">${c.autorAvatar || 'A'}</span>
             <div>
               <b style="font-size: 12px; color: var(--tinta);">${c.autorNombre}</b>
               <div style="font-size: 10.5px; color: var(--tinta-2);">${c.autorUniv || 'Bolivia'}</div>
             </div>
           </div>
-          <button type="button" class="btn sm ghost" style="font-size: 11.5px;">📖 Leer</button>
+          <button type="button" class="btn sm ghost" style="font-size: 11.5px;"> Leer</button>
         </div>
       </div>
     `).join('');
@@ -472,7 +472,7 @@ Reglas fundamentales explicadas en la sala virtual para resolución rápida en p
     renderizarMisCuadernosUI();
 
     if (window.mostrarToast) {
-      window.mostrarToast('📸 Pizarra guardada en «' + c.titulo + '»');
+      window.mostrarToast('Pizarra guardada en «' + c.titulo + '»');
     }
   };
 
@@ -490,7 +490,7 @@ Reglas fundamentales explicadas en la sala virtual para resolución rápida en p
 
     let md = c.contenido || '';
     if (c.capturas && c.capturas.length > 0) {
-      md += '\\n\\n---\\n### 📸 Pizarras de la Sesión (' + c.capturas.length + ' capturas)\\n';
+      md += '\\n\\n---\\n### Pizarras de la Sesión (' + c.capturas.length + ' capturas)\\n';
       c.capturas.forEach((cap, i) => {
         md += `\\n#### Pizarra #${i + 1} (${cap.hora} por ${cap.autor})\\n![Pizarra ${i + 1}](${cap.dataUrl})\\n`;
       });
@@ -507,7 +507,7 @@ Reglas fundamentales explicadas en la sala virtual para resolución rápida en p
     URL.revokeObjectURL(url);
 
     if (window.mostrarToast) {
-      window.mostrarToast('📥 Archivo .md descargado exitosamente');
+      window.mostrarToast('Archivo Markdown descargado exitosamente');
     }
   };
 
@@ -524,7 +524,7 @@ Reglas fundamentales explicadas en la sala virtual para resolución rápida en p
   window.abrirCuadernoParaSala = function(tema, area) {
     let c = stateCuadernos.find(x => x.titulo.toLowerCase().includes((tema || '').toLowerCase().substring(0, 15)));
     if (!c) {
-      const u = window.currentUser || { id: 'andre', nombre: 'Andre', avatar: '👨‍💻', universidad: 'UMSS' };
+      const u = window.currentUser || { id: 'andre', nombre: 'Andre', avatar: 'A', universidad: 'UMSS' };
       c = {
         id: 'cuaderno-sala-' + Date.now(),
         titulo: 'Apuntes: ' + (tema || 'Sesión en Vivo'),
