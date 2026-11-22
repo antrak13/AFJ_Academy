@@ -8,6 +8,7 @@ import { htmlFicha, fichaLocal, limpiarFicha, svgIcono } from './fichas.js';
 import { activarFichas, animar } from './fichas-dom.js';
 import { DEMO } from './demo-aprendin.js';
 import { crearPrueba } from './prueba.js';
+import { sincronizarAvance } from './avance-nube.js';
 import { demoClase } from './demo-clase.js';
 import { descargarPostal } from './postal.js';
 import { descargarAprendin } from './intercambio.js';
@@ -23,9 +24,10 @@ const EJEMPLO = params.get('ejemplo');
 const DEMO_FASES = params.get('demo') === 'fases';
 let A = EJEMPLO != null ? DEMO : cargarAprendin(params.get('aprendin') || undefined);
 // Estado de la clase: paso que le enseñas (1 a 4; 5 = terminó), mensajes, fichas y lo que midió la IA.
-let C = null, estrella = null, ia = false, sttLocal = false, ocupado = false, hablarVoz = false, vistaFase = null;
+let C = null, estrella = null, ia = false, sttLocal = false, ocupado = false, hablarVoz = true, vistaFase = null;
 const nuevo = () => ({ paso: 1, chat: [], fichas: {}, medicion: {}, pista: '' });
-const guardar = () => guardarClase(A.id, C);
+// Además del navegador, el avance va a la plataforma para el panel docente (si hay sesión).
+const guardar = () => { guardarClase(A.id, C); if (EJEMPLO == null) sincronizarAvance(A, C); };
 const faseActual = () => Math.min(PASOS, C.paso - 1);
 const look = (nv = faseActual()) => A.fases[nv].look;
 const turnosDe = paso => C.chat.filter(m => m.paso === paso && m.de === 'yo').length;
@@ -90,6 +92,7 @@ function empezar() {
   $('#clCuidadoEstado').textContent = '';
   const guardada = cargarClase(A.id);
   C = EJEMPLO === 'prueba' && A === DEMO ? (guardada?.paso > PASOS ? guardada : demoClase(A)) : guardada || nuevo();
+  for (const apoyo of C.apoyo || []) apoyo.id ||= idUnicoApoyo();
   document.title = `Clase de ${A.nombre} · Aprendines`;
   $('#nombre').textContent = A.nombre;
   $('#deDonde').textContent = A.de ? `viene ${A.de}` : '';
@@ -599,12 +602,18 @@ if (mic && (Rec || tieneAudio)) {
 /* ---------- Fichas de apoyo en panel lateral + calibración ---------- */
 let cargandoApoyo = false, apoyoActivoId = null, recienteApoyoId = null;
 const idUnicoApoyo = () => `ap-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+function mismoApoyo(a, b) {
+  return a.datos.titulo === b.datos.titulo && a.datos.subtema === b.datos.subtema &&
+    a.datos.idea === b.datos.idea && a.datos.visual.tipo === b.datos.visual.tipo &&
+    a.datos.ejemplo?.situacion === b.datos.ejemplo?.situacion &&
+    a.datos.ejemplo?.pregunta === b.datos.ejemplo?.pregunta;
+}
 function fichasEstudioTema() {
   const s = cargarEstudio();
   const prev = s && s.aprendinId === A.id && s.tema?.toLowerCase() === A.tema.toLowerCase() ? s.fichas : [];
   const clase = C.apoyo || [];
-  const mismo = (a, b) => a.datos.titulo === b.datos.titulo && a.datos.visual.tipo === b.datos.visual.tipo;
-  return [...prev.filter(pf => !clase.some(cf => mismo(pf, cf))), ...clase].map((it, i) => it.id ? it : { ...it, id: `prev-${i}` });
+  const importables = prev.map((it, i) => ({ ...it, id: `prev-${i}` })).filter(pf => !clase.some(cf => mismoApoyo(pf, cf)));
+  return [...importables, ...clase];
 }
 function buscarApoyoPorId(id) {
   return (C.apoyo || []).find(f => f.id === id) || fichasEstudioTema().find(f => f.id === id);
@@ -629,7 +638,7 @@ function pintarApoyoActivo() {
 
   const delPaso = todas.filter(f => f.paso === C.paso);
   const externo = apoyoActivoId ? buscarApoyoPorId(apoyoActivoId) : null;
-  const tarjetas = externo && !delPaso.some(f => f.id === externo.id) ? [...delPaso, externo] : delPaso;
+  const tarjetas = externo ? [...delPaso.filter(f => f.id !== externo.id), externo] : delPaso;
 
   if (!tarjetas.length && cargandoApoyo) {
     host.innerHTML = `<div class="cl-apoyo-cargando"><p class="cargando">Armando una ficha visual adaptada debajo…</p></div>`;
@@ -662,7 +671,7 @@ function pintarApoyoActivo() {
   tarjetas.forEach((item, i) => {
     const esUltima = i === tarjetas.length - 1;
     const esDelPaso = item.paso === C.paso;
-    const idx = Math.max(0, todas.findIndex(f => f.id === item.id || (f.datos.titulo === item.datos.titulo && f.datos.visual.tipo === item.datos.visual.tipo)));
+    const idx = Math.max(0, todas.findIndex(f => f.id === item.id));
     const itemEl = document.createElement('div');
     itemEl.className = `cl-apoyo-stack-item${esUltima ? ' is-activa' : ' is-anterior'}${recienteApoyoId === item.id ? ' cl-nueva' : ''}`;
     itemEl.dataset.apoyoId = item.id;
@@ -685,14 +694,14 @@ function pintarApoyoActivo() {
             pintarApoyoActivo();
             if (C.paso <= PASOS) msg.focus();
           } else {
-            pedirApoyo(r, nota);
+            pedirApoyo(r, nota, '', item.datos);
           }
         },
         alEnfoque: ({ pinTipo, nota }) => {
           marcarReaccionApoyo(item.id, 'enfoque', nota);
-          pedirApoyo('enfoque', nota, pinTipo);
+          pedirApoyo('enfoque', nota, pinTipo, item.datos);
         },
-        alOtra: () => pedirApoyo('ejemplo')
+        alOtra: () => pedirApoyo('ejemplo', '', '', item.datos)
       });
     }
     stack.append(itemEl);
@@ -736,14 +745,16 @@ function pintarCalibracionClase() {
   renderizarPanelCalibracion(cont, { historial: historialDe(fichasEstudioTema()), compacto: true, alCambiar: () => pintarCalibracionClase() });
 }
 function mostrarApoyoEnChat(item) {
-  let guardado = (C.apoyo || []).find(f => f.id === item.id || (f.datos.titulo === item.datos.titulo && f.datos.visual.tipo === item.datos.visual.tipo));
-  if (!guardado) guardado = guardarApoyo({ ...item, paso: item.paso || Math.min(PASOS, C.paso) });
+  const apoyos = C.apoyo || [];
+  const paso = item.paso || Math.min(PASOS, C.paso);
+  const guardado = apoyos.find(f => f.id === item.id) || apoyos.find(f => f.paso === paso && mismoApoyo(f, item))
+    || guardarApoyo({ ...item, id: '', paso });
   apoyoActivoId = guardado.id;
   verPanelDer('apoyo');
   pintarApoyoActivo();
   $('#panelDer')?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'nearest' });
 }
-async function pedirApoyo(reaccion, nota = '', pinTipo = '') {
+async function pedirApoyo(reaccion, nota = '', pinTipo = '', fichaBase = null) {
   if (cargandoApoyo || C.paso > PASOS) return;
   cargandoApoyo = true;
   verPanelDer('apoyo');
@@ -753,12 +764,11 @@ async function pedirApoyo(reaccion, nota = '', pinTipo = '') {
     const pasoActual = C.paso, objetivo = A.fases[pasoActual]?.concepto || '';
     const anteriores = fichasEstudioTema();
     const historial = historialDe(anteriores.filter(f => f.paso === pasoActual));
-    const calBase = calcularCalibracion(historialDe(anteriores));
-    const calibracion = pinTipo ? { ...calBase, pinTipo, estrategia: 'fijo' } : calBase;
+    const calibracion = calcularCalibracion(historialDe(anteriores));
     const { datos, fuente } = await solicitarFichaInicio({
       ia, tema: A.tema, gustos: A.gustos || A.mundo,
       nivel: reaccion === 'duda' || reaccion === 'inicio' ? 'cero' : reaccion === 'reto' ? 'bastante' : 'algo',
-      reaccion, nota, objetivo, dificultad: C.pista, aprendin: A, historial, calibracion
+      reaccion, nota, objetivo, dificultad: C.pista, aprendin: A, historial, calibracion, fichaBase, pinTipo
     });
     const nuevaId = idUnicoApoyo();
     if (C.paso === pasoActual) {

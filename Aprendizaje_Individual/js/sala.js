@@ -5,7 +5,7 @@ import { MUNDOS } from './mundos.js';
 import { cargarAprendin, guardarAprendin, listarAprendines } from './guardado.js';
 import { importarAprendin } from './intercambio.js';
 import { activarFichas } from './fichas-dom.js';
-import { enlazarAccionesFicha, historialDe, calcularCalibracion, registrarEventoVisual, renderizarFichaEstudio, solicitarFichaInicio } from './fichas-apoyo.js';
+import { enlazarAccionesFicha, historialDe, registrarEventoVisual, renderizarFichaEstudio, solicitarFichaInicio } from './fichas-apoyo.js';
 import { RONDAS, VOCES, anotar, cargarSala, contextoSala, guardarSala, idSala, listarSalas, pasoSala, responderSala } from './sala-sesion.js';
 
 const $ = id => document.getElementById(id);
@@ -404,13 +404,12 @@ async function pedirApoyo(reaccion, nota = '', pinTipo = '') {
   try {
     const fichas = a.apoyos[paso] ||= [];
     const historial = historialDe(fichas);
-    const cal = calcularCalibracion(historial);
     const respuesta = ultimaRespuesta(a, paso);
     const { datos, fuente } = await solicitarFichaInicio({
       ia, tema: sala.tema, gustos: a.personaje.mundo, objetivo: `${sala.tema}. ${RONDAS[paso - 1].objetivo}`,
       dificultad: respuesta?.turno.pista || '',
       aprendin: contextoSala(sala, a), nivel: reaccion === 'duda' ? 'cero' : 'algo',
-      reaccion, nota, historial, calibracion: pinTipo ? { ...cal, pinTipo, estrategia: 'fijo' } : cal
+      reaccion, nota, historial, fichaBase: fichas.at(-1)?.datos, pinTipo
     });
     fichas.push({ datos, fuente, reaccionOrigen: reaccion, reaccion: null, nota });
     guardar(sala);
