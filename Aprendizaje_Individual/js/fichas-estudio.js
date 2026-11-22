@@ -7,7 +7,7 @@ import { svgAprendin } from './aprendin.js';
 import { MUNDOS } from './mundos.js';
 import { tonos } from './color.js';
 import { cargarAprendin, cargarClase } from './guardado.js';
-import { cargarEstudio, guardarEstudio, solicitarFichaInicio, renderizarFichaEstudio, historialDe, registrarEventoVisual, calcularCalibracion, renderizarPanelCalibracion } from './fichas-apoyo.js';
+import { cargarEstudio, guardarEstudio, solicitarFichaInicio, renderizarFichaEstudio, enlazarAccionesFicha, historialDe, registrarEventoVisual, calcularCalibracion, renderizarPanelCalibracion } from './fichas-apoyo.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -26,7 +26,7 @@ async function comprobarIA() {
   try { const r = await fetch('/api/estado', { cache: 'no-store' }); const j = r.ok ? await r.json() : null; ia = !!j?.ia; } catch { ia = false; }
   const el = $('#estadoIA');
   el.className = 'estado-ia' + (ia ? ' si' : '');
-  el.textContent = ia ? 'IA conectada' : 'Sin IA: fichas de respaldo';
+  el.textContent = ia ? 'En línea' : 'Modo práctica';
 }
 
 /* ---------- Sugerencias y enlace con el aprendín ---------- */
@@ -68,18 +68,20 @@ function pintarCalibracion() {
   const hist = historialDe(S.fichas);
   const ops = { historial: hist, alCambiar: () => pintarCalibracion() };
   renderizarPanelCalibracion($('#calibracionInicio'), { ...ops, compacto: true });
-  renderizarPanelCalibracion($('#calibracionEstudio'), ops);
+  renderizarPanelCalibracion($('#calibracionEstudio'), { ...ops, compacto: true });
 }
 
-async function pedirFichaAdaptativa(reaccion, nota = '') {
+async function pedirFichaAdaptativa(reaccion, nota = '', pinTipo = '') {
   if (cargando) return;
   cargando = true;
   pintarEstadoCarga(true);
   const historial = historialDe(S.fichas);
+  const calBase = calcularCalibracion(historial);
+  const calibracion = pinTipo ? { ...calBase, pinTipo, estrategia: 'fijo' } : calBase;
   const { datos, fuente } = await solicitarFichaInicio({
     ia, tema: S.tema, gustos: S.gustos, nivel: S.nivel, reaccion, nota,
     aprendin: S.usaAprendin && A ? A : null, historial,
-    calibracion: calcularCalibracion(historial)
+    calibracion
   });
   if (reaccion === 'entendio') S.nivel = S.nivel === 'cero' ? 'algo' : 'bastante';
   else if (reaccion === 'duda' && S.nivel === 'bastante') S.nivel = 'algo';
@@ -87,7 +89,7 @@ async function pedirFichaAdaptativa(reaccion, nota = '') {
   guardarEstudio(S);
   cargando = false;
   pintarEstadoCarga(false);
-  pintarEstudio();
+  pintarEstudio({ animarUltima: true });
 }
 
 $('#formEstudio').addEventListener('submit', e => {
@@ -108,12 +110,16 @@ $('#btnNuevoTema').addEventListener('click', () => {
 });
 
 function pintarEstadoCarga(si) {
-  $('#estudioCargando').hidden = !si;
+  const cargaEl = $('#estudioCargando');
+  cargaEl.hidden = !si;
   $('#btnGenerar').disabled = si;
-  document.querySelectorAll('.fi-reaccion-btn').forEach(b => { b.disabled = si; });
+  document.querySelectorAll('.fi-reaccion-btn, .fi-btn-enfoque, .fi-enfoque-chip, .fi-enfoque-send').forEach(b => { b.disabled = si; });
+  if (si && S.fichas.length) {
+    cargaEl.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest' });
+  }
 }
 
-function pintarEstudio() {
+function pintarEstudio({ animarUltima = false } = {}) {
   const act = $('#estudioActivo'), cardForm = $('#tarjetaInicio');
   act.hidden = !S.activo;
   cardForm.hidden = S.activo;
@@ -135,22 +141,29 @@ function pintarEstudio() {
   const lista = $('#estudioLista');
   lista.replaceChildren();
   const av = S.usaAprendin && A ? svgAprendin(A.fases.at(-1).look, { emocion: 'orgulloso' }) : '';
-  const tono = S.usaAprendin && A ? tonos(A.fases.at(-1).look.color) : tonos('indigo');
+  const tono = S.usaAprendin && A ? tonos(A.fases.at(-1).look.color) : tonos('#2F5EA8');
 
-  [...S.fichas].reverse().forEach((item, revIdx) => {
-    const idx = S.fichas.length - 1 - revIdx;
+  S.fichas.forEach((item, idx) => {
     const esUltima = idx === S.fichas.length - 1;
     const wrap = document.createElement('div');
-    wrap.className = 'cl-ficha' + (esUltima ? ' cl-nueva' : '');
+    wrap.className = 'cl-ficha' + (esUltima ? ' cl-nueva fi-activa' : ' fi-anterior');
     wrap.innerHTML = renderizarFichaEstudio(item, idx, { esUltima, gustos: S.gustos, avatar: av, tono });
     lista.append(wrap);
   });
 
-  lista.querySelectorAll('.fi-reaccion-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (cargando) return;
-      const r = btn.dataset.reaccion;
-      const nota = lista.querySelector('.fi-nota-duda')?.value.trim() || '';
+  const btnCal = $('#btnCalibracion');
+  const hostCal = $('#calibracionEstudio');
+  if (btnCal && hostCal && !btnCal.dataset.wired) {
+    btnCal.dataset.wired = '1';
+    btnCal.addEventListener('click', () => {
+      hostCal.hidden = !hostCal.hidden;
+      btnCal.setAttribute('aria-expanded', String(!hostCal.hidden));
+    });
+  }
+
+  enlazarAccionesFicha(lista, {
+    ocupado: () => cargando,
+    alReaccionar: (r, nota) => {
       const ultima = S.fichas.at(-1);
       if (ultima) {
         ultima.reaccion = r;
@@ -159,12 +172,29 @@ function pintarEstudio() {
       }
       guardarEstudio(S);
       pedirFichaAdaptativa(r, nota);
-    });
+    },
+    alEnfoque: ({ pinTipo, nota }) => {
+      const ultima = S.fichas.at(-1);
+      if (ultima) {
+        ultima.reaccion = 'enfoque';
+        ultima.nota = nota;
+      }
+      guardarEstudio(S);
+      pedirFichaAdaptativa('enfoque', nota, pinTipo);
+    }
   });
 
-  activarFichas(lista);
-  const primeroVis = lista.querySelector('.vis');
-  if (primeroVis) animar(primeroVis);
+  if (animarUltima) {
+    activarFichas(lista, { autoPlay: false });
+    const ultimaCard = lista.querySelector('.fi-activa');
+    const ultimaVis = ultimaCard?.querySelector('.vis');
+    if (ultimaVis) animar(ultimaVis, { autoPlay: true });
+    if (S.fichas.length > 1 && ultimaCard) {
+      ultimaCard.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest' });
+    }
+  } else {
+    activarFichas(lista);
+  }
 }
 
 /* ---------- Fichas guardadas de tu clase ---------- */
@@ -179,7 +209,7 @@ function pintarFichasClase() {
   listas.sort(([a], [b]) => Number(a) - Number(b)).forEach(([p, f]) => {
     cont.insertAdjacentHTML('beforeend', htmlFicha(limpiarFicha(f.datos), {
       numero: p, fase: A.fases[p]?.titulo || '', mundo: A.mundo,
-      tono: tonos(A.fases[p]?.look?.color || 'indigo'),
+      tono: tonos(A.fases[p]?.look?.color || '#2F5EA8'),
       avatar: svgAprendin(A.fases[p]?.look || A.fases[0].look, { emocion: 'orgulloso' })
     }));
   });

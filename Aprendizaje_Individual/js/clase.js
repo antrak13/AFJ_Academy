@@ -4,12 +4,12 @@ import { crearAprendin, svgAprendin, EMOCIONES } from './aprendin.js';
 import { tonos } from './color.js';
 import { cargarAprendin, guardarAprendin, cargarClase, guardarClase, borrarClase } from './guardado.js';
 import { ESTADOS, PASOS, preguntaInicial, turnoLocal, resumenAprendin } from './turno.js';
-import { htmlFicha, fichaLocal, limpiarFicha } from './fichas.js';
+import { htmlFicha, fichaLocal, limpiarFicha, svgIcono } from './fichas.js';
 import { activarFichas, animar } from './fichas-dom.js';
 import { DEMO } from './demo-aprendin.js';
 import { crearPrueba } from './prueba.js';
 import { demoClase } from './demo-clase.js';
-import { cargarEstudio, guardarEstudio, solicitarFichaInicio, renderizarFichaEstudio, historialDe, registrarEventoVisual, calcularCalibracion, renderizarPanelCalibracion } from './fichas-apoyo.js';
+import { cargarEstudio, guardarEstudio, solicitarFichaInicio, renderizarFichaEstudio, enlazarAccionesFicha, historialDe, registrarEventoVisual, calcularCalibracion, renderizarPanelCalibracion } from './fichas-apoyo.js';
 
 const $ = s => document.querySelector(s);
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -40,12 +40,37 @@ $('#marcaAv').append(marca.el);
 
 async function estadoIA() {
   try { const r = await fetch('/api/estado', { cache: 'no-store' }); const j = r.ok ? await r.json() : null; ia = !!j?.ia; } catch { ia = false; }
-  const el = $('#estadoIA'); el.className = 'estado-ia' + (ia ? ' si' : ''); el.textContent = ia ? 'IA conectada' : 'Sin IA: modo práctica';
+  const el = $('#estadoIA'); el.className = 'estado-ia' + (ia ? ' si' : ''); el.textContent = ia ? 'En línea' : 'Modo práctica';
 }
+
+let panelDerActual = 'apoyo';
+function verPanelDer(tab = 'apoyo') {
+  panelDerActual = tab === 'cuaderno' ? 'cuaderno' : 'apoyo';
+  const tAp = $('#tabApoyo'), tCu = $('#tabCuaderno');
+  const pAp = $('#paneApoyo'), pCu = $('#paneCuaderno');
+  if (!tAp || !tCu || !pAp || !pCu) return;
+  const esAp = panelDerActual === 'apoyo';
+  tAp.setAttribute('aria-selected', String(esAp)); tAp.tabIndex = esAp ? 0 : -1;
+  tCu.setAttribute('aria-selected', String(!esAp)); tCu.tabIndex = esAp ? -1 : 0;
+  pAp.hidden = !esAp; pCu.hidden = esAp;
+  if (!esAp && $('#dotCuaderno')) $('#dotCuaderno').hidden = true;
+}
+[$('#tabApoyo'), $('#tabCuaderno')].filter(Boolean).forEach((btn, i, arr) => {
+  btn.addEventListener('click', () => verPanelDer(btn.id === 'tabCuaderno' ? 'cuaderno' : 'apoyo'));
+  btn.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const nx = arr[(i + (e.key === 'ArrowRight' ? 1 : -1) + arr.length) % arr.length];
+      verPanelDer(nx.id === 'tabCuaderno' ? 'cuaderno' : 'apoyo');
+      nx.focus();
+    }
+  });
+});
 
 function empezar() {
   if (!A) { $('#vacio').hidden = false; $('#clase').hidden = true; return; }
   $('#vacio').hidden = true; $('#clase').hidden = false;
+  apoyoActivoId = null;
   const guardada = cargarClase(A.id);
   C = EJEMPLO === 'prueba' && A === DEMO ? (guardada?.paso > PASOS ? guardada : demoClase(A)) : guardada || nuevo();
   document.title = `Clase de ${A.nombre} · Aprendines`;
@@ -57,7 +82,8 @@ function empezar() {
   estrella?.destruir();
   estrella = crearAprendin({ look: look(), emocion: 'feliz' });
   $('#estrella').replaceChildren(estrella.el);
-  pintarFases(); pintarAhora(); pintarChat(); pintarFichas(); pintarMedicion(); pintarApoyoLista(); pintarCalibracionClase();
+  verPanelDer('apoyo');
+  pintarFases(); pintarAhora(); pintarChat(); pintarFichas(); pintarMedicion(); pintarApoyoLista(); pintarApoyoActivo(); pintarCalibracionClase();
   for (const [p, f] of Object.entries(C.fichas)) if (f.estado !== 'lista') pedirFicha(Number(p));   // quedó a medias al recargar
   if (C.paso >= PASOS) prueba.preparar();
   if (!C.chat.length) arrancar();
@@ -87,14 +113,17 @@ function pintarFases() {
   const ya = A.fases[faseActual()], sig = A.fases[C.paso];
   $('#faseTxt').innerHTML = `Es <b>${esc(ya.titulo)}</b>${sig && C.paso <= PASOS ? ` · siguiente: <b>${esc(sig.titulo)}</b>` : ''}`;
 }
+function ponerPista(texto) {
+  const el = $('#pista');
+  if (el) el.innerHTML = `${svgIcono('idea', { size: 16 })}<span>${esc(texto)}</span>`;
+}
 function pintarAhora() {
   const fin = C.paso > PASOS;
   $('#ahoraTit').textContent = fin ? '¡Aprendió todo el tema!' : `Paso ${C.paso} de ${PASOS} · le enseñas`;
   $('#concepto').textContent = fin ? `${A.nombre} ya es ${A.fases[PASOS].titulo}.` : A.fases[C.paso].concepto;
   $('#btnPista').hidden = fin;
   $('#btnApoyo').hidden = fin;
-  if ($('#btnApoyoChat')) $('#btnApoyoChat').hidden = fin;
-  $('#pista').textContent = C.pista || pistaBase();
+  ponerPista(C.pista || pistaBase());
   const pr = C.prueba, bp = $('#btnPrueba');
   bp.hidden = !fin;
   bp.textContent = !pr?.respuestas?.length ? 'Hacer la prueba juntos' : !pr.terminado ? 'Seguir con la prueba' : pr.aprobado ? `Prueba aprobada: ${pr.puntaje} de ${pr.examen.preguntas.length}` : 'Ver la prueba e intentar otra vez';
@@ -110,65 +139,19 @@ const cajaMsg = $('#mensajes');
 function burbuja(m) {
   const el = document.createElement('div');
   if (m.de === 'sis') {
+    const ico = m.tipo === 'evo' ? svgIcono('chispa', { size: 15 }) : m.tipo === 'ficha' ? svgIcono('libro', { size: 15 }) : m.tipo === 'prueba' ? svgIcono('meta', { size: 15 }) : '';
     el.className = `cl-sis cl-sis-${m.tipo || 'info'}`;
-    el.innerHTML = `<span>${esc(m.texto)}</span>`;
+    el.innerHTML = `<span>${ico}${esc(m.texto)}</span>`;
     if (m.tipo === 'prueba') { const b = document.createElement('button'); b.className = 'btn btn-crear cl-sis-btn'; b.type = 'button'; b.textContent = 'Hacer la prueba juntos'; b.addEventListener('click', () => prueba.abrir()); el.append(b); }
-    if (m.ficha) { el.classList.add('cl-sis-link'); el.addEventListener('click', () => document.getElementById(`ficha-${m.ficha}`)?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'start' })); }
+    if (m.ficha) { el.classList.add('cl-sis-link'); el.addEventListener('click', () => { verPanelDer('cuaderno'); document.getElementById(`ficha-${m.ficha}`)?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'start' }); }); }
     return el;
   }
   if (m.de === 'apoyo') {
     const item = buscarApoyoPorId(m.idApoyo);
     if (!item) { el.hidden = true; return el; }
-    el.className = 'cl-msg-apoyo';
-    el.id = `apoyo-msg-${item.id}`;
-    const todas = fichasEstudioTema();
-    const idx = Math.max(0, todas.findIndex(f => f.id === item.id || (f.datos.titulo === item.datos.titulo && f.datos.visual.tipo === item.datos.visual.tipo)));
-    const esUltima = idx === todas.length - 1;
-    const concepto = A.fases[Math.min(PASOS, m.paso || C.paso)]?.concepto || A.tema;
-    const col = !!m.colapsada;
-    el.innerHTML = `<div class="cl-apoyo-chat-cab">
-      <span>📖 <b>Ficha · Paso ${m.paso || C.paso}:</b> ${esc(concepto)}</span>
-      <div class="cl-apoyo-chat-acc">
-        <button type="button" class="btn btn-chico cl-apoyo-toggle" aria-expanded="${!col}">${col ? 'Ver ficha' : 'Ocultar'}</button>
-        <button type="button" class="btn btn-chico btn-fuerte cl-apoyo-ir">Explicarle ↓</button>
-      </div>
-    </div>
-    <div class="cl-apoyo-chat-cuerpo"${col ? ' hidden' : ''}></div>`;
-    const cuerpo = el.querySelector('.cl-apoyo-chat-cuerpo');
-    cuerpo.innerHTML = renderizarFichaEstudio(item, idx, {
-      esUltima: esUltima && item.reaccion !== 'entendio',
-      gustos: A.gustos || A.mundo,
-      avatar: svgAprendin(look(), { emocion: 'curioso' }),
-      tono: tonos(look().color),
-      placeholder: 'Opcional: ¿qué parte de este paso no entiendes?'
-    });
-    if (esUltima && item.reaccion === 'entendio') {
-      cuerpo.insertAdjacentHTML('beforeend', `<div class="cl-apoyo-otra-wrap"><span class="fi-reaccion-res">✓ Ya lo entendiste (${esc(item.datos.visual.tipo)}) — explícaselo a ${esc(A.nombre)} abajo</span><button type="button" class="btn btn-chico cl-apoyo-otra">Otra ficha</button></div>`);
-      cuerpo.querySelector('.cl-apoyo-otra')?.addEventListener('click', () => { if (!cargandoApoyo) pedirApoyo('ejemplo'); });
-    }
-    el.querySelector('.cl-apoyo-toggle').addEventListener('click', e => {
-      m.colapsada = !m.colapsada;
-      cuerpo.hidden = m.colapsada;
-      e.currentTarget.textContent = m.colapsada ? 'Ver ficha' : 'Ocultar';
-      e.currentTarget.setAttribute('aria-expanded', String(!m.colapsada));
-      guardar();
-    });
-    el.querySelector('.cl-apoyo-ir').addEventListener('click', () => { if (C.paso <= PASOS) msg.focus(); });
-    cuerpo.querySelectorAll('.fi-reaccion-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (cargandoApoyo) return;
-        const r = btn.dataset.reaccion, nota = cuerpo.querySelector('.fi-nota-duda')?.value.trim() || '';
-        marcarReaccionApoyo(item.id, r, nota);
-        registrarEventoVisual(item.datos.visual.tipo, r);
-        pintarCalibracionClase();
-        if (r === 'entendio') {
-          pintarChat();
-          if (C.paso <= PASOS) msg.focus();
-        } else {
-          pedirApoyo(r, nota);
-        }
-      });
-    });
+    el.className = 'cl-sis cl-sis-ficha cl-sis-link';
+    el.innerHTML = `<span>${svgIcono(item.datos.icono, { def: 'libro', size: 15 })}Abrir ficha · ${esc(item.datos.titulo)}</span>`;
+    el.addEventListener('click', () => mostrarApoyoEnChat(item));
     return el;
   }
   el.className = `cl-msg cl-${m.de}`;
@@ -252,7 +235,7 @@ $('#formMsg').addEventListener('submit', async e => {
   }
   pensando(false);
   medir(paso, t, fuente);
-  if (t.pista) { C.pista = t.pista; $('#pista').textContent = t.pista; }
+  if (t.pista) { C.pista = t.pista; ponerPista(t.pista); }
   if (t.estado === 'error') estrella.equivocarse();
   await decir(t.dice, t.emocion, t.intento ? { intento: t.intento } : {});
   if (t.estado === 'entendio') {
@@ -278,9 +261,9 @@ async function subirDeFase(paso, t) {
   estrella.evolucionar(f.look); estrella.sentir('orgulloso');
   $('#foco').style.setProperty('--tono', tonos(f.look.color).claro);
   sistema(`${A.nombre} subió a ${f.titulo}`, 'evo');
-  pintarFases(); pintarAhora(); C.pista = ''; $('#pista').textContent = pistaBase(); $('#pista').hidden = true; $('#btnPista').setAttribute('aria-expanded', 'false');
+  pintarFases(); pintarAhora(); C.pista = ''; ponerPista(pistaBase()); $('#pista').hidden = true; $('#btnPista').setAttribute('aria-expanded', 'false');
   await espera(1400);
-  if (paso < PASOS) await decir(t.siguiente || preguntaInicial(A, paso + 1), 'curioso');
+  if (paso < PASOS) { await decir(t.siguiente || preguntaInicial(A, paso + 1), 'curioso'); pintarApoyoActivo(); }
   else {
     estrella.saltar();
     await decir(`¡Ya aprendí los ${PASOS} pasos! Ahora viene la prueba de mi misión… Solo no puedo: ¿la respondemos juntos?`, 'nervioso');
@@ -305,6 +288,7 @@ async function pedirFicha(paso) {
   }
   C.fichas[paso] = { estado: 'lista', datos: limpiarFicha(datos), nueva: true }; guardar();
   pintarFichas();
+  if (panelDerActual !== 'cuaderno' && $('#dotCuaderno')) $('#dotCuaderno').hidden = false;
   sistema(`Nueva ficha: ${C.fichas[paso].datos.titulo}`, 'ficha', paso);
   if (C.paso > PASOS && !ia) prueba.preparar();
 }
@@ -348,7 +332,7 @@ function pintarMedicion() {
     const fila = document.createElement('div'); fila.className = 'cl-med';
     const chips = (m?.turnos || []).map(t => `<i class="est est-${t.estado}" title="${esc(ESTADOS[t.estado])}${t.nota ? ': ' + esc(t.nota) : ''}"></i>`).join('');
     const ult = m?.turnos.at(-1);
-    fila.innerHTML = `<div class="cl-med-cab"><b>${p}. ${esc(f.concepto)}</b><span class="est-chips" aria-label="${m ? m.turnos.map(t => ESTADOS[t.estado]).join(', ') : 'sin empezar'}">${chips || '<em>sin empezar</em>'}</span></div>${ult?.nota ? `<p>${esc(ult.nota)}${ult.fuente === 'local' ? ' <small>(sin IA)</small>' : ''}</p>` : ''}`;
+    fila.innerHTML = `<div class="cl-med-cab"><b>${p}. ${esc(f.concepto)}</b><span class="est-chips" aria-label="${m ? m.turnos.map(t => ESTADOS[t.estado]).join(', ') : 'sin empezar'}">${chips || '<em>sin empezar</em>'}</span></div>${ult?.nota ? `<p>${esc(ult.nota)}</p>` : ''}`;
     caja.append(fila);
   }
 }
@@ -441,15 +425,15 @@ if (mic && (Rec || tieneAudio)) {
     if (g.muestras < g.sr * 0.25 || g.maxAmp < 0.002) {
       setMicEstado('No escuché voz clara; habla más cerca del micrófono.', 'err'); return;
     }
-    if (!ia) { setMicEstado('Activa el servidor con IA para transcribir tu voz.', 'err'); return; }
-    mic.disabled = true; setMicEstado('✨ Transcribiendo tu voz…');
+    if (!ia) { setMicEstado('Activa el servidor local para transcribir tu voz.', 'err'); return; }
+    mic.disabled = true; setMicEstado('Transcribiendo tu voz…');
     try {
       const wav = codificarWav16k(g.chunks, g.sr);
       const r = await fetch('/api/transcribir', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ audioBase64: bytesABase64(wav), idioma: navigator.language || 'es' }) });
       const j = await r.json();
       if (!j.ok) throw new Error(j.error || r.status);
       if (!j.texto) setMicEstado('No entendí palabras claras; intenta hablar más fuerte.', 'err');
-      else { agregarTextoDictado(j.texto); setMicEstado('✓ Voz transcrita', 'ok'); }
+      else { agregarTextoDictado(j.texto); setMicEstado('Voz transcrita', 'ok'); }
     } catch (e) {
       setMicEstado(`No pude transcribir el audio (${e.message}).`, 'err');
     } finally { mic.disabled = false; }
@@ -467,11 +451,11 @@ if (mic && (Rec || tieneAudio)) {
         for (let i = 0; i < cp.length; i++) { const a = Math.abs(cp[i]); if (a > state.maxAmp) state.maxAmp = a; }
         state.chunks.push(cp); state.muestras += cp.length;
       };
-      state.reloj = setInterval(() => { state.segs++; setMicEstado(`🎙️ Grabando (${state.segs}s)… toca 🎤 para transcribir`, 'grabando'); }, 1000);
+      state.reloj = setInterval(() => { state.segs++; setMicEstado(`Grabando (${state.segs}s)… toca el micrófono para transcribir`, 'grabando'); }, 1000);
       state.tope = setTimeout(() => detenerWav(), 30000);
       grab = state;
       mic.classList.add('grabando'); mic.setAttribute('aria-pressed', 'true');
-      setMicEstado('🎙️ Grabando… toca 🎤 otra vez para transcribir', 'grabando');
+      setMicEstado('Grabando… toca el micrófono otra vez para transcribir', 'grabando');
     } catch (e) {
       mic.classList.remove('grabando'); mic.setAttribute('aria-pressed', 'false');
       const m = e.name === 'NotAllowedError' ? 'Permiso de micrófono denegado.' : e.name === 'NotFoundError' ? 'No se encontró ningún micrófono.' : `Error de micrófono (${e.message}).`;
@@ -502,11 +486,11 @@ if (mic && (Rec || tieneAudio)) {
     rec.onend = () => {
       if (errorRed) return;
       rec = null; mic.classList.remove('grabando'); mic.setAttribute('aria-pressed', 'false');
-      if (huboTexto) setMicEstado('✓ Dictado listo', 'ok');
+      if (huboTexto) setMicEstado('Dictado listo', 'ok');
       msg.focus();
     };
     mic.classList.add('grabando'); mic.setAttribute('aria-pressed', 'true');
-    setMicEstado('🎙️ Escuchando… toca 🎤 para parar', 'grabando');
+    setMicEstado('Escuchando… toca el micrófono para parar', 'grabando');
     try { rec.start(); } catch (e) { rec = null; mic.classList.remove('grabando'); mic.setAttribute('aria-pressed', 'false'); if (tieneAudio) { preferirWav = true; iniciarWav(); } else setMicEstado(e.message, 'err'); }
   }
 
@@ -519,8 +503,8 @@ if (mic && (Rec || tieneAudio)) {
   });
 }
 
-/* ---------- Fichas de apoyo dentro del chat + calibración ---------- */
-let cargandoApoyo = false;
+/* ---------- Fichas de apoyo en panel lateral + calibración ---------- */
+let cargandoApoyo = false, apoyoActivoId = null, recienteApoyoId = null;
 const idUnicoApoyo = () => `ap-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 function fichasEstudioTema() {
   const s = cargarEstudio();
@@ -544,7 +528,8 @@ function guardarApoyo(item) {
   const s = cargarEstudio();
   if (s && s.tema?.toLowerCase() === A.tema.toLowerCase()) { s.fichas.push(item); guardarEstudio(s); }
   else guardarEstudio({ activo: true, tema: A.tema, gustos: A.gustos || A.mundo, nivel: 'algo', usaAprendin: true, fichas: [...(C.apoyo || [])] });
-  pintarApoyoLista(); pintarCalibracionClase();
+  apoyoActivoId = item.id;
+  pintarApoyoLista(); pintarApoyoActivo(); pintarCalibracionClase();
   return item;
 }
 function marcarReaccionApoyo(id, r, nota) {
@@ -556,6 +541,104 @@ function marcarReaccionApoyo(id, r, nota) {
     if (st) { st.reaccion = r; st.nota = nota; guardarEstudio(s); }
   }
 }
+function pintarApoyoActivo() {
+  const host = $('#apoyoActivoHost');
+  if (!host || !A || !C) return;
+  const todas = fichasEstudioTema();
+  const pasoActual = Math.min(PASOS, C.paso);
+  const concepto = A.fases[pasoActual]?.concepto || A.tema;
+
+  const delPaso = todas.filter(f => f.paso === C.paso);
+  const externo = apoyoActivoId ? buscarApoyoPorId(apoyoActivoId) : null;
+  const tarjetas = externo && !delPaso.some(f => f.id === externo.id) ? [...delPaso, externo] : delPaso;
+
+  if (!tarjetas.length && cargandoApoyo) {
+    host.innerHTML = `<div class="cl-apoyo-cargando"><p class="cargando">Armando una ficha visual adaptada debajo…</p></div>`;
+    return;
+  }
+
+  if (!tarjetas.length) {
+    host.innerHTML = `<div class="cl-apoyo-vacio">
+      <div class="cl-apoyo-vacio-ico">${svgIcono('libro', { size: 22 })}</div>
+      <h3>Apoyo visual: ${esc(concepto)}</h3>
+      <p class="nota">Abre una ficha visual con gráficos animados y ejemplos de ${esc(A.mundo || 'tu mundo')} para tenerla a la vista mientras explicas en el chat.</p>
+      <button type="button" class="btn btn-fuerte" id="btnPedirApoyoPanel"${C.paso > PASOS ? ' hidden' : ''}>Ver ficha de este paso</button>
+    </div>`;
+    $('#btnPedirApoyoPanel')?.addEventListener('click', () => pedirApoyo('inicio'));
+    return;
+  }
+
+  const cuentaTxt = tarjetas.length > 1 ? ` · ${tarjetas.length} fichas` : '';
+  host.innerHTML = `<div class="cl-apoyo-panel-card">
+    <div class="cl-apoyo-panel-cab">
+      <span>${svgIcono(tarjetas.at(-1).datos.icono, { def: 'libro', size: 15 })} <b>${esc(concepto)}</b><small class="cl-apoyo-cnt">${esc(cuentaTxt)}</small></span>
+      <button type="button" class="btn btn-chico cl-apoyo-ir">Escribir al chat</button>
+    </div>
+    <div class="cl-apoyo-stack"></div>
+  </div>`;
+  const stack = host.querySelector('.cl-apoyo-stack');
+  const av = svgAprendin(look(), { emocion: 'curioso' });
+  const tono = tonos(look().color);
+
+  tarjetas.forEach((item, i) => {
+    const esUltima = i === tarjetas.length - 1;
+    const idx = Math.max(0, todas.findIndex(f => f.id === item.id || (f.datos.titulo === item.datos.titulo && f.datos.visual.tipo === item.datos.visual.tipo)));
+    const itemEl = document.createElement('div');
+    itemEl.className = `cl-apoyo-stack-item${esUltima ? ' is-activa' : ' is-anterior'}${recienteApoyoId === item.id ? ' cl-nueva' : ''}`;
+    itemEl.dataset.apoyoId = item.id;
+    itemEl.innerHTML = renderizarFichaEstudio(item, idx, {
+      esUltima: esUltima && item.reaccion !== 'entendio',
+      permitirEnfoque: esUltima && item.reaccion === 'entendio',
+      gustos: A.gustos || A.mundo,
+      avatar: av,
+      tono,
+      placeholder: 'Opcional: ¿qué parte de este paso no entiendes?'
+    });
+    if (esUltima) {
+      enlazarAccionesFicha(itemEl, {
+        ocupado: () => cargandoApoyo,
+        alReaccionar: (r, nota) => {
+          marcarReaccionApoyo(item.id, r, nota);
+          registrarEventoVisual(item.datos.visual.tipo, r);
+          pintarCalibracionClase();
+          if (r === 'entendio') {
+            pintarApoyoActivo();
+            if (C.paso <= PASOS) msg.focus();
+          } else {
+            pedirApoyo(r, nota);
+          }
+        },
+        alEnfoque: ({ pinTipo, nota }) => {
+          marcarReaccionApoyo(item.id, 'enfoque', nota);
+          pedirApoyo('enfoque', nota, pinTipo);
+        },
+        alOtra: () => pedirApoyo('ejemplo')
+      });
+    }
+    stack.append(itemEl);
+  });
+
+  if (cargandoApoyo) {
+    stack.insertAdjacentHTML('beforeend', `<div class="cl-apoyo-cargando"><p class="cargando">Armando una nueva ficha visual adaptada debajo…</p></div>`);
+  }
+
+  host.querySelector('.cl-apoyo-ir')?.addEventListener('click', () => { if (C.paso <= PASOS) msg.focus(); });
+
+  activarFichas(stack, { autoPlay: false });
+  if (cargandoApoyo) {
+    stack.querySelector('.cl-apoyo-cargando')?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'nearest' });
+  } else if (recienteApoyoId) {
+    const ultimaVis = stack.querySelector('.cl-apoyo-stack-item.is-activa .vis');
+    if (ultimaVis) animar(ultimaVis, { autoPlay: true });
+    if (tarjetas.length > 1) {
+      stack.querySelector('.cl-apoyo-stack-item.is-activa')?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'nearest' });
+    }
+    recienteApoyoId = null;
+  } else {
+    const ultimaVis = stack.querySelector('.cl-apoyo-stack-item.is-activa .vis');
+    if (ultimaVis) animar(ultimaVis, { autoPlay: true });
+  }
+}
 function pintarApoyoLista() {
   const todas = fichasEstudioTema(), det = $('#apoyoGuardadas'), lista = $('#apoyoMiniLista');
   if (!det || !lista) return;
@@ -565,7 +648,7 @@ function pintarApoyoLista() {
   [...todas].reverse().forEach(it => {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'cl-apoyo-mini';
-    b.innerHTML = `<span>${esc(it.datos.icono)} ${esc(it.datos.titulo)}</span><small>${esc(it.datos.visual.tipo)}</small>`;
+    b.innerHTML = `<span class="cl-apoyo-mini-txt">${svgIcono(it.datos.icono, { def: 'libro', size: 15 })}<span>${esc(it.datos.titulo)}</span></span><small>${esc(it.datos.visual.tipo)}</small>`;
     b.addEventListener('click', () => mostrarApoyoEnChat(it));
     lista.append(b);
   });
@@ -579,54 +662,47 @@ function mostrarApoyoEnChat(item) {
   let guardado = (C.apoyo || []).find(f => f.id === item.id || (f.datos.titulo === item.datos.titulo && f.datos.visual.tipo === item.datos.visual.tipo));
   if (!guardado) guardado = guardarApoyo({ ...item, paso: item.paso || Math.min(PASOS, C.paso) });
   registrarVistaPaso(C.paso, guardado.datos.visual.tipo);
-  const existente = C.chat.find(m => m.de === 'apoyo' && m.idApoyo === guardado.id);
-  if (existente) {
-    existente.colapsada = false; guardar(); pintarChat();
-    document.getElementById(`apoyo-msg-${guardado.id}`)?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'nearest' });
-  } else {
-    agregar({ de: 'apoyo', idApoyo: guardado.id, paso: guardado.paso || C.paso });
-  }
+  apoyoActivoId = guardado.id;
+  verPanelDer('apoyo');
+  pintarApoyoActivo();
+  if (window.innerWidth <= 1180) $('#panelDer')?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'start' });
 }
-async function pedirApoyo(reaccion, nota = '') {
+async function pedirApoyo(reaccion, nota = '', pinTipo = '') {
   if (cargandoApoyo || C.paso > PASOS) return;
   cargandoApoyo = true;
-  document.querySelectorAll('#mensajes .fi-reaccion-btn, #btnApoyo, #btnApoyoChat').forEach(b => { if (b) b.disabled = true; });
-  const avCarga = document.createElement('div');
-  avCarga.className = 'cl-apoyo-cargando';
-  avCarga.innerHTML = '<p class="cargando">Armando una ficha visual adaptada para este paso…</p>';
-  cajaMsg.append(avCarga); bajar();
+  verPanelDer('apoyo');
+  document.querySelectorAll('#apoyoActivoHost .fi-reaccion-btn, #apoyoActivoHost .fi-btn-enfoque, #apoyoActivoHost .fi-enfoque-chip, #apoyoActivoHost .fi-enfoque-send, #btnApoyo').forEach(b => { if (b) b.disabled = true; });
+  pintarApoyoActivo();
+  if (window.innerWidth <= 1180) $('#panelDer')?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'start' });
   try {
     const pasoActual = C.paso, objetivo = A.fases[pasoActual]?.concepto || '';
     const historial = historialDe(fichasEstudioTema());
+    const calBase = calcularCalibracion(historial);
+    const calibracion = pinTipo ? { ...calBase, pinTipo, estrategia: 'fijo' } : calBase;
     const { datos, fuente } = await solicitarFichaInicio({
       ia, tema: A.tema, gustos: A.gustos || A.mundo, nivel: reaccion === 'inicio' ? 'cero' : 'algo',
-      reaccion, nota, objetivo, aprendin: A, historial, calibracion: calcularCalibracion(historial)
+      reaccion, nota, objetivo, aprendin: A, historial, calibracion
     });
-    const item = guardarApoyo({ id: idUnicoApoyo(), paso: pasoActual, datos, fuente, reaccionOrigen: reaccion, reaccion: null, nota });
-    avCarga.remove();
-    agregar({ de: 'apoyo', idApoyo: item.id, paso: pasoActual });
-  } catch {
-    avCarga.remove();
-  } finally {
+    const nuevaId = idUnicoApoyo();
+    recienteApoyoId = nuevaId;
     cargandoApoyo = false;
-    document.querySelectorAll('#mensajes .fi-reaccion-btn, #btnApoyo, #btnApoyoChat').forEach(b => { if (b) b.disabled = false; });
+    const item = guardarApoyo({ id: nuevaId, paso: pasoActual, datos, fuente, reaccionOrigen: reaccion, reaccion: null, nota });
+    apoyoActivoId = item.id;
+  } finally {
+    const quedoCargando = cargandoApoyo;
+    cargandoApoyo = false;
+    document.querySelectorAll('#apoyoActivoHost .fi-reaccion-btn, #apoyoActivoHost .fi-btn-enfoque, #apoyoActivoHost .fi-enfoque-chip, #apoyoActivoHost .fi-enfoque-send, #btnApoyo').forEach(b => { if (b) b.disabled = false; });
+    if (quedoCargando) pintarApoyoActivo();
   }
 }
 function abrirApoyoEnChat() {
   if (!A || C.paso > PASOS) return;
   const pasoActual = C.paso;
-  const enChat = [...C.chat].reverse().find(m => m.de === 'apoyo' && m.paso === pasoActual);
-  if (enChat) {
-    enChat.colapsada = false; guardar(); pintarChat();
-    document.getElementById(`apoyo-msg-${enChat.idApoyo}`)?.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'nearest' });
-    return;
-  }
-  const previa = fichasEstudioTema().find(f => f.paso === pasoActual);
+  const previa = [...fichasEstudioTema()].reverse().find(f => f.paso === pasoActual);
   if (previa) mostrarApoyoEnChat(previa);
   else pedirApoyo('inicio');
 }
 $('#btnApoyo')?.addEventListener('click', () => abrirApoyoEnChat());
-$('#btnApoyoChat')?.addEventListener('click', () => abrirApoyoEnChat());
 
 /* ---------- Reiniciar y ejemplo ---------- */
 $('#btnReiniciar').addEventListener('click', () => {

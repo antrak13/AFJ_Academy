@@ -20,7 +20,7 @@
   <nav class="nav" aria-label="Secciones"><a href="taller.html">Taller</a><a href="clase.html" aria-current="page">Clase</a><a href="fichas.html">Fichas</a></nav>
   <p class="lema" id="lema">Enséñale y míralo <b>evolucionar</b>.</p>
   <div class="barra-acc">
-    <span class="estado-ia" id="estadoIA">Buscando la IA…</span>
+    <span class="estado-ia" id="estadoIA">Conectando…</span>
     <button class="btn btn-chico" id="btnVoz" type="button" aria-pressed="false" title="Que el aprendín hable en voz alta">Voz: no</button>
     <button class="btn btn-chico" id="btnReiniciar" type="button">Empezar de nuevo</button>
   </div>
@@ -41,7 +41,7 @@
       <p class="cl-concepto" id="concepto"></p>
       <div class="cl-ahora-acc">
         <button class="btn btn-chico" id="btnPista" type="button" aria-expanded="false" aria-controls="pista">¿Cómo se lo explico?</button>
-        <button class="btn btn-chico cl-btn-apoyo" id="btnApoyo" type="button">📖 Ficha de este paso</button>
+        <button class="btn btn-chico cl-btn-apoyo" id="btnApoyo" type="button"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v16H6.5A2.5 2.5 0 0 0 4 21.5zM20 5.5A2.5 2.5 0 0 0 17.5 3H12v16h5.5a2.5 2.5 0 0 1 2.5 2.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span>Ficha de este paso</span></button>
       </div>
       <p class="cl-pista" id="pista" hidden></p>
       <button class="btn btn-crear cl-btn-prueba" id="btnPrueba" type="button" hidden>Hacer la prueba juntos</button>
@@ -52,32 +52,39 @@
   <section class="cl-chat" aria-label="Clase">
     <div class="cl-mensajes" id="mensajes" role="log" aria-live="polite" aria-relevant="additions"></div>
     <div class="cl-chat-herr" id="chatHerr">
-      <button class="btn btn-chico cl-btn-apoyo" id="btnApoyoChat" type="button">📖 Ficha de este paso</button>
       <span class="cl-mic-estado" id="micEstado" role="status" aria-live="polite"></span>
     </div>
     <form class="cl-escribir" id="formMsg" autocomplete="off">
       <label class="solo-lector" for="msg">Tu explicación</label>
       <textarea id="msg" rows="1" maxlength="600" placeholder="Explícale aquí…"></textarea>
-      <button class="cl-mic" id="btnMic" type="button" aria-label="Dictar con la voz" aria-pressed="false" title="Dictar con la voz" hidden>🎤</button>
+      <button class="cl-mic" id="btnMic" type="button" aria-label="Dictar con la voz" aria-pressed="false" title="Dictar con la voz" hidden><svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><rect x="9" y="3.5" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 11.5a6 6 0 0 0 12 0M12 17.5v3M9 20.5h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
       <button class="btn btn-crear cl-enviar" id="btnEnviar" type="submit">Enseñar</button>
     </form>
   </section>
 
-  <aside class="cl-cuaderno" aria-label="Cuaderno de fichas">
-    <div class="cl-cuad-tit"><h2>Sus fichas</h2><span id="cuentaFichas">0 de 4</span></div>
-    <p class="nota" id="notaFichas">Cada vez que entiende un paso, escribe una ficha con lo que le enseñaste.</p>
-    <div class="cl-fichas" id="fichas"></div>
-    <details class="cl-medicion" id="medicion">
-      <summary>Lo que midió la IA</summary>
-      <p class="nota">Mientras conversan, la IA evalúa cada explicación sin ponerte nota. Así se ve dónde te trabaste.</p>
-      <div id="medicionLista"></div>
-    </details>
-    <details class="cl-medicion cl-apoyo-lista" id="apoyoGuardadas" hidden>
-      <summary>Fichas para estudiar (<span id="cuentaApoyo">0</span>)</summary>
-      <p class="nota">Fichas visuales para entender cada concepto antes o mientras se lo explicas. Toca una para verla en el chat.</p>
-      <div id="apoyoMiniLista" class="cl-apoyo-minis"></div>
-    </details>
-    <div class="fi-cal-host" id="calibracionClase"></div>
+  <aside class="cl-cuaderno cl-panel-der" id="panelDer" aria-label="Apoyo visual y cuaderno">
+    <div class="cl-panel-tabs" role="tablist" aria-label="Vista lateral">
+      <button type="button" role="tab" id="tabApoyo" aria-selected="true" tabindex="0">Apoyo visual</button>
+      <button type="button" role="tab" id="tabCuaderno" aria-selected="false" tabindex="-1">Cuaderno <span class="cl-tab-num" id="cuentaFichas">0 de 4</span><i class="cl-tab-dot" id="dotCuaderno" hidden aria-hidden="true"></i></button>
+    </div>
+    <section class="cl-panel-pane" id="paneApoyo" role="tabpanel" aria-labelledby="tabApoyo">
+      <div id="apoyoActivoHost"></div>
+      <details class="cl-medicion cl-apoyo-lista" id="apoyoGuardadas" hidden>
+        <summary>Fichas guardadas del tema (<span id="cuentaApoyo">0</span>)</summary>
+        <p class="nota">Fichas visuales para entender cada concepto antes o mientras se lo explicas. Toca una para abrirla aquí.</p>
+        <div id="apoyoMiniLista" class="cl-apoyo-minis"></div>
+      </details>
+    </section>
+    <section class="cl-panel-pane" id="paneCuaderno" role="tabpanel" aria-labelledby="tabCuaderno" hidden>
+      <p class="nota" id="notaFichas">Cada vez que entiende un paso, escribe una ficha con lo que le enseñaste.</p>
+      <div class="cl-fichas" id="fichas"></div>
+      <details class="cl-medicion" id="medicion">
+        <summary>Seguimiento del aprendizaje</summary>
+        <p class="nota">Resumen automático mientras conversan, sin ponerte nota. Así ves dónde conviene reforzar.</p>
+        <div id="medicionLista"></div>
+      </details>
+      <div class="fi-cal-host" id="calibracionClase"></div>
+    </section>
   </aside>
 </main>
 
@@ -95,7 +102,7 @@
       <div class="pr-tit"><small>La prueba de la misión · juntos</small><h2 id="prTitulo">La prueba</h2></div>
       <ol class="pr-progreso" id="prProgreso" aria-label="Preguntas"></ol>
       <span class="pr-equipo" id="prEquipo"></span>
-      <button class="pr-cerrar" id="prCerrar" type="button" aria-label="Salir de la prueba (se guarda)">✕</button>
+      <button class="pr-cerrar" id="prCerrar" type="button" aria-label="Salir de la prueba (se guarda)"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
     </header>
     <div class="pr-cuerpo">
       <div class="pr-apr">

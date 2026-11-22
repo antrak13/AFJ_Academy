@@ -26,13 +26,14 @@ const OPERACIONES = ['ninguna', 'suma', 'resta', 'igual', 'compara'];
 /* ================= Esquema para la IA ================= */
 export function esquemaFicha() {
   const s = d => ({ type: 'string', description: d });
-  const item = { type: 'object', properties: { texto: s('Texto corto (máximo 6 palabras)'), detalle: s('Detalle opcional (máximo 12 palabras)'), icono: s('Un emoji'), valor: { type: 'number', description: 'Número, si el visual lo usa (barras, torta, iconos)' }, fecha: s('Fecha o año (solo línea de tiempo)') }, required: ['texto'] };
-  const lado = { type: 'object', properties: { titulo: s('Título corto'), icono: s('Un emoji'), puntos: { type: 'array', maxItems: 4, items: s('Máximo 8 palabras') } }, required: ['titulo', 'puntos'] };
+  const icoDesc = 'Nombre corto de ícono sin emoji (uno de: libro, chispa, pasos, ciclo, mapa, balanza, reloj, grafico, tabla, recta, pelota, cocina, agua, hoja, energia, escudo, meta, moneda, bloque, cohete, musica, lupa, check, cruz, alerta, diamante, idea)';
+  const item = { type: 'object', properties: { texto: s('Texto corto (máximo 6 palabras)'), detalle: s('Detalle opcional (máximo 12 palabras)'), icono: s(icoDesc), valor: { type: 'number', description: 'Número, si el visual lo usa (barras, torta, iconos)' }, fecha: s('Fecha o año (solo línea de tiempo)') }, required: ['texto'] };
+  const lado = { type: 'object', properties: { titulo: s('Título corto'), icono: s(icoDesc), puntos: { type: 'array', maxItems: 4, items: s('Máximo 8 palabras') } }, required: ['titulo', 'puntos'] };
   return {
     type: 'object',
     properties: {
       titulo: s('Título de la ficha, máximo 6 palabras'),
-      icono: s('Un emoji que represente la idea'),
+      icono: s(icoDesc + ' que represente la idea'),
       idea: s('La idea clave en 1 o 2 oraciones simples y correctas, máximo 35 palabras'),
       visual: {
         type: 'object', description: 'El visual que mejor muestra la idea. Llena solo los campos de su tipo.',
@@ -87,7 +88,7 @@ export function esquemaFichaInicio() {
 const txt = (v, max) => String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
 const num = (v, def = 0) => { const x = Number(v); return Number.isFinite(x) ? x : def; };
 const ent = (v, a, b, def) => Math.max(a, Math.min(b, Math.round(num(v, def))));
-const emoji = v => { const s = txt(v, 16); return [...s].slice(0, 4).join(''); };
+const emoji = v => txt(v, 28);
 const mcd = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) [a, b] = [b, a % b]; return a || 1; };
 
 export function limpiarFicha(r = {}) {
@@ -126,7 +127,7 @@ export function limpiarFicha(r = {}) {
   if (!visualTieneDatos(vis)) { vis.tipo = 'pasos'; if (!vis.items.length) vis.items = []; }
   const e = r.ejemplo || {};
   return {
-    titulo: txt(r.titulo, 60) || 'Lo que aprendí', icono: emoji(r.icono) || '✨', idea: txt(r.idea, 260), visual: vis,
+    titulo: txt(r.titulo, 60) || 'Lo que aprendí', icono: emoji(r.icono) || 'chispa', idea: txt(r.idea, 260), visual: vis,
     ejemplo: { situacion: txt(e.situacion, 220), pasos: (Array.isArray(e.pasos) ? e.pasos : []).map(p => txt(p, 110)).filter(Boolean).slice(0, 4), resultado: txt(e.resultado, 100) },
     cuidado: txt(r.cuidado, 200), de_ti: txt(r.de_ti, 160).replace(/^[«"“']+|[»"”']+$/g, '').trim()
   };
@@ -166,46 +167,126 @@ function corregirFracciones(v) {
 /* ================= Dibujo ================= */
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const r1 = v => Math.round(v * 10) / 10;
-const SERIE = ['#6C63FF', '#FF6B5B', '#2CC4A8', '#FFB020', '#4BA3FF', '#FF6FB1', '#7BBF3A', '#A66BFF'];
+const SERIE = ['#E86A4A', '#2F5EA8', '#229F74', '#E59D18', '#0D9488', '#D94862', '#5A8D26', '#4668B8'];
 const fmt = x => Number.isInteger(x) ? String(x) : String(Math.round(x * 100) / 100).replace('.', ',');
 let cuenta = 0; // ids únicos para las flechas de cada visual
-const ico = (i, cls = 'v-ico') => i ? `<span class="${cls}" aria-hidden="true">${esc(i)}</span>` : '';
+
+const ICONOS_SVG = {
+  libro: '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v16H6.5A2.5 2.5 0 0 0 4 21.5zM20 5.5A2.5 2.5 0 0 0 17.5 3H12v16h5.5a2.5 2.5 0 0 1 2.5 2.5z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>',
+  chispa: '<path d="M12 3l1.9 5.3L19 10l-5.1 1.7L12 17l-1.9-5.3L5 10l5.1-1.7z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>',
+  pasos: '<path d="M4 18h5v-4h5v-4h6M4 18v-2M9 14v-2M14 10V8" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>',
+  ciclo: '<path d="M17 7a7 7 0 0 0-11 2M7 17a7 7 0 0 0 11-2M17 3v4h-4M7 21v-4h4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>',
+  mapa: '<path d="M9 4L3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5zM9 4v13M15 6.5v13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>',
+  balanza: '<path d="M12 4v16M7 20h10M5 8h14M5 8l-2.5 6h5zM19 8l-2.5 6h5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+  reloj: '<circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M12 7.5V12l3.2 2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>',
+  grafico: '<path d="M4 4v16h16M7 15l4-4 3 3 5-6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>',
+  tabla: '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 9.5h17M3.5 14.5h17M10 9.5v10" fill="none" stroke="currentColor" stroke-width="1.7"/>',
+  recta: '<path d="M3 13h18M7 10v6M12 10v6M17 10v6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M7 10c2.5-4 7.5-4 10 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+  pelota: '<circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M12 7l4.2 3-1.6 4.8H9.4L7.8 10z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>',
+  cocina: '<path d="M5 13h14v4a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3zM8 10c0-1 1-1.5 1-2.5M12 10c0-1 1-1.5 1-2.5M16 10c0-1 1-1.5 1-2.5M3 13h18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+  agua: '<path d="M12 3.5c3.8 5 6 8.2 6 11a6 6 0 1 1-12 0c0-2.8 2.2-6 6-11z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>',
+  hoja: '<path d="M19 5C10 5 5 10 5 18c8 0 14-4 14-13zM5 19c3.5-3.5 7-6.5 11-9.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>',
+  energia: '<path d="M13 3L5.5 13.5H12L11 21l7.5-10.5H12z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>',
+  escudo: '<path d="M12 3.5l7 3v5c0 4.8-3 8.2-7 9.5-4-1.3-7-4.7-7-9.5v-5z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>',
+  meta: '<circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/>',
+  moneda: '<circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M14.5 9.2c-.6-.7-1.5-1-2.5-1-1.5 0-2.5.8-2.5 1.9 0 1.2 1 1.6 2.6 2 1.6.4 2.6.9 2.6 2.1 0 1.2-1.1 2-2.7 2-1.2 0-2.2-.4-2.8-1.1M12 6.5v11" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>',
+  bloque: '<path d="M12 3.5l7.5 4.2v8.6L12 20.5l-7.5-4.2V7.7zM4.5 7.7L12 12l7.5-4.3M12 12v8.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>',
+  cohete: '<path d="M13.5 4.5c3 0 5.5 2.5 5.5 5.5 0 4-3.8 7.6-8.5 9.5L8.5 17 5.5 14c1.9-4.7 5.5-9.5 8-9.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="14" cy="10" r="1.5" fill="currentColor"/>',
+  musica: '<path d="M9 17.5a2.5 2.5 0 1 1-2-2.45V6.5l10-2v9.55a2.5 2.5 0 1 1-2-2.45V8.1l-6 1.2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>',
+  lupa: '<circle cx="10.5" cy="10.5" r="6" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M15 15l5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',
+  cruz: '<path d="M6.5 6.5l11 11M17.5 6.5l-11 11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
+  alerta: '<path d="M12 4L3.5 19h17zM12 10v4.5M12 17.2v.2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>',
+  diamante: '<path d="M6.5 5h11l3 4.5L12 19.5 3.5 9.5zM3.5 9.5h17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>',
+  idea: '<path d="M9 17.5h6M10 20.5h4M12 3.5a5.5 5.5 0 0 0-3 10.1c.6.4 1 1.1 1 1.9h4c0-.8.4-1.5 1-1.9a5.5 5.5 0 0 0-3-10.1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+  mas: '<path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
+  sol: '<circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+  nube: '<path d="M7.5 18h9.5a3.5 3.5 0 0 0 .4-7A5 5 0 0 0 8 9.2 4 4 0 0 0 7.5 18z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>',
+  laboratorio: '<path d="M9 4h6M10 4v5.5L5.2 17.2A1.8 1.8 0 0 0 6.8 20h10.4a1.8 1.8 0 0 0 1.6-2.8L14 9.5V4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>',
+  repetir: '<path d="M4.5 12a7.5 7.5 0 0 1 13-5.2L19.5 8.8M19.5 4.5v4.3h-4.3M19.5 12a7.5 7.5 0 0 1-13 5.2L4.5 15.2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>',
+  play: '<path d="M7.5 5.5L18.5 12l-11 6.5z" fill="currentColor"/>',
+  pausa: '<path d="M7 5.5h3.5v13H7zM13.5 5.5H17v13h-3.5z" fill="currentColor"/>',
+  izq: '<path d="M14.5 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>',
+  der: '<path d="M9.5 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>'
+};
+
+const EMOJI_A_CLAVE = new Map([
+  ['\u{2728}', 'chispa'], ['\u{1F4DD}', 'libro'], ['\u{1F4D6}', 'libro'], ['\u{1F4D2}', 'libro'],
+  ['\u{1F355}', 'cocina'], ['\u{1F370}', 'cocina'], ['\u{1F356}', 'cocina'], ['\u{1F96A}', 'cocina'], ['\u{1F36C}', 'cocina'], ['\u{1FAD8}', 'hoja'],
+  ['\u{26BD}', 'pelota'], ['\u{1F3C0}', 'pelota'],
+  ['\u{2696}', 'balanza'], ['\u{2795}', 'mas'], ['\u{2797}', 'mas'], ['\u{1F504}', 'ciclo'], ['\u{1F448}', 'pasos'],
+  ['\u{1FA9C}', 'pasos'], ['\u{1F4CB}', 'tabla'], ['\u{1F50D}', 'lupa'], ['\u{1F440}', 'lupa'],
+  ['\u{274C}', 'cruz'], ['\u{2705}', 'check'], ['\u{2713}', 'check'],
+  ['\u{1F4CA}', 'grafico'], ['\u{1F4C8}', 'grafico'], ['\u{1F525}', 'energia'], ['\u{26A1}', 'energia'],
+  ['\u{1F9E0}', 'idea'], ['\u{1F4A1}', 'idea'], ['\u{1F4A7}', 'agua'], ['\u{1F327}', 'agua'], ['\u{1F30A}', 'agua'],
+  ['\u{2600}', 'sol'], ['\u{2601}', 'nube'], ['\u{1F32C}', 'nube'],
+  ['\u{1F331}', 'hoja'], ['\u{1F343}', 'hoja'], ['\u{1F52C}', 'laboratorio'], ['\u{1F9EA}', 'laboratorio'],
+  ['\u{1F977}', 'meta'], ['\u{1F94B}', 'meta'], ['\u{1F3AF}', 'meta'], ['\u{1F5DD}', 'meta'], ['\u{1F511}', 'meta'],
+  ['\u{1F6D2}', 'moneda'], ['\u{1F4B0}', 'moneda'], ['\u{1F437}', 'moneda'], ['\u{1F68C}', 'pasos'], ['\u{1F4F1}', 'chispa'],
+  ['\u{1F9ED}', 'mapa'], ['\u{1F3D4}', 'mapa'], ['\u{2693}', 'mapa'], ['\u{2694}', 'escudo'],
+  ['\u{1F6E1}', 'escudo'], ['\u{1F4DC}', 'libro'],
+  ['\u{1F9F1}', 'bloque'], ['\u{1F48E}', 'diamante'], ['\u{1F680}', 'cohete'],
+  ['\u{1F3B5}', 'musica'], ['\u{1F3A4}', 'musica'], ['\u{23F1}', 'reloj'],
+  ['\u{26A0}', 'alerta'], ['\u{2699}', 'ciclo'], ['\u{1F4AA}', 'energia'], ['\u{1F634}', 'reloj']
+]);
+
+export function claveIcono(v, def = 'chispa') {
+  const s = String(v ?? '').trim();
+  if (!s) return def;
+  const k = s.toLowerCase();
+  if (ICONOS_SVG[k]) return k;
+  const sinVs = s.replace(/\uFE0F/g, '');
+  if (EMOJI_A_CLAVE.has(s)) return EMOJI_A_CLAVE.get(s);
+  if (EMOJI_A_CLAVE.has(sinVs)) return EMOJI_A_CLAVE.get(sinVs);
+  if (/[\u{1F300}-\u{1FAFF}\u2600-\u27BF]/u.test(s)) return def;
+  return def;
+}
+
+export function svgIcono(v, { def = 'chispa', size = 20, cls = 'fi-svg-ico' } = {}) {
+  const k = claveIcono(v, def);
+  const path = ICONOS_SVG[k] || ICONOS_SVG[def] || ICONOS_SVG.chispa;
+  return `<svg class="${cls}" viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true">${path}</svg>`;
+}
+
+const ico = (i, cls = 'v-ico') => i ? `<span class="${cls}" aria-hidden="true">${svgIcono(i, { size: 17 })}</span>` : '';
 
 const VISUALES = {
   pasos(v) {
-    return `<ol class="v-pasos">${v.items.map((it, i) => `<li style="--i:${i}"><span class="v-num">${i + 1}</span><div>${ico(it.icono)}<b>${esc(it.texto)}</b>${it.detalle ? `<small>${esc(it.detalle)}</small>` : ''}</div></li>`).join('')}</ol>`;
+    return `<ol class="v-pasos"><span class="v-pasos-fill" aria-hidden="true"></span>${v.items.map((it, i) => `<li class="v-step" data-step="${i}" style="--i:${i}"><span class="v-num">${i + 1}</span><div>${ico(it.icono)}<b>${esc(it.texto)}</b>${it.detalle ? `<small>${esc(it.detalle)}</small>` : ''}</div></li>`).join('')}</ol>`;
   },
   ciclo(v) {
     const N = Math.max(2, v.items.length), R = 36, cx = 50, cy = 50, del = N > 4 ? 16 : 20, mid = `vf${++cuenta}`;
     const pos = i => { const a = (-90 + i * 360 / N) * Math.PI / 180; return [cx + Math.cos(a) * R, cy + Math.sin(a) * R]; };
     const arco = i => {
       const a0 = (-90 + i * 360 / N + del) * Math.PI / 180, a1 = (-90 + (i + 1) * 360 / N - del) * Math.PI / 180;
-      return `<path class="v-trazo" style="--i:${i}" d="M${r1(cx + Math.cos(a0) * R)} ${r1(cy + Math.sin(a0) * R)}A${R} ${R} 0 0 1 ${r1(cx + Math.cos(a1) * R)} ${r1(cy + Math.sin(a1) * R)}" pathLength="1" marker-end="url(#${mid})"/>`;
+      return `<path class="v-trazo v-step" data-step="${i}" style="--i:${i}" d="M${r1(cx + Math.cos(a0) * R)} ${r1(cy + Math.sin(a0) * R)}A${R} ${R} 0 0 1 ${r1(cx + Math.cos(a1) * R)} ${r1(cy + Math.sin(a1) * R)}" pathLength="1" marker-end="url(#${mid})"/>`;
     };
-    return `<div class="v-ciclo"><svg viewBox="0 0 100 100" aria-hidden="true"><defs><marker id="${mid}" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--c)"/></marker></defs><g class="v-giro">${v.items.map((_, i) => arco(i)).join('')}</g></svg>
+    return `<div class="v-ciclo"><svg viewBox="0 0 100 100" aria-hidden="true"><defs><marker id="${mid}" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--c)"/></marker></defs><circle cx="50" cy="50" r="${R}" class="v-ciclo-ring"/><g class="v-giro">${v.items.map((_, i) => arco(i)).join('')}</g><g class="v-ciclo-orb"><circle cx="50" cy="${cx - R}" r="3.2"/></g></svg>
 ${v.centro ? `<div class="v-centro">${esc(v.centro)}</div>` : ''}
-${v.items.map((it, i) => { const [x, y] = pos(i); return `<div class="v-nodo" style="--i:${i};left:${r1(x)}%;top:${r1(y)}%">${ico(it.icono, 'v-burbuja')}<b>${esc(it.texto)}</b></div>`; }).join('')}</div>`;
+${v.items.map((it, i) => { const [x, y] = pos(i); return `<div class="v-nodo v-step" data-step="${i}" style="--i:${i};left:${r1(x)}%;top:${r1(y)}%">${ico(it.icono, 'v-burbuja')}<b>${esc(it.texto)}</b></div>`; }).join('')}</div>`;
   },
   partes(v) {
-    const N = v.items.length, pos = i => { const a = (-90 + i * 360 / N + (N % 2 ? 0 : 180 / N)) * Math.PI / 180; return [50 + Math.cos(a) * 36, 50 + Math.sin(a) * 37]; };
-    return `<div class="v-partes"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${v.items.map((_, i) => { const [x, y] = pos(i); return `<line class="v-trazo" style="--i:${i}" x1="50" y1="50" x2="${r1(x)}" y2="${r1(y)}" pathLength="1"/>`; }).join('')}</svg>
-<div class="v-centro">${esc(v.centro || v.titulo)}</div>
-${v.items.map((it, i) => { const [x, y] = pos(i); return `<div class="v-nodo" style="--i:${i};left:${r1(x)}%;top:${r1(y)}%">${ico(it.icono)}<b>${esc(it.texto)}</b>${it.detalle ? `<small>${esc(it.detalle)}</small>` : ''}</div>`; }).join('')}</div>`;
+    const N = v.items.length, pos = i => { const a = (-90 + i * 360 / N + (N % 2 ? 0 : 180 / N)) * Math.PI / 180; return [50 + Math.cos(a) * 37, 50 + Math.sin(a) * 38]; };
+    return `<div class="v-partes"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${v.items.map((_, i) => { const [x, y] = pos(i); return `<line class="v-trazo v-step" data-step="${i + 1}" style="--i:${i + 1}" x1="50" y1="50" x2="${r1(x)}" y2="${r1(y)}" pathLength="1"/>`; }).join('')}</svg>
+<div class="v-centro v-step" data-step="0">${esc(v.centro || v.titulo)}</div>
+${v.items.map((it, i) => { const [x, y] = pos(i); return `<div class="v-nodo v-step" data-step="${i + 1}" style="--i:${i + 1};left:${r1(x)}%;top:${r1(y)}%">${ico(it.icono)}<b>${esc(it.texto)}</b>${it.detalle ? `<small>${esc(it.detalle)}</small>` : ''}</div>`; }).join('')}</div>`;
   },
   comparar(v) {
-    const col = (l, k, c) => `<div class="v-col v-col-${k}" style="--i:${k === 'izq' ? 0 : 1}"><h5>${ico(l.icono)}${esc(l.titulo)}</h5><ul>${l.puntos.map((p, i) => `<li style="--i:${i + 1}">${esc(p)}</li>`).join('')}</ul></div>`;
+    const lp = v.izquierda.puntos || [], rp = v.derecha.puntos || [];
+    const col = (l, k) => `<div class="v-col v-col-${k}" style="--i:${k === 'izq' ? 0 : 1}"><h5 class="v-step" data-step="0">${ico(l.icono)}${esc(l.titulo)}</h5><ul>${(l.puntos || []).map((p, i) => `<li class="v-step" data-step="${Math.min(3, i + 1)}" style="--i:${i + 1}">${esc(p)}</li>`).join('')}</ul></div>`;
+    void lp; void rp;
     return `<div class="v-comparar">${col(v.izquierda, 'izq')}<span class="v-vs">vs</span>${col(v.derecha, 'der')}</div>`;
   },
   barras(v) {
     const its = v.items.filter(i => Number.isFinite(i.valor)), max = Math.max(...its.map(i => i.valor), 0) || 1;
-    return `<div class="v-barras">${its.map((it, i) => `<div class="v-barra" style="--i:${i};--h:${r1(Math.max(0, it.valor) / max * 100)}%;--b:${SERIE[i % SERIE.length]}"><span class="v-val">${fmt(it.valor)}${esc(v.unidad && v.unidad !== '%' ? ' ' + v.unidad : v.unidad)}</span><span class="v-col-b"><i></i></span>${ico(it.icono)}<span class="v-lab">${esc(it.texto)}</span></div>`).join('')}</div>`;
+    return `<div class="v-barras">${its.map((it, i) => `<div class="v-barra v-step" data-step="${i}" style="--i:${i};--h:${r1(Math.max(0, it.valor) / max * 100)}%;--b:${SERIE[i % SERIE.length]}"><span class="v-val">${fmt(it.valor)}${esc(v.unidad && v.unidad !== '%' ? ' ' + v.unidad : v.unidad)}</span><span class="v-col-b"><i></i></span>${ico(it.icono)}<span class="v-lab">${esc(it.texto)}</span></div>`).join('')}</div>`;
   },
   torta(v) {
     const its = v.items.filter(i => Number.isFinite(i.valor) && i.valor > 0), tot = its.reduce((a, i) => a + i.valor, 0) || 1;
     let acc = 0;
-    const segs = its.map((it, i) => { const p = it.valor / tot, s = `<circle class="v-seg" style="--i:${i};--p:${r1(p * 100)};--o:${r1(-acc * 100)}" cx="50" cy="50" r="36" pathLength="100" stroke="${SERIE[i % SERIE.length]}"/>`; acc += p; return s; }).join('');
-    return `<div class="v-torta"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="36" fill="none" stroke="#EEEAFB" stroke-width="20"/>${segs}</svg>
-<ul>${its.map((it, i) => `<li style="--i:${i}"><i style="background:${SERIE[i % SERIE.length]}"></i>${ico(it.icono)}<span>${esc(it.texto)}</span><b>${v.unidad === '%' || !v.unidad ? Math.round(it.valor / tot * 100) + '%' : fmt(it.valor) + ' ' + esc(v.unidad)}</b></li>`).join('')}</ul></div>`;
+    const segs = its.map((it, i) => { const p = it.valor / tot, s = `<circle class="v-seg v-step" data-step="${i}" style="--i:${i};--p:${r1(p * 100)};--o:${r1(-acc * 100)}" cx="50" cy="50" r="36" pathLength="100" stroke="${SERIE[i % SERIE.length]}"/>`; acc += p; return s; }).join('');
+    return `<div class="v-torta"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="36" fill="none" stroke="#EAE2D2" stroke-width="20"/>${segs}</svg>
+<ul>${its.map((it, i) => `<li class="v-step" data-step="${i}" style="--i:${i}"><i style="background:${SERIE[i % SERIE.length]}"></i>${ico(it.icono)}<span>${esc(it.texto)}</span><b>${v.unidad === '%' || !v.unidad ? Math.round(it.valor / tot * 100) + '%' : fmt(it.valor) + ' ' + esc(v.unidad)}</b></li>`).join('')}</ul></div>`;
   },
   fraccion(v) {
     const fs = v.fracciones, val = f => f.num / f.den;
@@ -216,8 +297,8 @@ ${v.items.map((it, i) => { const [x, y] = pos(i); return `<div class="v-nodo" st
       if (v.operacion === 'compara') { const a = val(fs[i]), b = val(fs[i + 1]); return Math.abs(a - b) < 1e-9 ? '=' : a > b ? '>' : '<'; }
       return '';
     };
-    let k = 0; // contador de porciones para animar en orden
-    const dibujo = f => {
+    let k = 0;
+    const dibujo = (f, extraClass = '') => {
       const enteros = Math.max(1, Math.min(3, Math.ceil(f.num / f.den) || 1)), barra = v.forma === 'barra' || f.den > 12;
       let s = '';
       for (let w = 0; w < enteros; w++) {
@@ -230,9 +311,33 @@ ${v.items.map((it, i) => { const [x, y] = pos(i); return `<div class="v-nodo" st
           s += `<svg class="v-fr-pizza" viewBox="0 0 44 44" aria-hidden="true">${Array.from({ length: f.den }, (_, j) => porc(j)).join('')}</svg>`;
         }
       }
-      return `<div class="v-fr-dib">${s}</div>`;
+      return `<div class="v-fr-dib ${extraClass}">${s}</div>`;
     };
-    return `<div class="v-fracciones${fs.length === 1 ? ' v-fr-sola' : ''}">${fs.map((f, i) => `<div class="v-fr">${v.ocultarNumeros ? '' : `<div class="v-fr-num"><span>${f.num}</span><span>${f.den}</span></div>`}${dibujo(f)}${f.etiqueta ? `<small>${esc(f.etiqueta)}</small>` : ''}</div>${i < fs.length - 1 && simbolo(i) ? `<span class="v-op">${simbolo(i)}</span>` : ''}`).join('')}</div>`;
+    // Si es suma/resta con distinto denominador, agrega transformación visual de equivalencia (cómo igualar)
+    let bridgeHtml = '', stepShift = 0;
+    if ((v.operacion === 'suma' || v.operacion === 'resta') && fs.length >= 2 && fs[0].den !== fs[1].den) {
+      const a = fs[0], b = fs[1], denComun = (a.den * b.den) / mcd(a.den, b.den);
+      if (denComun <= 24) {
+        const ea = { num: Math.round(a.num * denComun / a.den), den: denComun };
+        const eb = { num: Math.round(b.num * denComun / b.den), den: denComun };
+        stepShift = 1;
+        bridgeHtml = `<div class="v-fr-eq v-step" data-step="1">
+          <span class="v-fr-eq-tit">Cómo igualar tamaños (denominador común ${denComun}):</span>
+          <div class="v-fr-eq-fila">
+            <span class="v-fr-mini">${a.num}/${a.den} = <b>${ea.num}/${ea.den}</b></span>
+            ${dibujo(ea, 'v-fr-mini-dib')}
+            <span class="v-fr-eq-op">${v.operacion === 'suma' ? '+' : '−'}</span>
+            <span class="v-fr-mini">${b.num}/${b.den} = <b>${eb.num}/${eb.den}</b></span>
+            ${dibujo(eb, 'v-fr-mini-dib')}
+          </div>
+        </div>`;
+      }
+    }
+    const itemsHtml = fs.map((f, i) => {
+      const stepIdx = i === 0 ? 0 : i + stepShift;
+      return `<div class="v-fr v-step" data-step="${stepIdx}">${v.ocultarNumeros ? '' : `<div class="v-fr-num"><span>${f.num}</span><span>${f.den}</span></div>`}${dibujo(f)}${f.etiqueta ? `<small>${esc(f.etiqueta)}</small>` : ''}</div>${i < fs.length - 1 && simbolo(i) ? `<span class="v-op">${simbolo(i)}</span>` : ''}`;
+    }).join('');
+    return `<div class="v-fracciones${fs.length === 1 ? ' v-fr-sola' : ''}">${itemsHtml}</div>${bridgeHtml}`;
   },
   recta(v) {
     const mid = `vf${++cuenta}`, W = 320, x0 = 16, x1 = W - 16, X = val => x0 + (val - v.min) / (v.max - v.min) * (x1 - x0), Y = 70;
@@ -240,19 +345,19 @@ ${v.items.map((it, i) => { const [x, y] = pos(i); return `<div class="v-nodo" st
     let ticks = '';
     for (let t = Math.ceil(v.min / paso) * paso; t <= v.max + 1e-9; t += paso) ticks += `<line x1="${r1(X(t))}" y1="${Y - 5}" x2="${r1(X(t))}" y2="${Y + 5}"/><text x="${r1(X(t))}" y="${Y + 20}" class="v-tnum">${fmt(t)}</text>`;
     const m = v.marcas;
-    const saltos = v.saltos ? m.slice(1).map((b, i) => { const a = m[i], xa = X(a.valor), xb = X(b.valor), h = Math.min(40, 12 + Math.abs(xb - xa) * .25), d = b.valor - a.valor; return `<path class="v-trazo" style="--i:${i + 1}" d="M${r1(xa)} ${Y - 6}Q${r1((xa + xb) / 2)} ${r1(Y - 6 - h * 2)} ${r1(xb)} ${Y - 6}" pathLength="1" marker-end="url(#${mid})"/><text class="v-salto" style="--i:${i + 1}" x="${r1((xa + xb) / 2)}" y="${r1(Y - 10 - h)}">${d >= 0 ? '+' : '−'}${fmt(Math.abs(d))}</text>`; }).join('') : '';
-    const puntos = m.map((p, i) => `<g class="v-punto" style="--i:${i}"><circle cx="${r1(X(p.valor))}" cy="${Y}" r="6"/>${p.texto ? `<text x="${r1(X(p.valor))}" y="${v.saltos ? Y + 36 : Y - 14}" class="v-etq">${esc(p.texto)}</text>` : ''}</g>`).join('');
+    const saltos = v.saltos ? m.slice(1).map((b, i) => { const a = m[i], xa = X(a.valor), xb = X(b.valor), h = Math.min(40, 12 + Math.abs(xb - xa) * .25), d = b.valor - a.valor; return `<path class="v-trazo v-step" data-step="${i + 1}" style="--i:${i + 1}" d="M${r1(xa)} ${Y - 6}Q${r1((xa + xb) / 2)} ${r1(Y - 6 - h * 2)} ${r1(xb)} ${Y - 6}" pathLength="1" marker-end="url(#${mid})"/><text class="v-salto v-step" data-step="${i + 1}" style="--i:${i + 1}" x="${r1((xa + xb) / 2)}" y="${r1(Y - 10 - h)}">${d >= 0 ? '+' : '−'}${fmt(Math.abs(d))}</text>`; }).join('') : '';
+    const puntos = m.map((p, i) => `<g class="v-punto v-step" data-step="${i}" style="--i:${i}"><circle cx="${r1(X(p.valor))}" cy="${Y}" r="6"/>${p.texto ? `<text x="${r1(X(p.valor))}" y="${v.saltos ? Y + 36 : Y - 14}" class="v-etq">${esc(p.texto)}</text>` : ''}</g>`).join('');
     return `<svg class="v-recta" viewBox="0 0 ${W} ${v.saltos ? 112 : 100}" aria-hidden="true"><defs><marker id="${mid}" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--c)"/></marker></defs><line class="v-eje" x1="${x0 - 8}" y1="${Y}" x2="${x1 + 8}" y2="${Y}"/><g class="v-ticks">${ticks}</g>${saltos}${puntos}</svg>`;
   },
   linea_tiempo(v) {
-    return `<ol class="v-tiempo">${v.items.map((it, i) => `<li style="--i:${i}"><span class="v-fecha">${esc(it.fecha || it.detalle || '')}</span><span class="v-hito"></span><div>${ico(it.icono)}<b>${esc(it.texto)}</b>${it.fecha && it.detalle ? `<small>${esc(it.detalle)}</small>` : ''}</div></li>`).join('')}</ol>`;
+    return `<ol class="v-tiempo"><span class="v-tiempo-fill" aria-hidden="true"></span>${v.items.map((it, i) => `<li class="v-step" data-step="${i}" style="--i:${i}"><span class="v-fecha">${esc(it.fecha || it.detalle || '')}</span><span class="v-hito"></span><div>${ico(it.icono)}<b>${esc(it.texto)}</b>${it.fecha && it.detalle ? `<small>${esc(it.detalle)}</small>` : ''}</div></li>`).join('')}</ol>`;
   },
   ecuacion(v) {
     const n = v.lineas.length;
-    return `<ol class="v-ecuacion">${v.lineas.map((l, i) => `<li style="--i:${i}"${i === n - 1 ? ' class="v-final"' : ''}><code>${esc(l.expresion)}</code>${l.nota ? `<span>${esc(l.nota)}</span>` : ''}</li>`).join('')}</ol>`;
+    return `<ol class="v-ecuacion">${v.lineas.map((l, i) => `<li class="v-step${i === n - 1 ? ' v-final' : ''}" data-step="${i}" style="--i:${i}"><code>${esc(l.expresion)}</code>${l.nota ? `<span>${esc(l.nota)}</span>` : ''}</li>`).join('')}</ol>`;
   },
   tabla(v) {
-    return `<div class="v-tabla"><table>${v.columnas.length ? `<thead><tr>${v.columnas.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead>` : ''}<tbody>${v.filas.map((f, i) => `<tr style="--i:${i}">${f.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+    return `<div class="v-tabla"><table>${v.columnas.length ? `<thead><tr>${v.columnas.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead>` : ''}<tbody>${v.filas.map((f, i) => `<tr class="v-step" data-step="${i}" style="--i:${i}">${f.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
   },
   grafico(v) {
     const P = v.puntos, W = 320, H = 190, L = 40, R = 14, T = 14, B = 34;
@@ -264,27 +369,103 @@ ${v.items.map((it, i) => { const [x, y] = pos(i); return `<div class="v-nodo" st
     const marcasY = [ya, (ya + yb) / 2, yb].map(y => `<line class="v-guia" x1="${L}" y1="${r1(Y(y))}" x2="${W - R}" y2="${r1(Y(y))}"/><text class="v-tnum" x="${L - 6}" y="${r1(Y(y) + 4)}" text-anchor="end">${fmt(Math.round(y * 100) / 100)}</text>`).join('');
     const marcasX = P.map(p => `<text class="v-tnum" x="${r1(X(p.x))}" y="${H - B + 16}">${fmt(p.x)}</text>`).join('');
     return `<svg class="v-grafico" viewBox="0 0 ${W} ${H}" aria-hidden="true">${marcasY}<line class="v-eje" x1="${L}" y1="${H - B}" x2="${W - R}" y2="${H - B}"/><line class="v-eje" x1="${L}" y1="${T}" x2="${L}" y2="${H - B}"/>${marcasX}
-<path class="v-linea v-trazo" d="${d}" pathLength="1"/>${P.map((p, i) => `<g class="v-punto" style="--i:${i}"><circle cx="${r1(X(p.x))}" cy="${r1(Y(p.y))}" r="5"/>${p.texto ? `<text class="v-etq" x="${r1(X(p.x))}" y="${r1(Y(p.y) - 10)}">${esc(p.texto)}</text>` : ''}</g>`).join('')}
+<path class="v-linea v-trazo" d="${d}" pathLength="1"/>${P.map((p, i) => `<g class="v-punto v-step" data-step="${i}" style="--i:${i}"><circle cx="${r1(X(p.x))}" cy="${r1(Y(p.y))}" r="5"/>${p.texto ? `<text class="v-etq" x="${r1(X(p.x))}" y="${r1(Y(p.y) - 10)}">${esc(p.texto)}</text>` : ''}</g>`).join('')}
 ${v.ejeX ? `<text class="v-ejeT" x="${(L + W - R) / 2}" y="${H - 4}">${esc(v.ejeX)}</text>` : ''}${v.ejeY ? `<text class="v-ejeT" x="12" y="${(T + H - B) / 2}" transform="rotate(-90 12 ${(T + H - B) / 2})">${esc(v.ejeY)}</text>` : ''}</svg>`;
   },
   iconos(v) {
     let k = 0;
-    return `<div class="v-iconos">${v.items.filter(i => Number.isFinite(i.valor)).map(it => { const n = Math.max(0, Math.min(24, Math.round(it.valor))); return `<div class="v-ifila"><span class="v-lab">${esc(it.texto)}</span><span class="v-ilista">${Array.from({ length: n }, () => `<i style="--i:${k++}">${esc(it.icono || '●')}</i>`).join('')}</span><b>${fmt(it.valor)}</b></div>`; }).join('')}</div>`;
+    return `<div class="v-iconos">${v.items.filter(i => Number.isFinite(i.valor)).map((it, rIdx) => { const n = Math.max(0, Math.min(24, Math.round(it.valor))); const colorIt = SERIE[rIdx % SERIE.length]; return `<div class="v-ifila v-step" data-step="${rIdx}"><span class="v-lab">${esc(it.texto)}</span><span class="v-ilista" style="color:${colorIt}">${Array.from({ length: n }, () => `<i style="--i:${k++}">${svgIcono(it.icono, { def: 'diamante', size: 18 })}</i>`).join('')}</span><b>${fmt(it.valor)}</b></div>`; }).join('')}</div>`;
   }
 };
 
+function secuenciaDeVisual(v) {
+  switch (v.tipo) {
+    case 'pasos':
+      return v.items.map((it, i) => `Paso ${i + 1}: ${it.texto}${it.detalle ? ` — ${it.detalle}` : ''}`);
+    case 'ciclo':
+      return v.items.map((it, i) => `Etapa ${i + 1}: ${it.texto} pasa a ${v.items[(i + 1) % v.items.length]?.texto || 'inicio'}`);
+    case 'partes':
+      return [`Centro: ${v.centro || v.titulo}`, ...v.items.map(it => `${it.texto}${it.detalle ? `: ${it.detalle}` : ''}`)];
+    case 'comparar': {
+      const maxP = Math.max(v.izquierda.puntos.length, v.derecha.puntos.length);
+      return [
+        `${v.izquierda.titulo} frente a ${v.derecha.titulo}`,
+        ...Array.from({ length: Math.min(3, maxP) }, (_, i) => [v.izquierda.puntos[i], v.derecha.puntos[i]].filter(Boolean).join(' vs '))
+      ];
+    }
+    case 'barras': {
+      const its = v.items.filter(i => Number.isFinite(i.valor));
+      return its.map(it => `${it.texto}: ${fmt(it.valor)}${v.unidad ? ' ' + v.unidad : ''}`);
+    }
+    case 'torta': {
+      const its = v.items.filter(i => Number.isFinite(i.valor) && i.valor > 0);
+      const tot = its.reduce((a, i) => a + i.valor, 0) || 1;
+      return its.map(it => `${it.texto}: ${v.unidad === '%' || !v.unidad ? Math.round(it.valor / tot * 100) + '%' : fmt(it.valor) + ' ' + v.unidad}`);
+    }
+    case 'fraccion': {
+      const fs = v.fracciones || [];
+      if (fs.length <= 1) return fs.map(f => `${f.num}/${f.den}${f.etiqueta ? `: ${f.etiqueta}` : ''}`);
+      const steps = [`Primero: ${fs[0].num}/${fs[0].den}${fs[0].etiqueta ? ` (${fs[0].etiqueta})` : ''}`];
+      if ((v.operacion === 'suma' || v.operacion === 'resta') && fs[0].den !== fs[1].den) {
+        const d = (fs[0].den * fs[1].den) / mcd(fs[0].den, fs[1].den);
+        if (d <= 24) steps.push(`Igualamos tamaños a /${d}: ${Math.round(fs[0].num * d / fs[0].den)}/${d} ${v.operacion === 'suma' ? '+' : '−'} ${Math.round(fs[1].num * d / fs[1].den)}/${d}`);
+      }
+      fs.slice(1).forEach((f, i) => {
+        const esRes = (v.operacion === 'suma' || v.operacion === 'resta') && i === fs.length - 2 && fs.length >= 3;
+        steps.push(`${esRes ? 'Resultado' : 'Compara con'}: ${f.num}/${f.den}${f.etiqueta ? ` (${f.etiqueta})` : ''}`);
+      });
+      return steps;
+    }
+    case 'recta':
+      return v.marcas.map((m, i) => {
+        if (i === 0) return `Punto inicial: ${fmt(m.valor)}${m.texto ? ` (${m.texto})` : ''}`;
+        const d = m.valor - v.marcas[i - 1].valor;
+        return `Salto de ${d >= 0 ? '+' : '−'}${fmt(Math.abs(d))} hasta ${fmt(m.valor)}${m.texto ? ` (${m.texto})` : ''}`;
+      });
+    case 'linea_tiempo':
+      return v.items.map(it => `${it.fecha || ''}${it.fecha ? ': ' : ''}${it.texto}`);
+    case 'ecuacion':
+      return v.lineas.map((l, i) => i === 0 ? `Inicio: ${l.expresion}` : l.nota ? `${l.nota} → ${l.expresion}` : `Queda: ${l.expresion}`);
+    case 'tabla':
+      return v.filas.map(f => f.join(' · '));
+    case 'grafico':
+      return v.puntos.map((p, i) => `${i === 0 ? 'Inicio' : `Paso ${i}`}: (${fmt(p.x)}, ${fmt(p.y)})${p.texto ? ` — ${p.texto}` : ''}`);
+    case 'iconos': {
+      let acum = 0;
+      return v.items.filter(i => Number.isFinite(i.valor)).map(it => {
+        acum += it.valor;
+        return `${it.texto}: +${fmt(it.valor)} (llevamos ${fmt(acum)})`;
+      });
+    }
+    default: return [];
+  }
+}
+
 export function htmlVisual(v) {
   const dib = (VISUALES[v.tipo] || VISUALES.pasos)(v);
-  return `<figure class="vis vis-${v.tipo}">${v.titulo ? `<figcaption>${esc(v.titulo)}</figcaption>` : ''}${dib}<button class="vis-otra" type="button" aria-label="Ver la animación otra vez" title="Ver otra vez">↻</button></figure>`;
+  const pasos = secuenciaDeVisual(v);
+  const playHtml = pasos.length > 1
+    ? `<div class="vis-playbar" data-total="${pasos.length}">
+        <div class="vis-play-btns">
+          <button type="button" class="vis-btn-step vis-play" aria-label="Reproducir cómo se hace paso a paso" title="Reproducir / pausar">${svgIcono('play', { size: 13 })}</button>
+          <button type="button" class="vis-btn-step vis-prev" aria-label="Paso anterior" title="Paso anterior">${svgIcono('izq', { size: 13 })}</button>
+          <div class="vis-dots" aria-hidden="true">${pasos.map((_, i) => `<i data-i="${i}"></i>`).join('')}</div>
+          <button type="button" class="vis-btn-step vis-next" aria-label="Paso siguiente" title="Paso siguiente">${svgIcono('der', { size: 13 })}</button>
+        </div>
+        <p class="vis-cap" aria-live="polite">${esc(pasos[pasos.length - 1] || '')}</p>
+        <script type="application/json" class="vis-seq">${JSON.stringify(pasos).replace(/</g, '\\u003c')}</script>
+      </div>`
+    : '';
+  return `<figure class="vis vis-${v.tipo}" data-tipo="${esc(v.tipo)}">${v.titulo ? `<figcaption>${esc(v.titulo)}</figcaption>` : ''}${dib}<button class="vis-otra" type="button" aria-label="Ver la animación otra vez" title="Ver otra vez">${svgIcono('repetir', { size: 15 })}</button>${playHtml}</figure>`;
 }
 
 // ctx: { numero, fase, mundo, avatar (HTML del aprendín), tono: { base, claro, oscuro }, citaDe, adaptacion, pieHtml }
 export function htmlFicha(f, ctx = {}) {
-  const t = ctx.tono || { base: '#6C63FF', claro: '#EFEDFF', oscuro: '#4B43D1' };
+  const t = ctx.tono || { base: '#2F5EA8', claro: '#E6EEF8', oscuro: '#214580' };
   const e = f.ejemplo || {};
   const adap = ctx.adaptacion || f.adaptacion;
   return `<article class="ficha-ap" style="--c:${t.base};--c-claro:${t.claro};--c-osc:${t.oscuro}">
-<header class="fi-cab"><span class="fi-ico" aria-hidden="true">${esc(f.icono)}</span><div class="fi-tit"><small>Ficha ${ctx.numero || ''}${ctx.fase ? ` · ${esc(ctx.fase)}` : ''}</small><h3>${esc(f.titulo)}</h3></div>${ctx.avatar ? `<span class="fi-av">${ctx.avatar}</span>` : ''}</header>
+<header class="fi-cab"><span class="fi-ico" aria-hidden="true">${svgIcono(f.icono, { def: 'chispa', size: 22 })}</span><div class="fi-tit"><small>Ficha ${ctx.numero || ''}${ctx.fase ? ` · ${esc(ctx.fase)}` : ''}</small><h3>${esc(f.titulo)}</h3></div>${ctx.avatar ? `<span class="fi-av">${ctx.avatar}</span>` : ''}</header>
 ${adap ? `<p class="fi-adapta"><b>Adaptada para ti:</b> ${esc(adap)}</p>` : ''}
 ${f.idea ? `<p class="fi-idea">${esc(f.idea)}</p>` : ''}
 ${htmlVisual(f.visual)}
@@ -295,13 +476,13 @@ ${ctx.pieHtml || ''}
 </article>`;
 }
 
-/* ================= Ficha sin IA ================= */
+/* ================= Ficha en modo práctica ================= */
 // Arma una ficha con las propias palabras del estudiante: sus oraciones se vuelven los pasos.
 export function fichaLocal(concepto, mensajes = []) {
   const frases = mensajes.join(' ').split(/(?<=[.!?])\s+|\n+/).map(s => s.trim()).filter(s => s.length > 8);
   const mejor = [...mensajes].sort((a, b) => b.length - a.length)[0] || '';
   return limpiarFicha({
-    titulo: concepto, icono: '📝', idea: frases[0] || mejor,
+    titulo: concepto, icono: 'libro', idea: frases[0] || mejor,
     visual: { tipo: 'pasos', titulo: 'Cómo me lo explicaste', items: frases.slice(0, 4).map(f => ({ texto: f.split(' ').slice(0, 6).join(' ') + (f.split(' ').length > 6 ? '…' : ''), detalle: f.split(' ').length > 6 ? f.slice(0, 100) : '' })) },
     ejemplo: {}, cuidado: '', de_ti: mejor.slice(0, 150)
   });
@@ -342,54 +523,60 @@ export function fichaInicioLocal({ tema = '', gustos = '', nivel = 'algo', reacc
 
   if (esFrac) {
     const base = [
-      { titulo: 'Qué es una fracción', subtema: 'Partes iguales', icono: '🍕', idea: 'Abajo va en cuántas partes iguales se divide el total; arriba cuántas partes tomas.', visual: { tipo: 'fraccion', titulo: `Reparto en ${objMundo}`, fracciones: [{ num: 1, den: 4, etiqueta: 'Tu parte' }, { num: 3, den: 4, etiqueta: 'Lo que queda' }], operacion: 'compara', forma: 'pizza' }, ejemplo: { situacion: `En ${objMundo}, divides algo en 4 partes iguales y usas 1.`, pasos: ['Total de partes iguales: 4 (abajo)', 'Partes que tomas: 1 (arriba)'], resultado: '1/4 del total' }, cuidado: 'Si las partes no son del mismo tamaño, no es una fracción justa.', de_ti: 'Abajo dice en cuánto cortas; arriba cuánto agarras.' },
-      { titulo: 'Fracciones equivalentes', subtema: 'Misma cantidad', icono: '⚖️', idea: 'Dos fracciones valen lo mismo si multiplicas o divides arriba y abajo por el mismo número.', visual: { tipo: 'fraccion', titulo: '1/2 es igual que 2/4', fracciones: [{ num: 1, den: 2, etiqueta: 'Mitad' }, { num: 2, den: 4, etiqueta: 'Dos cuartos' }], operacion: 'igual', forma: 'barra' }, ejemplo: { situacion: `En ${objMundo}, comparas 1/2 con 2/4.`, pasos: ['1 × 2 = 2 y 2 × 2 = 4', 'Ocupan exactamente el mismo espacio'], resultado: 'Son iguales: 1/2 = 2/4' }, cuidado: 'Números más grandes no hacen mayor la fracción: 2/4 no es mayor que 1/2.', de_ti: 'Si multiplicas arriba y abajo por igual, el tamaño no cambia.' },
-      { titulo: 'Sumar fracciones', subtema: 'Mismo denominador', icono: '➕', idea: 'Solo puedes sumar pedazos del mismo tamaño: primero iguala el denominador y suma solo arriba.', visual: { tipo: 'fraccion', titulo: 'Un medio más un cuarto', fracciones: [{ num: 1, den: 2, etiqueta: 'Primero' }, { num: 1, den: 4, etiqueta: 'Después' }, { num: 3, den: 4 }], operacion: 'suma', forma: 'pizza' }, ejemplo: { situacion: `Usas 1/2 en la mañana y 1/4 en la tarde en ${objMundo}.`, pasos: ['Convierte 1/2 en 2/4', 'Suma arriba: 2/4 + 1/4'], resultado: '3/4 en total' }, cuidado: 'No sumes abajo con abajo (1/2 + 1/4 no es 2/6).', de_ti: 'Primero iguala los pedazos; luego suma arriba.' },
-      { titulo: 'Pasos para sumar fracciones', subtema: 'Método ordenado', icono: '🪜', idea: 'Sigue tres pasos claros para sumar cualquier par de fracciones sin confundirte.', visual: { tipo: 'pasos', titulo: 'Ruta sin errores', items: [{ texto: 'Mira el de abajo', detalle: 'Si los denominadores son distintos, búscales un tamaño común', icono: '👀' }, { texto: 'Iguala las partes', detalle: 'Multiplica arriba y abajo por el mismo número (ej. 1/2 = 2/4)', icono: '⚖️' }, { texto: 'Suma solo arriba', detalle: '2/4 + 1/4 = 3/4; el denominador no se suma', icono: '➕' }] }, ejemplo: { situacion: `En ${objMundo}, juntas 1/2 y 1/4 del total.`, pasos: ['Convierte 1/2 en 2/4', 'Suma los numeradores: 2 + 1 = 3'], resultado: '3/4' }, cuidado: 'Nunca sumes los denominadores entre sí.', de_ti: 'Iguala abajo, suma arriba y deja el de abajo quieto.' },
-      { titulo: 'Tabla rápida de fracciones', subtema: 'Referencia visual', icono: '📋', idea: 'Ver cómo se leen y cuánto valen las fracciones más usadas ayuda a comparar rápido.', visual: { tipo: 'tabla', titulo: 'Equivalencias clave', columnas: ['Fracción', 'Significa', 'Equivalente'], filas: [['1/2', 'La mitad', '2/4'], ['1/4', 'Un cuarto', '2/8'], ['3/4', 'Tres cuartos', '6/8']] }, ejemplo: { situacion: `Comparas cuánto avanza un reto en ${objMundo}.`, pasos: ['1/2 equivale a 2/4', '2/4 es más chico que 3/4'], resultado: '3/4 > 1/2' }, cuidado: 'Un denominador más grande (1/8) significa pedazos más pequeños, no más grandes.', de_ti: 'Más cortes abajo hacen pedazos más chicos.' }
+      { titulo: 'Qué es una fracción', subtema: 'Partes iguales', icono: 'cocina', idea: 'Abajo va en cuántas partes iguales se divide el total; arriba cuántas partes tomas.', visual: { tipo: 'fraccion', titulo: `Reparto en ${objMundo}`, fracciones: [{ num: 1, den: 4, etiqueta: 'Tu parte' }, { num: 3, den: 4, etiqueta: 'Lo que queda' }], operacion: 'compara', forma: 'pizza' }, ejemplo: { situacion: `En ${objMundo}, divides algo en 4 partes iguales y usas 1.`, pasos: ['Total de partes iguales: 4 (abajo)', 'Partes que tomas: 1 (arriba)'], resultado: '1/4 del total' }, cuidado: 'Si las partes no son del mismo tamaño, no es una fracción justa.', de_ti: 'Abajo dice en cuánto cortas; arriba cuánto agarras.' },
+      { titulo: 'Fracciones equivalentes', subtema: 'Misma cantidad', icono: 'balanza', idea: 'Dos fracciones valen lo mismo si multiplicas o divides arriba y abajo por el mismo número.', visual: { tipo: 'fraccion', titulo: '1/2 es igual que 2/4', fracciones: [{ num: 1, den: 2, etiqueta: 'Mitad' }, { num: 2, den: 4, etiqueta: 'Dos cuartos' }], operacion: 'igual', forma: 'barra' }, ejemplo: { situacion: `En ${objMundo}, comparas 1/2 con 2/4.`, pasos: ['1 × 2 = 2 y 2 × 2 = 4', 'Ocupan exactamente el mismo espacio'], resultado: 'Son iguales: 1/2 = 2/4' }, cuidado: 'Números más grandes no hacen mayor la fracción: 2/4 no es mayor que 1/2.', de_ti: 'Si multiplicas arriba y abajo por igual, el tamaño no cambia.' },
+      { titulo: 'Sumar fracciones', subtema: 'Mismo denominador', icono: 'mas', idea: 'Solo puedes sumar pedazos del mismo tamaño: primero iguala el denominador y suma solo arriba.', visual: { tipo: 'fraccion', titulo: 'Un medio más un cuarto', fracciones: [{ num: 1, den: 2, etiqueta: 'Primero' }, { num: 1, den: 4, etiqueta: 'Después' }, { num: 3, den: 4 }], operacion: 'suma', forma: 'pizza' }, ejemplo: { situacion: `Usas 1/2 en la mañana y 1/4 en la tarde en ${objMundo}.`, pasos: ['Convierte 1/2 en 2/4', 'Suma arriba: 2/4 + 1/4'], resultado: '3/4 en total' }, cuidado: 'No sumes abajo con abajo (1/2 + 1/4 no es 2/6).', de_ti: 'Primero iguala los pedazos; luego suma arriba.' },
+      { titulo: 'Pasos para sumar fracciones', subtema: 'Método ordenado', icono: 'pasos', idea: 'Sigue tres pasos claros para sumar cualquier par de fracciones sin confundirte.', visual: { tipo: 'pasos', titulo: 'Ruta sin errores', items: [{ texto: 'Mira el de abajo', detalle: 'Si los denominadores son distintos, búscales un tamaño común', icono: 'lupa' }, { texto: 'Iguala las partes', detalle: 'Multiplica arriba y abajo por el mismo número (ej. 1/2 = 2/4)', icono: 'balanza' }, { texto: 'Suma solo arriba', detalle: '2/4 + 1/4 = 3/4; el denominador no se suma', icono: 'mas' }] }, ejemplo: { situacion: `En ${objMundo}, juntas 1/2 y 1/4 del total.`, pasos: ['Convierte 1/2 en 2/4', 'Suma los numeradores: 2 + 1 = 3'], resultado: '3/4' }, cuidado: 'Nunca sumes los denominadores entre sí.', de_ti: 'Iguala abajo, suma arriba y deja el de abajo quieto.' },
+      { titulo: 'Tabla rápida de fracciones', subtema: 'Referencia visual', icono: 'tabla', idea: 'Ver cómo se leen y cuánto valen las fracciones más usadas ayuda a comparar rápido.', visual: { tipo: 'tabla', titulo: 'Equivalencias clave', columnas: ['Fracción', 'Significa', 'Equivalente'], filas: [['1/2', 'La mitad', '2/4'], ['1/4', 'Un cuarto', '2/8'], ['3/4', 'Tres cuartos', '6/8']] }, ejemplo: { situacion: `Comparas cuánto avanza un reto en ${objMundo}.`, pasos: ['1/2 equivale a 2/4', '2/4 es más chico que 3/4'], resultado: '3/4 > 1/2' }, cuidado: 'Un denominador más grande (1/8) significa pedazos más pequeños, no más grandes.', de_ti: 'Más cortes abajo hacen pedazos más chicos.' }
     ];
-    const simple = { titulo: 'Error vs acierto en fracciones', subtema: 'Aclarando la base', icono: '🔍', idea: 'El denominador no se suma y las partes siempre deben ser iguales.', visual: { tipo: 'comparar', titulo: 'Cómo pensarlo bien', izquierda: { titulo: 'Confusión común', icono: '❌', puntos: ['Sumar arriba y abajo: 1/2 + 1/4 = 2/6', 'Cortar pedazos desiguales'] }, derecha: { titulo: 'Regla real', icono: '✅', puntos: ['Igualar tamaños: 2/4 + 1/4 = 3/4', 'Todas las partes miden igual'] } }, ejemplo: { situacion: `Piensa en barras iguales dentro de ${objMundo}.`, pasos: ['Corta ambas barras en 4', 'Cuenta los cuartos pintados'], resultado: '3 cuartos = 3/4' }, cuidado: 'El número de abajo solo nombra el tamaño del pedazo.', de_ti: 'Mismo tamaño primero, suma arriba después.' };
+    const simple = { titulo: 'Error vs acierto en fracciones', subtema: 'Aclarando la base', icono: 'lupa', idea: 'El denominador no se suma y las partes siempre deben ser iguales.', visual: { tipo: 'comparar', titulo: 'Cómo pensarlo bien', izquierda: { titulo: 'Confusión común', icono: 'cruz', puntos: ['Sumar arriba y abajo: 1/2 + 1/4 = 2/6', 'Cortar pedazos desiguales'] }, derecha: { titulo: 'Regla real', icono: 'check', puntos: ['Igualar tamaños: 2/4 + 1/4 = 3/4', 'Todas las partes miden igual'] } }, ejemplo: { situacion: `Piensa en barras iguales dentro de ${objMundo}.`, pasos: ['Corta ambas barras en 4', 'Cuenta los cuartos pintados'], resultado: '3 cuartos = 3/4' }, cuidado: 'El número de abajo solo nombra el tamaño del pedazo.', de_ti: 'Mismo tamaño primero, suma arriba después.' };
+    const fracRecta = { titulo: 'Fracciones en la recta', subtema: 'Saltos de tamaño igual', icono: 'recta', idea: 'Cada cuarto avanza 0.25 del total; sumar 1/2 y 1/4 es dar un salto de 2 cuartos más 1 cuarto.', visual: { tipo: 'recta', titulo: 'De 0 a 3/4 paso a paso', min: 0, max: 1, marcas: [{ valor: 0, texto: '0' }, { valor: 0.5, texto: '1/2 (2/4)' }, { valor: 0.75, texto: '3/4' }], saltos: true }, ejemplo: { situacion: `En ${objMundo}, recorres medio tramo y luego un cuarto más.`, pasos: ['1/2 te deja en 0.50 (dos cuartos)', '1/4 más avanza 0.25 hasta 0.75'], resultado: 'Llegas a 3/4 del camino' }, cuidado: 'No confundas la mitad (0.5) con 0.2 — cuenta en partes iguales de la unidad.', de_ti: 'Una fracción también marca un punto exacto del camino.' };
+    const fracPartes = { titulo: 'Anatomía de una fracción', subtema: 'Mapa de partes', icono: 'idea', idea: 'Cada número de la fracción cumple un papel distinto para describir cuántas partes iguales tienes.', visual: { tipo: 'partes', titulo: 'Qué dice cada pieza', centro: 'Fracción a/b', items: [{ texto: 'Numerador (arriba)', detalle: 'Cuántas partes tomas', icono: 'meta' }, { texto: 'Denominador (abajo)', detalle: 'En cuánto divides 1 entero', icono: 'bloque' }, { texto: 'Raya fraccionaria', detalle: 'Indica división exacta', icono: 'balanza' }, { texto: 'Equivalencia', detalle: '1/2 ocupa lo mismo que 2/4', icono: 'ciclo' }] }, ejemplo: { situacion: `En 3/4 aplicados a ${objMundo}, el 4 parte y el 3 elige.`, pasos: ['El 4 divide el entero en cuartos', 'El 3 toma tres de esos cuartos'], resultado: '3/4 del total' }, cuidado: 'Si el número de abajo crece, cada pedazo se vuelve más pequeño.', de_ti: 'Arriba cuánto tomas; abajo en cuánto partes.' };
     const idxObj = /equival/.test(no) ? 1 : /sum|rest|mixt/.test(no) ? 2 : (nivel === 'bastante' ? 2 : nivel === 'algo' ? 1 : 0);
     const ordered = [...base.slice((idxObj + Math.max(0, paso - 1)) % base.length), ...base];
     const unique = ordered.filter((v, i, a) => a.indexOf(v) === i);
-    const f = reaccion === 'duda' ? elegir([simple, ...unique.filter(x => x.visual.tipo !== 'fraccion')]) : elegir(unique);
+    const extrasEnfoque = (reaccion === 'enfoque' || calibracion?.pinTipo) ? [simple, fracRecta, fracPartes] : [];
+    const f = reaccion === 'duda' ? elegir([simple, ...unique.filter(x => x.visual.tipo !== 'fraccion')]) : elegir([...unique, ...extrasEnfoque]);
     return limpiarFichaInicio({ ...f, adaptacion: motivoLocal(reaccion, nivel, f.visual.tipo, nota, calibracion) });
   }
   if (esPorc) {
     const f = elegir([
-      { titulo: 'Qué es un porcentaje', subtema: 'Por cada cien', icono: '📊', idea: 'Un porcentaje compara una parte contra un total de 100. 50 % es la mitad; 25 % es un cuarto.', visual: { tipo: 'torta', titulo: `Reparto de tiempo en ${objMundo}`, unidad: '%', items: [{ texto: 'Práctica', valor: 50, icono: '🔥' }, { texto: 'Táctica', valor: 25, icono: '🧠' }, { texto: 'Descanso', valor: 25, icono: '💧' }] }, ejemplo: { situacion: `Si dedicas el 25 % de 100 minutos a táctica en ${objMundo}, ¿cuánto es?`, pasos: ['25 % = 25 de cada 100', '1/4 de 100 = 25'], resultado: '25 minutos' }, cuidado: 'El 25 % no siempre es 25: depende de cuánto sea el total.', de_ti: 'Por ciento significa de cada cien.' },
-      { titulo: 'Comparar porcentajes', subtema: 'Aplicado a totales', icono: '📈', idea: 'Para sacar un porcentaje de cualquier cantidad, multiplica por el porcentaje y divide entre 100.', visual: { tipo: 'barras', titulo: 'Descuentos comparados', unidad: '%', items: [{ texto: '10 %', valor: 10, icono: '🏷️' }, { texto: '25 %', valor: 25, icono: '✨' }, { texto: '50 %', valor: 50, icono: '⚡' }] }, ejemplo: { situacion: `Algo de ${objMundo} cuesta 80 y tiene 25 % de descuento.`, pasos: ['80 × 25 = 2000', '2000 ÷ 100 = 20'], resultado: 'Rebaja de 20 (pagas 60)' }, cuidado: 'No restes 25 directo al precio: primero calcula el 25 % del precio.', de_ti: 'Multiplica por el porcentaje y divide entre 100.' },
-      { titulo: 'Atajos de porcentaje', subtema: 'Tabla rápida', icono: '📋', idea: 'Memorizar los porcentajes clave en fracción te permite calcular casi todo de cabeza.', visual: { tipo: 'tabla', titulo: 'De porcentaje a atajo', columnas: ['Porcentaje', 'Fracción', 'En 80 sería'], filas: [['50 %', 'La mitad (÷ 2)', '40'], ['25 %', 'Un cuarto (÷ 4)', '20'], ['10 %', 'Entre 10', '8']] }, ejemplo: { situacion: `Calcula rápido el 25 % de 80 en ${objMundo}.`, pasos: ['25 % es dividir entre 4', '80 ÷ 4 = 20'], resultado: '20' }, cuidado: 'El 10 % se saca dividiendo entre 10, no restando 10.', de_ti: '50 % es mitad, 25 % cuarto, 10 % décima parte.' }
+      { titulo: 'Qué es un porcentaje', subtema: 'Por cada cien', icono: 'grafico', idea: 'Un porcentaje compara una parte contra un total de 100. 50 % es la mitad; 25 % es un cuarto.', visual: { tipo: 'torta', titulo: `Reparto de tiempo en ${objMundo}`, unidad: '%', items: [{ texto: 'Práctica', valor: 50, icono: 'energia' }, { texto: 'Táctica', valor: 25, icono: 'idea' }, { texto: 'Descanso', valor: 25, icono: 'agua' }] }, ejemplo: { situacion: `Si dedicas el 25 % de 100 minutos a táctica en ${objMundo}, ¿cuánto es?`, pasos: ['25 % = 25 de cada 100', '1/4 de 100 = 25'], resultado: '25 minutos' }, cuidado: 'El 25 % no siempre es 25: depende de cuánto sea el total.', de_ti: 'Por ciento significa de cada cien.' },
+      { titulo: 'Comparar porcentajes', subtema: 'Aplicado a totales', icono: 'grafico', idea: 'Para sacar un porcentaje de cualquier cantidad, multiplica por el porcentaje y divide entre 100.', visual: { tipo: 'barras', titulo: 'Descuentos comparados', unidad: '%', items: [{ texto: '10 %', valor: 10, icono: 'moneda' }, { texto: '25 %', valor: 25, icono: 'chispa' }, { texto: '50 %', valor: 50, icono: 'energia' }] }, ejemplo: { situacion: `Algo de ${objMundo} cuesta 80 y tiene 25 % de descuento.`, pasos: ['80 × 25 = 2000', '2000 ÷ 100 = 20'], resultado: 'Rebaja de 20 (pagas 60)' }, cuidado: 'No restes 25 directo al precio: primero calcula el 25 % del precio.', de_ti: 'Multiplica por el porcentaje y divide entre 100.' },
+      { titulo: 'Cómo sacar cualquier %', subtema: 'Método paso a paso', icono: 'pasos', idea: 'Sigue tres pasos fijos para convertir cualquier porcentaje en una cantidad real.', visual: { tipo: 'pasos', titulo: 'Cálculo en 3 pasos', items: [{ texto: 'Identifica el 100 %', detalle: 'Cuál es tu total completo', icono: 'meta' }, { texto: 'Multiplica arriba', detalle: 'Total × porcentaje buscado', icono: 'mas' }, { texto: 'Divide entre 100', detalle: 'Mueve dos lugares decimales', icono: 'balanza' }] }, ejemplo: { situacion: `25 % de 80 en ${objMundo}.`, pasos: ['Total 80 × 25 = 2000', '2000 ÷ 100 = 20'], resultado: '20' }, cuidado: 'Nunca restes el % como si fuera una cantidad fija.', de_ti: 'Multiplica por el % y parte en 100.' },
+      { titulo: 'Atajos de porcentaje', subtema: 'Tabla rápida', icono: 'tabla', idea: 'Memorizar los porcentajes clave en fracción te permite calcular casi todo de cabeza.', visual: { tipo: 'tabla', titulo: 'De porcentaje a atajo', columnas: ['Porcentaje', 'Fracción', 'En 80 sería'], filas: [['50 %', 'La mitad (÷ 2)', '40'], ['25 %', 'Un cuarto (÷ 4)', '20'], ['10 %', 'Entre 10', '8']] }, ejemplo: { situacion: `Calcula rápido el 25 % de 80 en ${objMundo}.`, pasos: ['25 % es dividir entre 4', '80 ÷ 4 = 20'], resultado: '20' }, cuidado: 'El 10 % se saca dividiendo entre 10, no restando 10.', de_ti: '50 % es mitad, 25 % cuarto, 10 % décima parte.' }
     ]);
     return limpiarFichaInicio({ ...f, adaptacion: motivoLocal(reaccion, nivel, f.visual.tipo, nota, calibracion) });
   }
   if (esEcu || esLin || esNeg || esFoto) {
     const f = esEcu
       ? elegir([
-        { titulo: 'Despejar paso a paso', subtema: 'Orden inverso', icono: '🧩', idea: 'Para hallar x, deshaces las operaciones desde la más lejana hacia x, aplicando lo mismo a ambos lados.', visual: { tipo: 'ecuacion', titulo: 'Resolver 2x + 4 = 14', lineas: [{ expresion: '2x + 4 = 14' }, { expresion: '2x = 14 − 4', nota: 'Resto 4 a ambos lados' }, { expresion: '2x = 10' }, { expresion: 'x = 10 ÷ 2', nota: 'Divido entre 2' }, { expresion: 'x = 5' }] }, ejemplo: { situacion: `En ${objMundo}, 2 rondas iguales más 4 puntos extras suman 14.`, pasos: ['Quita los 4 extras: quedan 10', 'Divide en 2 rondas iguales'], resultado: '5 puntos por ronda' }, cuidado: 'No dividas antes de quitar lo que suma o resta suelto.', de_ti: 'Lo último que entró sale primero.' },
-        { titulo: 'Orden para despejar la x', subtema: 'Balanza justa', icono: '🪜', idea: 'Una ecuación es una balanza equilibrada: lo que haces de un lado lo haces del otro.', visual: { tipo: 'pasos', titulo: 'Cómo liberar x', items: [{ texto: 'Separa los términos', detalle: 'Deja lo que tiene x de un lado', icono: '👈' }, { texto: 'Pasa lo que suma o resta', detalle: 'Cambia al signo contrario al otro lado', icono: '🔄' }, { texto: 'Pasa lo que multiplica', detalle: 'Dividiendo ambos lados', icono: '➗' }] }, ejemplo: { situacion: `En 2x + 4 = 14 dentro de ${objMundo}.`, pasos: ['Resta 4 → 2x = 10', 'Divide entre 2 → x = 5'], resultado: 'x = 5' }, cuidado: 'Cada lado de la igualdad debe recibir exactamente la misma operación.', de_ti: 'Cuida la balanza: igual a ambos lados.' }
+        { titulo: 'Despejar paso a paso', subtema: 'Orden inverso', icono: 'balanza', idea: 'Para hallar x, deshaces las operaciones desde la más lejana hacia x, aplicando lo mismo a ambos lados.', visual: { tipo: 'ecuacion', titulo: 'Resolver 2x + 4 = 14', lineas: [{ expresion: '2x + 4 = 14' }, { expresion: '2x = 14 − 4', nota: 'Resto 4 a ambos lados' }, { expresion: '2x = 10' }, { expresion: 'x = 10 ÷ 2', nota: 'Divido entre 2' }, { expresion: 'x = 5' }] }, ejemplo: { situacion: `En ${objMundo}, 2 rondas iguales más 4 puntos extras suman 14.`, pasos: ['Quita los 4 extras: quedan 10', 'Divide en 2 rondas iguales'], resultado: '5 puntos por ronda' }, cuidado: 'No dividas antes de quitar lo que suma o resta suelto.', de_ti: 'Lo último que entró sale primero.' },
+        { titulo: 'Orden para despejar la x', subtema: 'Balanza justa', icono: 'pasos', idea: 'Una ecuación es una balanza equilibrada: lo que haces de un lado lo haces del otro.', visual: { tipo: 'pasos', titulo: 'Cómo liberar x', items: [{ texto: 'Separa los términos', detalle: 'Deja lo que tiene x de un lado', icono: 'pasos' }, { texto: 'Pasa lo que suma o resta', detalle: 'Cambia al signo contrario al otro lado', icono: 'ciclo' }, { texto: 'Pasa lo que multiplica', detalle: 'Dividiendo ambos lados', icono: 'balanza' }] }, ejemplo: { situacion: `En 2x + 4 = 14 dentro de ${objMundo}.`, pasos: ['Resta 4 → 2x = 10', 'Divide entre 2 → x = 5'], resultado: 'x = 5' }, cuidado: 'Cada lado de la igualdad debe recibir exactamente la misma operación.', de_ti: 'Cuida la balanza: igual a ambos lados.' }
       ])
-      : esNeg ? { titulo: 'Moverse con negativos', subtema: 'Recta numérica', icono: '🧭', idea: 'Sumar mueve a la derecha y restar a la izquierda. La distancia entre dos números se cuenta por pasos.', visual: { tipo: 'recta', titulo: 'De −3 a +5', min: -5, max: 7, marcas: [{ valor: -3, texto: 'Inicio' }, { valor: 5, texto: 'Meta' }], saltos: true }, ejemplo: { situacion: `En ${objMundo}, pasas de −3 puntos a +5 puntos.`, pasos: ['De −3 a 0 hay 3 pasos', 'De 0 a 5 hay 5 pasos más'], resultado: 'Subiste 8 en total' }, cuidado: 'No restes 5 − 3: ir desde abajo de cero suma esa distancia.', de_ti: 'Cuenta los saltos en la recta.' }
-      : esLin ? { titulo: 'Cómo crece una recta', subtema: 'Pendiente e inicio', icono: '📈', idea: 'Una función lineal y = mx + b parte de b y cambia siempre lo mismo (m) en cada paso.', visual: { tipo: 'grafico', titulo: `Avance en ${objMundo}`, ejeX: 'Pasos', ejeY: 'Total', puntos: [{ x: 0, y: 2, texto: 'Inicio' }, { x: 1, y: 5 }, { x: 2, y: 8 }, { x: 3, y: 11 }, { x: 4, y: 14 }] }, ejemplo: { situacion: `Empiezas con 2 puntos y ganas 3 por ronda.`, pasos: ['Ronda 0: 2', 'Ronda 4: 3 × 4 + 2 = 14'], resultado: '14 puntos' }, cuidado: 'No olvides sumar el punto de inicio cuando x vale 0.', de_ti: 'Inicio más cambio constante.' }
-      : { titulo: 'La receta de la fotosíntesis', subtema: 'Entradas y salidas', icono: '🌱', idea: 'La planta combina agua, dióxido de carbono y luz solar para fabricar glucosa y liberar oxígeno.', visual: { tipo: 'ciclo', titulo: 'Energía en la planta', centro: 'Luz solar', items: [{ texto: 'Agua por raíz', icono: '💧' }, { texto: 'CO₂ del aire', icono: '🍃' }, { texto: 'Glucosa', icono: '🍬' }, { texto: 'Oxígeno', icono: '🌬️' }] }, ejemplo: { situacion: `Piensa en una cocina dentro de ${objMundo}: ingredientes entran, energía sale.`, pasos: ['Entran agua + CO₂ + luz', 'Salen azúcar + oxígeno'], resultado: 'Alimento propio y aire limpio' }, cuidado: 'Las plantas no comen tierra: fabrican su propio alimento con luz.', de_ti: 'Agua, aire y luz hacen azúcar.' };
+      : esNeg ? { titulo: 'Moverse con negativos', subtema: 'Recta numérica', icono: 'recta', idea: 'Sumar mueve a la derecha y restar a la izquierda. La distancia entre dos números se cuenta por pasos.', visual: { tipo: 'recta', titulo: 'De −3 a +5', min: -5, max: 7, marcas: [{ valor: -3, texto: 'Inicio' }, { valor: 5, texto: 'Meta' }], saltos: true }, ejemplo: { situacion: `En ${objMundo}, pasas de −3 puntos a +5 puntos.`, pasos: ['De −3 a 0 hay 3 pasos', 'De 0 a 5 hay 5 pasos más'], resultado: 'Subiste 8 en total' }, cuidado: 'No restes 5 − 3: ir desde abajo de cero suma esa distancia.', de_ti: 'Cuenta los saltos en la recta.' }
+      : esLin ? { titulo: 'Cómo crece una recta', subtema: 'Pendiente e inicio', icono: 'grafico', idea: 'Una función lineal y = mx + b parte de b y cambia siempre lo mismo (m) en cada paso.', visual: { tipo: 'grafico', titulo: `Avance en ${objMundo}`, ejeX: 'Pasos', ejeY: 'Total', puntos: [{ x: 0, y: 2, texto: 'Inicio' }, { x: 1, y: 5 }, { x: 2, y: 8 }, { x: 3, y: 11 }, { x: 4, y: 14 }] }, ejemplo: { situacion: `Empiezas con 2 puntos y ganas 3 por ronda.`, pasos: ['Ronda 0: 2', 'Ronda 4: 3 × 4 + 2 = 14'], resultado: '14 puntos' }, cuidado: 'No olvides sumar el punto de inicio cuando x vale 0.', de_ti: 'Inicio más cambio constante.' }
+      : { titulo: 'La receta de la fotosíntesis', subtema: 'Entradas y salidas', icono: 'hoja', idea: 'La planta combina agua, dióxido de carbono y luz solar para fabricar glucosa y liberar oxígeno.', visual: { tipo: 'ciclo', titulo: 'Energía en la planta', centro: 'Luz solar', items: [{ texto: 'Agua por raíz', icono: 'agua' }, { texto: 'CO₂ del aire', icono: 'hoja' }, { texto: 'Glucosa', icono: 'energia' }, { texto: 'Oxígeno', icono: 'nube' }] }, ejemplo: { situacion: `Piensa en una cocina dentro de ${objMundo}: ingredientes entran, energía sale.`, pasos: ['Entran agua + CO₂ + luz', 'Salen azúcar + oxígeno'], resultado: 'Alimento propio y aire limpio' }, cuidado: 'Las plantas no comen tierra: fabrican su propio alimento con luz.', de_ti: 'Agua, aire y luz hacen azúcar.' };
     return limpiarFichaInicio({ ...f, adaptacion: motivoLocal(reaccion, nivel, f.visual.tipo, nota, calibracion) });
   }
 
   // Tema genérico adaptable con variación de diseño visual (5 estilos distintos)
   const variantes = [
-    { titulo: `Bases de ${t}`, subtema: 'Mapa de ideas', icono: '🧠', idea: `Para dominar ${t}, primero distingue sus partes clave y cómo se conectan entre sí.`, visual: { tipo: 'partes', titulo: t, centro: t, items: [{ texto: 'Idea base', detalle: 'Qué es y para qué sirve', icono: '💡' }, { texto: 'Regla clave', detalle: 'Qué la hace funcionar', icono: '⚙️' }, { texto: 'En tu mundo', detalle: `Cómo aparece en ${objMundo}`, icono: '🎯' }, { texto: 'Trampa típica', detalle: 'Qué conviene vigilar', icono: '⚠️' }] }, ejemplo: { situacion: `Imagina aplicar ${t} en una situación real de ${objMundo}.`, pasos: ['Identifica qué dato tienes', 'Aplica la regla central paso a paso'], resultado: `Resuelves el caso de ${objMundo} con claridad` }, cuidado: `Memorizar palabras sueltas de ${t} sin un ejemplo concreto hace que se olvide rápido.`, de_ti: 'Entender qué hace cada parte vale más que repetir definiciones.' },
-    { titulo: `Paso a paso en ${t}`, subtema: 'Procedimiento guiado', icono: '🪜', idea: `Resolver un problema de ${t} se vuelve sencillo cuando sigues un orden claro de principio a fin.`, visual: { tipo: 'pasos', titulo: `Cómo abordar ${t}`, items: [{ texto: 'Ubica el objetivo', detalle: 'Qué te piden encontrar o explicar', icono: '🎯' }, { texto: 'Elige la regla', detalle: 'Qué principio conecta los datos', icono: '🔑' }, { texto: 'Prueba en pequeño', detalle: `Haz un caso simple de ${objMundo}`, icono: '🧪' }, { texto: 'Verifica el sentido', detalle: 'Comprueba si el resultado es lógico', icono: '✅' }] }, ejemplo: { situacion: `Un reto rápido de ${t} dentro de ${objMundo}.`, pasos: ['Separa lo que sabes de lo que falta', 'Aplica la regla en un caso corto'], resultado: 'Resultado comprobado' }, cuidado: 'Saltarse el primer paso lleva a usar una regla que no corresponde.', de_ti: 'Primero entiende qué buscas; después haz las cuentas o pasos.' },
-    { titulo: `Error vs acierto en ${t}`, subtema: 'Aclarar confusiones', icono: '🔍', idea: `La forma más rápida de destrabar ${t} es comparar el error común frente a cómo funciona de verdad.`, visual: { tipo: 'comparar', titulo: `En ${t}`, izquierda: { titulo: 'Lo que confunde', icono: '❌', puntos: ['Aplicar reglas de memoria sin revisar el caso', nota ? `Duda: ${nota.slice(0, 48)}` : 'Saltar directo al resultado'] }, derecha: { titulo: 'Cómo pensarlo bien', icono: '✅', puntos: [`Probar con un ejemplo de ${objMundo}`, 'Comprobar por qué funciona cada paso'] } }, ejemplo: { situacion: `Vuelve a mirar ${t} desde cero con algo cotidiano de ${objMundo}.`, pasos: ['Explica el porqué en una frase', 'Compara un caso fácil con otro'], resultado: 'La duda desaparece' }, cuidado: 'Si algo no cierra, vuelve al ejemplo más chico posible.', de_ti: 'Cuando entiendes el porqué, el truco sobra.' },
-    { titulo: `Resumen rápido de ${t}`, subtema: 'Tabla comparativa', icono: '📋', idea: `Ordenar los casos de ${t} en una tabla ayuda a elegir el método correcto de un vistazo.`, visual: { tipo: 'tabla', titulo: `Cuándo usar cada idea en ${t}`, columnas: ['Situación', 'Qué revisar', 'Clave'], filas: [['Inicio', 'Idea central', 'Ejemplo simple'], ['Práctica', 'Pasos en orden', 'Verificar sentido'], ['Reto', 'Casos borde', `Aplicar en ${objMundo}`]] }, ejemplo: { situacion: `Caso desafiante de ${t} ambientado en ${objMundo}.`, pasos: ['Identifica en qué fila encaja', 'Aplica la clave y comprueba'], resultado: 'Caso resuelto sin adivinar' }, cuidado: 'Revisa qué cambia entre un caso básico y un reto.', de_ti: 'Mirar la estructura ahorra errores.' },
-    { titulo: `Claves visuales de ${t}`, subtema: 'Resumen visual', icono: '✨', idea: `Divide ${t} en piezas concretas para recordarlo con ejemplos de ${objMundo}.`, visual: { tipo: 'iconos', titulo: `Peso de cada paso en ${t}`, items: [{ texto: 'Entender qué es', valor: 4, icono: '💡' }, { texto: `Probar en ${objMundo}`, valor: 3, icono: '🎯' }, { texto: 'Evitar la trampa', valor: 2, icono: '🛡️' }] }, ejemplo: { situacion: `Aplica estas 3 claves de ${t} en ${objMundo}.`, pasos: ['Empieza por la idea más simple', 'Comprueba con un caso concreto'], resultado: 'Dominado paso a paso' }, cuidado: 'Ir directo a casos difíciles sin entender la base multiplica las dudas.', de_ti: 'Primero la idea base, después la práctica.' }
+    { titulo: `Bases de ${t}`, subtema: 'Mapa de ideas', icono: 'idea', idea: `Para dominar ${t}, primero distingue sus partes clave y cómo se conectan entre sí.`, visual: { tipo: 'partes', titulo: t, centro: t, items: [{ texto: 'Idea base', detalle: 'Qué es y para qué sirve', icono: 'idea' }, { texto: 'Regla clave', detalle: 'Qué la hace funcionar', icono: 'energia' }, { texto: 'En tu mundo', detalle: `Cómo aparece en ${objMundo}`, icono: 'meta' }, { texto: 'Trampa típica', detalle: 'Qué conviene vigilar', icono: 'alerta' }] }, ejemplo: { situacion: `Imagina aplicar ${t} en una situación real de ${objMundo}.`, pasos: ['Identifica qué dato tienes', 'Aplica la regla central paso a paso'], resultado: `Resuelves el caso de ${objMundo} con claridad` }, cuidado: `Memorizar palabras sueltas de ${t} sin un ejemplo concreto hace que se olvide rápido.`, de_ti: 'Entender qué hace cada parte vale más que repetir definiciones.' },
+    { titulo: `Paso a paso en ${t}`, subtema: 'Procedimiento guiado', icono: 'pasos', idea: `Resolver un problema de ${t} se vuelve sencillo cuando sigues un orden claro de principio a fin.`, visual: { tipo: 'pasos', titulo: `Cómo abordar ${t}`, items: [{ texto: 'Ubica el objetivo', detalle: 'Qué te piden encontrar o explicar', icono: 'meta' }, { texto: 'Elige la regla', detalle: 'Qué principio conecta los datos', icono: 'libro' }, { texto: 'Prueba en pequeño', detalle: `Haz un caso simple de ${objMundo}`, icono: 'laboratorio' }, { texto: 'Verifica el sentido', detalle: 'Comprueba si el resultado es lógico', icono: 'check' }] }, ejemplo: { situacion: `Un reto rápido de ${t} dentro de ${objMundo}.`, pasos: ['Separa lo que sabes de lo que falta', 'Aplica la regla en un caso corto'], resultado: 'Resultado comprobado' }, cuidado: 'Saltarse el primer paso lleva a usar una regla que no corresponde.', de_ti: 'Primero entiende qué buscas; después haz las cuentas o pasos.' },
+    { titulo: `Error vs acierto en ${t}`, subtema: 'Aclarar confusiones', icono: 'lupa', idea: `La forma más rápida de destrabar ${t} es comparar el error común frente a cómo funciona de verdad.`, visual: { tipo: 'comparar', titulo: `En ${t}`, izquierda: { titulo: 'Lo que confunde', icono: 'cruz', puntos: ['Aplicar reglas de memoria sin revisar el caso', nota ? `Duda: ${nota.slice(0, 48)}` : 'Saltar directo al resultado'] }, derecha: { titulo: 'Cómo pensarlo bien', icono: 'check', puntos: [`Probar con un ejemplo de ${objMundo}`, 'Comprobar por qué funciona cada paso'] } }, ejemplo: { situacion: `Vuelve a mirar ${t} desde cero con algo cotidiano de ${objMundo}.`, pasos: ['Explica el porqué en una frase', 'Compara un caso fácil con otro'], resultado: 'La duda desaparece' }, cuidado: 'Si algo no cierra, vuelve al ejemplo más chico posible.', de_ti: 'Cuando entiendes el porqué, el truco sobra.' },
+    { titulo: `Resumen rápido de ${t}`, subtema: 'Tabla comparativa', icono: 'tabla', idea: `Ordenar los casos de ${t} en una tabla ayuda a elegir el método correcto de un vistazo.`, visual: { tipo: 'tabla', titulo: `Cuándo usar cada idea en ${t}`, columnas: ['Situación', 'Qué revisar', 'Clave'], filas: [['Inicio', 'Idea central', 'Ejemplo simple'], ['Práctica', 'Pasos en orden', 'Verificar sentido'], ['Reto', 'Casos borde', `Aplicar en ${objMundo}`]] }, ejemplo: { situacion: `Caso desafiante de ${t} ambientado en ${objMundo}.`, pasos: ['Identifica en qué fila encaja', 'Aplica la clave y comprueba'], resultado: 'Caso resuelto sin adivinar' }, cuidado: 'Revisa qué cambia entre un caso básico y un reto.', de_ti: 'Mirar la estructura ahorra errores.' },
+    { titulo: `Claves visuales de ${t}`, subtema: 'Resumen visual', icono: 'chispa', idea: `Divide ${t} en piezas concretas para recordarlo con ejemplos de ${objMundo}.`, visual: { tipo: 'iconos', titulo: `Peso de cada paso en ${t}`, items: [{ texto: 'Entender qué es', valor: 4, icono: 'idea' }, { texto: `Probar en ${objMundo}`, valor: 3, icono: 'meta' }, { texto: 'Evitar la trampa', valor: 2, icono: 'escudo' }] }, ejemplo: { situacion: `Aplica estas 3 claves de ${t} en ${objMundo}.`, pasos: ['Empieza por la idea más simple', 'Comprueba con un caso concreto'], resultado: 'Dominado paso a paso' }, cuidado: 'Ir directo a casos difíciles sin entender la base multiplica las dudas.', de_ti: 'Primero la idea base, después la práctica.' }
   ];
   const idx = (paso - 1) % variantes.length;
   const f = reaccion === 'duda' ? elegir([variantes[2], ...variantes.filter((_, i) => i !== 2)])
+    : reaccion === 'enfoque' ? elegir([variantes[1], ...variantes.filter(x => x.visual.tipo !== ultimoTipo)])
     : reaccion === 'reto' ? elegir([variantes[3], ...variantes.filter((_, i) => i !== 3)])
     : elegir([...variantes.slice(idx), ...variantes.slice(0, idx)]);
   return limpiarFichaInicio({ ...f, adaptacion: motivoLocal(reaccion, nivel, f.visual.tipo, nota, calibracion) });
 }
 function motivoLocal(reaccion, nivel, tipo, nota, calibracion) {
+  if (reaccion === 'enfoque') return `Cambiamos el enfoque${nota ? ` («${nota.slice(0, 60)}»)` : ''} usando el formato animado «${tipo}».`;
   if (calibracion?.pinTipo === tipo) return `Usamos el formato «${tipo}» que fijaste manualmente en tu calibración.`;
   const esPref = calibracion?.preferidos?.some(p => p.tipo === tipo);
   const esExp = calibracion?.estrategia === 'explorar' && calibracion?.explorar?.some(p => (p.tipo || p) === tipo);

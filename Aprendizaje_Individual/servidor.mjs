@@ -305,7 +305,7 @@ const servidor = http.createServer(async (req, res) => {
       const gustos = String(cuerpo.gustos || '').replace(/\s+/g, ' ').trim().slice(0, 140) || 'vida cotidiana';
       if (!tema) return json(res, 400, { ok: false, error: 'falta el tema' });
       const nivel = ['cero', 'algo', 'bastante'].includes(cuerpo.nivel) ? cuerpo.nivel : 'algo';
-      const reaccion = ['inicio', 'entendio', 'duda', 'ejemplo', 'reto'].includes(cuerpo.reaccion) ? cuerpo.reaccion : 'inicio';
+      const reaccion = ['inicio', 'entendio', 'duda', 'ejemplo', 'reto', 'enfoque'].includes(cuerpo.reaccion) ? cuerpo.reaccion : 'inicio';
       const nota = String(cuerpo.nota || '').replace(/\s+/g, ' ').trim().slice(0, 240);
       const objetivo = String(cuerpo.objetivo || '').replace(/\s+/g, ' ').trim().slice(0, 100);
       const a = cuerpo.aprendin?.nombre ? resumenAprendin(cuerpo.aprendin) : null;

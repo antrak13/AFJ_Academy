@@ -120,7 +120,8 @@ async function estadoIA() {
   } catch { E.ia = null; }
   const si = !!E.ia?.ia;
   el.className = 'estado-ia' + (si ? ' si' : '');
-  el.textContent = si ? `IA conectada · ${E.ia.modelo}` : 'Sin IA: lo armo con el catálogo';
+  el.textContent = si ? 'En línea' : 'Modo práctica';
+  el.title = si && E.ia?.modelo ? `Motor conectado (${E.ia.modelo})` : '';
 }
 
 // Flujo: 1) gustos y tema → aparece el huevo y la IA hace 2 o 3 preguntas · 2) respuestas → la IA crea · 3) el huevo se rompe.
@@ -284,8 +285,8 @@ NAC.el.addEventListener('keydown', e => {
 function pintarFicha(info) {
   const a = E.ficha, caja = $('#ficha');
   if (!a) { caja.hidden = true; return; }
-  const origen = info?.sinIA ? `Armado sin IA, con el catálogo${info.motivo && info.motivo !== 'sin IA' ? ` (la IA falló: ${info.motivo})` : ''}.`
-    : info ? `Creado por ${info.modelo} en ${info.segundos} s${info.ensayo ? ' (ensayo guardado)' : ''}.` : '';
+  const origen = info?.sinIA ? 'Armado en modo práctica con el catálogo.'
+    : info ? `Generado en ${info.segundos} s${info.ensayo ? ' (guardado)' : ''}.` : '';
   caja.replaceChildren(
     h('div', { class: 'ficha-cab' }, miniSvg(a.fases[a.fases.length - 1].look, 'orgulloso'), h('div', {}, h('b', {}, a.nombre), h('span', {}, `viene ${a.de}`))),
     h('dl', {},
