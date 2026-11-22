@@ -1217,7 +1217,9 @@ async function abrirCuaderno() {
 function nbPintarTabs() {
   const tabs = $('#nbTabs'); if (!tabs || !R) return;
   const s = sesionFantasma();
-  if (!s?.cuaderno.length) { poner(tabs); nbVerFantasma(false); return; }
+  // Sin cuaderno de fantasmas: se vuelve al nuestro solo si se estaba viendo el otro
+  // (nbVerFantasma llama a esta función; llamarla siempre era una recursión infinita).
+  if (!s?.cuaderno.length) { poner(tabs); if (R.nb?.verFantasma) nbVerFantasma(false); return; }
   const ver = !!R.nb?.verFantasma;
   poner(tabs,
     h('button', { type: 'button', 'aria-pressed': String(!ver), onclick: () => nbVerFantasma(false) }, 'Nuestro'),
