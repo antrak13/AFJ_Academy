@@ -2,6 +2,9 @@
 .barra-acc { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; flex-shrink: 0; }
 .btn-chico { padding: 6px 12px; font-size: .84rem; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .btn[aria-pressed="true"] { background: var(--indigo); color: #fff; }
+@media (max-width: 1160px) {
+  .pag-clase .barra { flex-wrap: wrap; }
+}
 @media (max-width: 720px) {
   .pag-clase .barra { gap: 6px; padding: 8px 10px; }
   .pag-clase .marca-av { width: 32px; }

@@ -1459,7 +1459,7 @@
 
       if (user && user.username) {
         const initial = (user.username || 'U').charAt(0).toUpperCase();
-        const roleLabel = user.role === 'universitario' ? 'Universitario' : 'Estudiante';
+        const roleLabel = user.role === 'universitario' ? 'Universitario' : user.role === 'docente' ? 'Docente' : 'Estudiante';
         const centerName = user.institution || '';
         const badgeText = centerName ? `${roleLabel} · ${centerName}` : (user.career ? `${roleLabel} · ${user.career}` : roleLabel);
         const locParts = [user.city, user.country].filter(Boolean);
@@ -1495,7 +1495,7 @@
                 </div>` : ''}
                 ${user.career ? `
                 <div class="dropdown-detail-item">
-                  <span class="detail-label">Carrera:</span>
+                  <span class="detail-label">${user.role === 'universitario' ? 'Carrera:' : user.role === 'docente' ? 'Cargo:' : 'Curso:'}</span>
                   <span class="detail-val" title="${escapeHtml(user.career)}">${escapeHtml(user.career)}</span>
                 </div>` : ''}
                 <div class="dropdown-detail-item">
@@ -1504,6 +1504,7 @@
                 </div>
               </div>
               <div class="profile-dropdown-footer">
+                ${user.role === 'docente' ? '<a href="Aprendizaje_Individual/docente.html" class="dropdown-action-btn switch-acc">Panel docente</a>' : ''}
                 <a href="login.html" class="dropdown-action-btn switch-acc">Cambiar cuenta</a>
                 <button class="dropdown-action-btn logout-btn" id="logoutBtn">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>

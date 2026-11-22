@@ -6,6 +6,8 @@
 //   htmlFicha(f, ctx) → la tarjeta completa · htmlVisual(v) → solo el visual
 //   fichaLocal(...)  → una ficha sencilla sin IA
 
+import { rutaPractica } from './fichas-practica.js';
+
 export const TIPOS = {
   pasos: 'Pasos de un proceso o procedimiento, en orden',
   ciclo: 'Un ciclo que se repite (ciclo del agua, de la vida, de una rutina)',
@@ -27,6 +29,8 @@ export const NOMBRES_VISUAL = {
   linea_tiempo: 'Línea de tiempo', ecuacion: 'Ecuación', tabla: 'Tabla', grafico: 'Gráfico', iconos: 'Íconos'
 };
 const OPERACIONES = ['ninguna', 'suma', 'resta', 'igual', 'compara'];
+
+export const mantieneSubtema = reaccion => ['duda', 'ejemplo', 'enfoque', 'reto'].includes(reaccion);
 
 /* ================= Esquema para la IA ================= */
 export function esquemaFicha() {
@@ -69,7 +73,7 @@ export function esquemaFicha() {
         properties: {
           situacion: s('Contexto y datos del caso, máximo 30 palabras. Si hay pregunta aparte, no la repitas aquí.'),
           pregunta: s('Pregunta breve y sin respuesta. En un reto es obligatoria.'),
-          puente: s('Opcional. Si hay analogía o cambio de representación, indica qué representa cada elemento relevante. Máximo 24 palabras.'),
+          puente: s('Opcional. Vincula un elemento que ya aparece en la situación con su representación en el visual. Máximo 24 palabras.'),
           pasos: { type: 'array', minItems: 1, maxItems: 4, items: s('Una acción o deducción, máximo 14 palabras. No repitas los datos de partida.') },
           resultado: s('La respuesta, con su unidad si aplica, máximo 12 palabras')
         },
@@ -176,14 +180,15 @@ export function limpiarFicha(r = {}) {
       ...(e.puente ? { puente: txt(e.puente, 170) } : {}),
       pasos: (Array.isArray(e.pasos) ? e.pasos : []).map(p => txt(p, 110)).filter(Boolean).slice(0, 4), resultado: txt(e.resultado, 100)
     },
-    cuidado: txt(r.cuidado, 200), de_ti: txt(r.de_ti, 160).replace(/^[«"“']+|[»"”']+$/g, '').trim()
+    cuidado: txt(r.cuidado, 200), de_ti: txt(r.de_ti, 160).replace(/^[«"“']+|[»"”']+(?=[.!?]*$)/g, '').trim()
   };
 }
 export function limpiarFichaInicio(r = {}) {
   return {
     ...limpiarFicha(r),
     subtema: txt(r.subtema, 60) || txt(r.titulo, 60) || 'Concepto clave',
-    adaptacion: txt(r.adaptacion, 180)
+    adaptacion: txt(r.adaptacion, 180),
+    ...(r.aviso ? { aviso: txt(r.aviso, 180) } : {})
   };
 }
 function visualTieneDatos(v) {
@@ -211,7 +216,7 @@ function corregirFracciones(v) {
 }
 
 // Comprueba lo que se puede verificar antes de servir una ficha generada.
-export function revisarFichaGenerada(original = {}, { reto = false, ejemploAnterior = '' } = {}) {
+export function revisarFichaGenerada(original = {}, { reto = false, ejemploAnterior = '', referencia, reaccion, objetivo } = {}) {
   const errores = [];
   const ficha = limpiarFicha(original), v = ficha.visual;
   const crudo = original.visual || {}, e = ficha.ejemplo;
@@ -219,6 +224,17 @@ export function revisarFichaGenerada(original = {}, { reto = false, ejemploAnter
     errores.push('Completa la idea y un caso concreto con procedimiento y resultado.');
   }
   if (reto && !e.pregunta?.endsWith('?')) errores.push('Escribe una pregunta explícita en ejemplo.pregunta.');
+  if (referencia?.subtema && (mantieneSubtema(reaccion) || (reaccion === 'entendio' && objetivo))) {
+    if (txt(original.subtema, 60) !== referencia.subtema) {
+      errores.push(`Conserva el subtema indicado en la ficha de partida (${referencia.subtema}) y explica esa misma idea.`);
+    }
+  } else if (reaccion === 'entendio' && referencia?.subtema && normTxt(txt(original.subtema, 60)) === normTxt(referencia.subtema)) {
+    errores.push('Avanza a un subtema distinto que siga lógicamente a la ficha de partida.');
+  }
+  if (reaccion === 'enfoque' && referencia?.situacion &&
+      (e.situacion !== referencia.situacion || (referencia.pregunta && e.pregunta !== referencia.pregunta))) {
+    errores.push('Conserva literalmente la situación y la pregunta de la ficha de partida. Cambia la forma de explicarlas.');
+  }
   if (ejemploAnterior && normTxt(txt(e.situacion, 220)) === normTxt(txt(ejemploAnterior, 220))) {
     errores.push('Cambia la situación del ejemplo anterior y usa otros datos o un objeto distinto del mismo mundo.');
   }
@@ -230,6 +246,13 @@ export function revisarFichaGenerada(original = {}, { reto = false, ejemploAnter
     }
     if (['igual', 'compara'].includes(crudo.operacion) && fs.length < 2) errores.push('Incluye las dos fracciones que se comparan.');
     if (esCuentaFraccion(crudo.operacion) && fs.length >= 2 && fs.slice(0, 2).every(fraccionValida)) {
+      const idea = normTxt(ficha.idea);
+      const reglaNumeradores = /\b(?:sum\w*|rest\w*)\b[^.!?;]{0,55}\bnumeradores?\b/.test(idea);
+      const denominadoresIguales = /\b(?:mismo|igual) denominador\b|\bdenominador comun\b|\bdenominadores (?:\w+ ){0,3}(?:iguales|coinciden)\b/.test(idea);
+      const partesIguales = /\b(?:mismo|igual) tamano\b/.test(idea);
+      if (reglaNumeradores && !denominadoresIguales && !partesIguales) {
+        errores.push('En idea, indica que sumar o restar solo los numeradores requiere el mismo denominador.');
+      }
       const calculada = calcularFracciones(fs[0], fs[1], crudo.operacion === 'resta');
       if (!fraccionValida(fs[2]) || !mismoValor(fs[2], calculada)) errores.push('La tercera fracción del dibujo debe ser el resultado exacto de la operación.');
       const escrito = [...e.resultado.replaceAll('−', '-').matchAll(/(?:(-?\d+)\s+)?(-?\d+)\s*\/\s*(\d+)/g)].at(-1);
@@ -588,6 +611,7 @@ export function htmlFicha(f, ctx = {}) {
   const cuidado = f.cuidado ? `<p class="fi-cuidado"><b>¡Ojo!</b> ${esc(f.cuidado)}</p>` : '';
   const recordar = f.de_ti ? `<blockquote class="fi-deti"><p>«${esc(f.de_ti)}»</p><cite>${esc(ctx.citaDe || 'Lo que me enseñaste')}</cite></blockquote>` : '';
   const adaptacion = adap ? `<p class="fi-adapta"><b>${esc(ctx.rotuloAdaptacion || 'Adaptación')}</b> ${esc(adap)}</p>` : '';
+  const aviso = f.aviso ? `<p class="fi-adapta" role="status">${esc(f.aviso)}</p>` : '';
   const guia = ctx.rotuloAdaptacion === 'Guía de práctica';
   const notas = cuidado || recordar || (adaptacion && !guia)
     ? `<details class="fi-notas"><summary>Notas para repasar</summary><div class="fi-notas-cuerpo">${cuidado}${recordar}${guia ? '' : adaptacion}</div></details>` : '';
@@ -601,9 +625,9 @@ export function htmlFicha(f, ctx = {}) {
   const caso = enunciado && ctx.reto && (pasos || resultado)
     ? `<section class="fi-reto">${enunciado}<details class="fi-solucion"><summary>Ver solución</summary>${idea}${visual}${pasos}${resultado}${notas}</details></section>`
     : `${idea}${guia ? adaptacion : ''}<div class="fi-caso${enunciado && visual ? ' fi-caso--visual' : ''}">${enunciado}${visual}${respuesta}</div>${notas}`;
-  return `<article class="ficha-ap" style="--c:${t.base};--c-claro:${t.claro};--c-osc:${t.oscuro}">
+  return `<article class="ficha-ap" style="--c:${t.base};--c-claro:${t.claro};--c-osc:${t.tinta || t.oscuro}">
 <header class="fi-cab"><span class="fi-ico" aria-hidden="true">${svgIcono(f.icono, { def: 'chispa', size: 22 })}</span><div class="fi-tit"><small>Ficha ${ctx.numero || ''}${ctx.fase ? ` · ${esc(ctx.fase)}` : ''}</small><h3>${esc(f.titulo)}</h3></div>${ctx.avatar ? `<span class="fi-av">${ctx.avatar}</span>` : ''}</header>
-${caso}
+${aviso}${caso}
 ${ctx.pieHtml || ''}
 </article>`;
 }
@@ -624,12 +648,6 @@ export function fichaLocal(concepto, mensajes = []) {
 
 // Ficha adaptativa sin IA: elige un diseño visual distinto según el tema, el nivel, la calibración y la reacción anterior.
 const normTxt = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-const CONTEXTOS_EQUIVALENCIA = [
-  { coincide: /pizza|cocin|horno|receta/, contexto: 'En el horno preparas dos pizzas del mismo tamaño.', entero: 'Pizza', parte: 'porciones', forma: 'pizza', icono: 'cocina' },
-  { coincide: /espaci|cohete|nave|robot|marte/, contexto: 'Dos naves cargan combustible en depósitos de la misma capacidad.', entero: 'Depósito', parte: 'marcas', forma: 'barra', icono: 'cohete' },
-  { coincide: /bloque|minecraft|juego/, contexto: 'En dos tramos de un mapa idéntico señalas cuánto del recorrido completaste.', entero: 'Recorrido', parte: 'tramos', forma: 'barra', icono: 'bloque' },
-  { coincide: /futbol|pelota|cancha/, contexto: 'En la cancha comparas el tiempo de entrenamiento de dos equipos con sesiones de igual duración.', entero: 'Sesión', parte: 'intervalos', forma: 'barra', icono: 'pelota' }
-];
 function elegirPorCalibracion(candidatos, { ultimoTipo = '', calibracion = null } = {}) {
   const pref = new Map((calibracion?.preferidos || []).map((p, i) => [p.tipo, 36 - i * 6]));
   const evitar = new Set((calibracion?.evitar || []).map(p => p.tipo));
@@ -673,82 +691,84 @@ function fichaEnterosLocal(objetivo, gustos) {
   };
 }
 
-export function fichaInicioLocal({ tema = '', gustos = '', nivel = 'algo', reaccion = 'inicio', nota = '', objetivo = '', historial = [], calibracion = null } = {}) {
+function adaptarCasoAnterior(ficha, reaccion, pinTipo) {
+  const { ejemplo, visual } = ficha;
+  if (reaccion === 'ejemplo' || reaccion === 'reto') {
+    const accion = reaccion === 'reto' ? 'un reto nuevo' : 'otro ejemplo';
+    return { ...ficha, aviso: `Para generar ${accion} de este subtema, vuelve a conectarte a la IA. Puedes seguir repasando este caso.` };
+  }
+
+  const pasos = ejemplo.pasos.map((detalle, i) => ({ texto: `Paso ${i + 1}`, detalle }));
+  if (pasos.length < 2) pasos.unshift({ texto: 'Punto de partida', detalle: ejemplo.situacion });
+  const alternativa = visual.tipo !== 'pasos'
+    ? { tipo: 'pasos', titulo: 'Cómo se resuelve', items: pasos }
+    : { tipo: 'comparar', titulo: 'Del caso al resultado',
+      izquierda: { titulo: 'Punto de partida', puntos: [ejemplo.situacion] },
+      derecha: { titulo: 'Resultado', puntos: [ejemplo.resultado] } };
+  return {
+    ...ficha, visual: alternativa,
+    aviso: pinTipo && pinTipo !== alternativa.tipo ? 'En modo práctica, este caso tiene otro formato disponible.' : ''
+  };
+}
+
+export function fichaInicioLocal({ tema = '', gustos = '', nivel = 'algo', reaccion = 'inicio', nota = '', objetivo = '', historial = [], calibracion = null, fichaBase = null } = {}) {
   const t = txt(tema || objetivo, 80) || 'el tema', g = txt(gustos, 120) || 'tu día a día';
-  const nt = normTxt(`${tema} ${objetivo}`), no = normTxt(objetivo), ng = normTxt(g), paso = historial.filter(x => x.reaccion === 'entendio').length + (reaccion === 'entendio' ? 2 : 1);
-  const ultimoTipo = historial.at(-1)?.tipo;
+  const nt = normTxt(`${tema} ${objetivo}`), ng = normTxt(g);
+  const anterior = reaccion === 'inicio' ? null : fichaBase || historial.at(-1);
+  const mismoSubtema = mantieneSubtema(reaccion) || (reaccion === 'entendio' && !!objetivo);
+  const actual = fichaBase?.ejemplo?.resultado ? limpiarFichaInicio(fichaBase) : null;
+  const tipoAnterior = anterior?.visual?.tipo || anterior?.tipo;
+  const situacionAnterior = anterior?.ejemplo?.situacion || anterior?.situacion;
   const mundo = g.split(/,|;| y /)[0]?.trim() || 'tu mundo';
-  const esFrac = /fracci/.test(nt), esPorc = /porcent/.test(nt), esEcu = /ecuacion(?:es)? lineal|ecuacion simple|despej/.test(nt), esFoto = /fotosint/.test(nt);
+  const esFoto = /fotosint/.test(nt);
   const esNeg = /numeros enteros|numeros negativos|recta numerica/.test(nt), esLin = /funcion(?:es)? lineal|pendiente de una recta/.test(nt);
 
   const objMundo = /futbol|messi|gol/.test(ng) ? 'cancha' : /anime|dragon|goku|naruto|luffy/.test(ng) ? 'entrenamiento' : /cocin|abuela|comida/.test(ng) ? 'cocina' : /minecraft|bloque|juego/.test(ng) ? 'partida' : mundo;
-  const elegir = (cand) => elegirPorCalibracion(cand, { ultimoTipo, calibracion });
+  const terminar = (f, motivo) => limpiarFichaInicio({ ...f, adaptacion: motivo || motivoLocal(reaccion, nivel, f.visual.tipo, nota, calibracion) });
+  const ruta = rutaPractica(tema, objetivo, g, nivel);
+  if (ruta?.grupos.length) {
+    const { grupos, inicial } = ruta;
+    const anteriorIdx = grupos.findIndex(grupo => [grupo.subtema, ...grupo.alias].some(s => normTxt(s) === normTxt(anterior?.subtema)));
+    const avanzar = reaccion === 'entendio' && !objetivo && anteriorIdx >= 0 && anteriorIdx < grupos.length - 1;
+    const idx = anteriorIdx < 0 ? inicial : anteriorIdx + Number(avanzar);
+
+    if (!mismoSubtema || !anterior?.subtema || anteriorIdx >= 0) {
+      const casos = [0, 1, 2].map(grupos[idx].preparar);
+      const casoPrevio = casos.findIndex(([f]) => f.ejemplo.situacion === situacionAnterior);
+      const casoNuevo = reaccion === 'ejemplo' || reaccion === 'reto' || (reaccion === 'entendio' && !avanzar);
+      let caso = 0;
+      if (casoNuevo) caso = casoPrevio >= 0 ? (casoPrevio + 1) % casos.length : reaccion === 'reto' ? 2 : 0;
+      else if (!avanzar && casoPrevio >= 0) caso = casoPrevio;
+
+      if (!actual || avanzar || casoNuevo || casoPrevio >= 0) {
+        let candidatos = casos[caso];
+        const aceptaPin = candidatos.some(f => f.visual.tipo === calibracion?.pinTipo);
+        if (reaccion === 'enfoque' && !aceptaPin && (calibracion?.pinTipo === 'pasos' || calibracion?.pinTipo === 'comparar')) {
+          const apoyo = adaptarCasoAnterior(actual || limpiarFichaInicio(candidatos[0]), reaccion, calibracion.pinTipo);
+          if (apoyo.visual.tipo === calibracion.pinTipo) candidatos = [...candidatos, apoyo];
+        }
+        const equivalente = candidatos.find(f => f.visual.tipo === tipoAnterior);
+        const f = reaccion === 'ejemplo' && equivalente && !calibracion?.pinTipo
+          ? equivalente : elegirPorCalibracion(candidatos, { ultimoTipo: tipoAnterior, calibracion });
+        const mismoNombre = mismoSubtema && anteriorIdx >= 0 ? { subtema: anterior.subtema } : {};
+        const motivo = reaccion === 'entendio' && !avanzar ? 'Seguimos practicando la misma idea con otro caso.' : '';
+        const pin = reaccion === 'enfoque' && calibracion?.pinTipo;
+        const aviso = pin && pin !== f.visual.tipo ? 'Este caso tiene otro formato disponible en modo práctica.' : '';
+        const mismoCaso = actual && casoPrevio === caso && !casoNuevo ? { ejemplo: actual.ejemplo } : {};
+        return terminar({ ...f, ...mismoNombre, ...mismoCaso, aviso }, motivo);
+      }
+    }
+  }
+  if (actual && mismoSubtema) {
+    return terminar(adaptarCasoAnterior(actual, reaccion, calibracion?.pinTipo), 'Seguimos con la idea de la ficha anterior.');
+  }
   if (esNeg) {
     const ficha = fichaEnterosLocal(objetivo, gustos);
-    if (ficha) return limpiarFichaInicio({ ...ficha, adaptacion: motivoLocal(reaccion, nivel, 'recta', nota, calibracion) });
+    if (ficha) return terminar(ficha);
   }
 
-  if (esFrac) {
-    const base = [
-      { titulo: 'Qué es una fracción', subtema: 'Partes iguales', icono: 'cocina', idea: 'Abajo va en cuántas partes iguales se divide el total; arriba cuántas partes tomas.', visual: { tipo: 'fraccion', titulo: `Reparto en ${objMundo}`, fracciones: [{ num: 1, den: 4, etiqueta: 'Tu parte' }, { num: 3, den: 4, etiqueta: 'Lo que queda' }], operacion: 'compara', forma: 'pizza' }, ejemplo: { situacion: `En ${objMundo}, divides algo en 4 partes iguales y usas 1.`, pasos: ['Total de partes iguales: 4 (abajo)', 'Partes que tomas: 1 (arriba)'], resultado: '1/4 del total' }, cuidado: 'Si las partes no son del mismo tamaño, no es una fracción justa.', de_ti: 'Abajo dice en cuánto cortas; arriba cuánto agarras.' },
-      { titulo: 'Fracciones equivalentes', subtema: 'Misma cantidad', icono: 'balanza', idea: 'Multiplicar o dividir el numerador y el denominador por el mismo número positivo conserva el valor de la fracción.', visual: { tipo: 'fraccion', titulo: '1/2 es igual que 2/4', fracciones: [{ num: 1, den: 2, etiqueta: 'Mitad' }, { num: 2, den: 4, etiqueta: 'Dos cuartos' }], operacion: 'igual', forma: 'barra' }, ejemplo: { situacion: `En ${objMundo}, comparas 1/2 con 2/4.`, pasos: ['1 × 2 = 2 y 2 × 2 = 4', 'Ocupan exactamente el mismo espacio'], resultado: 'Son iguales: 1/2 = 2/4' }, cuidado: 'Números más grandes no hacen mayor la fracción: 2/4 no es mayor que 1/2.', de_ti: 'Multiplicar arriba y abajo por el mismo número positivo conserva la proporción.' },
-      { titulo: 'Sumar fracciones', subtema: 'Mismo denominador', icono: 'mas', idea: 'Solo puedes sumar pedazos del mismo tamaño: primero iguala el denominador y suma solo arriba.', visual: { tipo: 'fraccion', titulo: 'Un medio más un cuarto', fracciones: [{ num: 1, den: 2, etiqueta: 'Primero' }, { num: 1, den: 4, etiqueta: 'Después' }, { num: 3, den: 4 }], operacion: 'suma', forma: 'pizza' }, ejemplo: { situacion: `Usas 1/2 en la mañana y 1/4 en la tarde en ${objMundo}.`, pasos: ['Convierte 1/2 en 2/4', 'Suma arriba: 2/4 + 1/4'], resultado: '3/4 en total' }, cuidado: 'No sumes abajo con abajo (1/2 + 1/4 no es 2/6).', de_ti: 'Primero iguala los pedazos; luego suma arriba.' },
-      { titulo: 'Pasos para sumar fracciones', subtema: 'Método ordenado', icono: 'pasos', idea: 'Sigue tres pasos claros para sumar cualquier par de fracciones sin confundirte.', visual: { tipo: 'pasos', titulo: 'Ruta sin errores', items: [{ texto: 'Mira el de abajo', detalle: 'Si los denominadores son distintos, búscales un tamaño común', icono: 'lupa' }, { texto: 'Iguala las partes', detalle: 'Multiplica arriba y abajo por el mismo número (ej. 1/2 = 2/4)', icono: 'balanza' }, { texto: 'Suma solo arriba', detalle: '2/4 + 1/4 = 3/4; el denominador no se suma', icono: 'mas' }] }, ejemplo: { situacion: `En ${objMundo}, juntas 1/2 y 1/4 del total.`, pasos: ['Convierte 1/2 en 2/4', 'Suma los numeradores: 2 + 1 = 3'], resultado: '3/4' }, cuidado: 'Nunca sumes los denominadores entre sí.', de_ti: 'Iguala abajo, suma arriba y deja el de abajo quieto.' },
-      { titulo: 'Tabla rápida de fracciones', subtema: 'Referencia visual', icono: 'tabla', idea: 'Ver cómo se leen y cuánto valen las fracciones más usadas ayuda a comparar rápido.', visual: { tipo: 'tabla', titulo: 'Equivalencias clave', columnas: ['Fracción', 'Significa', 'Equivalente'], filas: [['1/2', 'La mitad', '2/4'], ['1/4', 'Un cuarto', '2/8'], ['3/4', 'Tres cuartos', '6/8']] }, ejemplo: { situacion: `Comparas cuánto avanza un reto en ${objMundo}.`, pasos: ['1/2 equivale a 2/4', '2/4 es más chico que 3/4'], resultado: '3/4 > 1/2' }, cuidado: 'Un denominador más grande (1/8) significa pedazos más pequeños, no más grandes.', de_ti: 'Más cortes abajo hacen pedazos más chicos.' }
-    ];
-    const simple = { titulo: 'Error vs acierto en fracciones', subtema: 'Aclarando la base', icono: 'lupa', idea: 'El denominador no se suma y las partes siempre deben ser iguales.', visual: { tipo: 'comparar', titulo: 'Cómo pensarlo bien', izquierda: { titulo: 'Confusión común', icono: 'cruz', puntos: ['Sumar arriba y abajo: 1/2 + 1/4 = 2/6', 'Cortar pedazos desiguales'] }, derecha: { titulo: 'Regla real', icono: 'check', puntos: ['Igualar tamaños: 2/4 + 1/4 = 3/4', 'Todas las partes miden igual'] } }, ejemplo: { situacion: `Piensa en barras iguales dentro de ${objMundo}.`, pasos: ['Corta ambas barras en 4', 'Cuenta los cuartos pintados'], resultado: '3 cuartos = 3/4' }, cuidado: 'El número de abajo solo nombra el tamaño del pedazo.', de_ti: 'Mismo tamaño primero, suma arriba después.' };
-    const fracRecta = { titulo: 'Fracciones en la recta', subtema: 'Saltos de tamaño igual', icono: 'recta', idea: 'Cada cuarto avanza 0.25 del total; sumar 1/2 y 1/4 es dar un salto de 2 cuartos más 1 cuarto.', visual: { tipo: 'recta', titulo: 'De 0 a 3/4 paso a paso', min: 0, max: 1, marcas: [{ valor: 0, texto: '0' }, { valor: 0.5, texto: '1/2 (2/4)' }, { valor: 0.75, texto: '3/4' }], saltos: true }, ejemplo: { situacion: `En ${objMundo}, recorres medio tramo y luego un cuarto más.`, pasos: ['1/2 te deja en 0.50 (dos cuartos)', '1/4 más avanza 0.25 hasta 0.75'], resultado: 'Llegas a 3/4 del camino' }, cuidado: 'No confundas la mitad (0.5) con 0.2 — cuenta en partes iguales de la unidad.', de_ti: 'Una fracción también marca un punto exacto del camino.' };
-    const fracPartes = { titulo: 'Anatomía de una fracción', subtema: 'Mapa de partes', icono: 'idea', idea: 'Cada número de la fracción cumple un papel distinto para describir cuántas partes iguales tienes.', visual: { tipo: 'partes', titulo: 'Qué dice cada pieza', centro: 'Fracción a/b', items: [{ texto: 'Numerador (arriba)', detalle: 'Cuántas partes tomas', icono: 'meta' }, { texto: 'Denominador (abajo)', detalle: 'En cuánto divides 1 entero', icono: 'bloque' }, { texto: 'Raya fraccionaria', detalle: 'Indica división exacta', icono: 'balanza' }, { texto: 'Equivalencia', detalle: '1/2 ocupa lo mismo que 2/4', icono: 'ciclo' }] }, ejemplo: { situacion: `En 3/4 aplicados a ${objMundo}, el 4 parte y el 3 elige.`, pasos: ['El 4 divide el entero en cuartos', 'El 3 toma tres de esos cuartos'], resultado: '3/4 del total' }, cuidado: 'Si el número de abajo crece, cada pedazo se vuelve más pequeño.', de_ti: 'Arriba cuánto tomas; abajo en cuánto partes.' };
-    if (/equival/.test(nt) && !/sum|rest/.test(no)) {
-      const contexto = CONTEXTOS_EQUIVALENCIA.find(c => c.coincide.test(ng)) || {
-        contexto: 'Compara dos barras del mismo largo con divisiones diferentes.', entero: 'Barra', parte: 'partes', forma: 'barra', icono: 'balanza'
-      };
-      const distintos = historial.filter(f => f.reaccion === 'ejemplo').length % 2;
-      const [n, d] = reaccion === 'reto' ? [3, 4] : reaccion === 'ejemplo' ? (distintos ? [1, 3] : [2, 5]) : [1, 2];
-      const inicial = `${n}/${d}`, final = `${n * 2}/${d * 2}`;
-      const ejemplo = {
-        situacion: `${contexto.contexto} En la primera unidad señalas ${n} de ${d} ${contexto.parte} iguales.`,
-        pregunta: `Si divides la segunda unidad en ${d * 2} ${contexto.parte} iguales, ¿cuántas cubren la misma cantidad?`,
-        pasos: [`Cada parte original se convierte en dos partes más pequeñas.`, `Multiplica ${n} y ${d} por 2, así obtienes ${final}.`],
-        resultado: `${inicial} = ${final}. Es la misma proporción del entero.`
-      };
-      const equivalencia = { ...base[1], icono: contexto.icono, ejemplo, visual: {
-        tipo: 'fraccion', titulo: `${contexto.entero}: ${inicial} y ${final}`, operacion: 'igual', forma: contexto.forma,
-        fracciones: [{ num: n, den: d, etiqueta: `${n} de ${d} ${contexto.parte}` }, { num: n * 2, den: d * 2, etiqueta: `${n * 2} de ${d * 2} ${contexto.parte}` }]
-      } };
-      const comparar = { ...equivalencia, titulo: 'La misma cantidad con más divisiones', visual: {
-        tipo: 'comparar', titulo: `${inicial} y ${final}`,
-        izquierda: { titulo: inicial, puntos: [`Divide la unidad en ${d} partes iguales`, `Señala ${n}`] },
-        derecha: { titulo: final, puntos: [`Divide cada parte por la mitad`, `Señala ${n * 2} para ocupar la misma cantidad`] }
-      } };
-      const recta = { ...equivalencia, titulo: 'Dos nombres en el mismo punto', visual: { tipo: 'recta', titulo: 'La misma posición', min: 0, max: 1, marcas: [{ valor: 0, texto: '0' }, { valor: n / d, texto: `${inicial} = ${final}` }, { valor: 1, texto: '1' }] } };
-      const candidatos = reaccion === 'duda' ? [comparar, equivalencia] : [equivalencia, comparar, recta];
-      const f = elegir(candidatos);
-      return limpiarFichaInicio({ ...f, adaptacion: motivoLocal(reaccion, nivel, f.visual.tipo, nota, calibracion) });
-    }
-    const idxObj = /equival/.test(no) ? 1 : /sum|rest|mixt/.test(no) ? 2 : (nivel === 'bastante' ? 2 : nivel === 'algo' ? 1 : 0);
-    const ordered = [...base.slice((idxObj + Math.max(0, paso - 1)) % base.length), ...base];
-    const unique = ordered.filter((v, i, a) => a.indexOf(v) === i);
-    const extrasEnfoque = (reaccion === 'enfoque' || calibracion?.pinTipo) ? [simple, fracRecta, fracPartes] : [];
-    const f = reaccion === 'duda' ? elegir([simple, ...unique.filter(x => x.visual.tipo !== 'fraccion')]) : elegir([...unique, ...extrasEnfoque]);
-    return limpiarFichaInicio({ ...f, adaptacion: motivoLocal(reaccion, nivel, f.visual.tipo, nota, calibracion) });
-  }
-  if (esPorc) {
-    const f = elegir([
-      { titulo: 'Qué es un porcentaje', subtema: 'Por cada cien', icono: 'grafico', idea: 'Un porcentaje compara una parte contra un total de 100. 50 % es la mitad; 25 % es un cuarto.', visual: { tipo: 'torta', titulo: `Reparto de tiempo en ${objMundo}`, unidad: '%', items: [{ texto: 'Práctica', valor: 50, icono: 'energia' }, { texto: 'Táctica', valor: 25, icono: 'idea' }, { texto: 'Descanso', valor: 25, icono: 'agua' }] }, ejemplo: { situacion: `Si dedicas el 25 % de 100 minutos a táctica en ${objMundo}, ¿cuánto es?`, pasos: ['25 % = 25 de cada 100', '1/4 de 100 = 25'], resultado: '25 minutos' }, cuidado: 'El 25 % no siempre es 25: depende de cuánto sea el total.', de_ti: 'Por ciento significa de cada cien.' },
-      { titulo: 'Comparar porcentajes', subtema: 'Aplicado a totales', icono: 'grafico', idea: 'Para sacar un porcentaje de cualquier cantidad, multiplica por el porcentaje y divide entre 100.', visual: { tipo: 'barras', titulo: 'Descuentos comparados', unidad: '%', items: [{ texto: '10 %', valor: 10, icono: 'moneda' }, { texto: '25 %', valor: 25, icono: 'chispa' }, { texto: '50 %', valor: 50, icono: 'energia' }] }, ejemplo: { situacion: `Algo de ${objMundo} cuesta 80 y tiene 25 % de descuento.`, pasos: ['80 × 25 = 2000', '2000 ÷ 100 = 20'], resultado: 'Rebaja de 20 (pagas 60)' }, cuidado: 'No restes 25 directo al precio: primero calcula el 25 % del precio.', de_ti: 'Multiplica por el porcentaje y divide entre 100.' },
-      { titulo: 'Cómo sacar cualquier %', subtema: 'Método paso a paso', icono: 'pasos', idea: 'Sigue tres pasos fijos para convertir cualquier porcentaje en una cantidad real.', visual: { tipo: 'pasos', titulo: 'Cálculo en 3 pasos', items: [{ texto: 'Identifica el 100 %', detalle: 'Cuál es tu total completo', icono: 'meta' }, { texto: 'Multiplica arriba', detalle: 'Total × porcentaje buscado', icono: 'mas' }, { texto: 'Divide entre 100', detalle: 'Mueve dos lugares decimales', icono: 'balanza' }] }, ejemplo: { situacion: `25 % de 80 en ${objMundo}.`, pasos: ['Total 80 × 25 = 2000', '2000 ÷ 100 = 20'], resultado: '20' }, cuidado: 'Nunca restes el % como si fuera una cantidad fija.', de_ti: 'Multiplica por el % y parte en 100.' },
-      { titulo: 'Atajos de porcentaje', subtema: 'Tabla rápida', icono: 'tabla', idea: 'Memorizar los porcentajes clave en fracción te permite calcular casi todo de cabeza.', visual: { tipo: 'tabla', titulo: 'De porcentaje a atajo', columnas: ['Porcentaje', 'Fracción', 'En 80 sería'], filas: [['50 %', 'La mitad (÷ 2)', '40'], ['25 %', 'Un cuarto (÷ 4)', '20'], ['10 %', 'Entre 10', '8']] }, ejemplo: { situacion: `Calcula rápido el 25 % de 80 en ${objMundo}.`, pasos: ['25 % es dividir entre 4', '80 ÷ 4 = 20'], resultado: '20' }, cuidado: 'El 10 % se saca dividiendo entre 10, no restando 10.', de_ti: '50 % es mitad, 25 % cuarto, 10 % décima parte.' }
-    ]);
-    return limpiarFichaInicio({ ...f, adaptacion: motivoLocal(reaccion, nivel, f.visual.tipo, nota, calibracion) });
-  }
-  if (esEcu || esLin || esFoto) {
-    const f = esEcu
-      ? elegir([
-        { titulo: 'Despejar paso a paso', subtema: 'Orden inverso', icono: 'balanza', idea: 'Para hallar x, deshaces las operaciones desde la más lejana hacia x, aplicando lo mismo a ambos lados.', visual: { tipo: 'ecuacion', titulo: 'Resolver 2x + 4 = 14', lineas: [{ expresion: '2x + 4 = 14' }, { expresion: '2x = 14 − 4', nota: 'Resto 4 a ambos lados' }, { expresion: '2x = 10' }, { expresion: 'x = 10 ÷ 2', nota: 'Divido entre 2' }, { expresion: 'x = 5' }] }, ejemplo: { situacion: `En ${objMundo}, 2 rondas iguales más 4 puntos extras suman 14.`, pasos: ['Quita los 4 extras: quedan 10', 'Divide en 2 rondas iguales'], resultado: '5 puntos por ronda' }, cuidado: 'No dividas antes de quitar lo que suma o resta suelto.', de_ti: 'Lo último que entró sale primero.' },
-        { titulo: 'Orden para despejar la x', subtema: 'Balanza justa', icono: 'pasos', idea: 'Una ecuación es una balanza equilibrada: lo que haces de un lado lo haces del otro.', visual: { tipo: 'pasos', titulo: 'Cómo liberar x', items: [{ texto: 'Separa los términos', detalle: 'Deja lo que tiene x de un lado', icono: 'pasos' }, { texto: 'Pasa lo que suma o resta', detalle: 'Cambia al signo contrario al otro lado', icono: 'ciclo' }, { texto: 'Pasa lo que multiplica', detalle: 'Dividiendo ambos lados', icono: 'balanza' }] }, ejemplo: { situacion: `En 2x + 4 = 14 dentro de ${objMundo}.`, pasos: ['Resta 4 → 2x = 10', 'Divide entre 2 → x = 5'], resultado: 'x = 5' }, cuidado: 'Cada lado de la igualdad debe recibir exactamente la misma operación.', de_ti: 'Cuida la balanza: igual a ambos lados.' }
-      ])
-      : esLin ? { titulo: 'Cómo crece una recta', subtema: 'Pendiente e inicio', icono: 'grafico', idea: 'La recta y = mx + b pasa por b cuando x vale cero. Por cada unidad que aumenta x, y cambia en m.', visual: { tipo: 'grafico', titulo: `Avance en ${objMundo}`, ejeX: 'Pasos', ejeY: 'Total', puntos: [{ x: 0, y: 2, texto: 'Inicio' }, { x: 1, y: 5 }, { x: 2, y: 8 }, { x: 3, y: 11 }, { x: 4, y: 14 }] }, ejemplo: { situacion: `Empiezas con 2 puntos y ganas 3 por ronda.`, pasos: ['Ronda 0: 2', 'Ronda 4: 3 × 4 + 2 = 14'], resultado: '14 puntos' }, cuidado: 'No olvides sumar el punto de inicio cuando x vale 0.', de_ti: 'Inicio más cambio constante.' }
+  if (esLin || esFoto) {
+    const f = esLin ? { titulo: 'Cómo crece una recta', subtema: 'Pendiente e inicio', icono: 'grafico', idea: 'La recta y = mx + b pasa por b cuando x vale cero. Por cada unidad que aumenta x, y cambia en m.', visual: { tipo: 'grafico', titulo: `Avance en ${objMundo}`, ejeX: 'Pasos', ejeY: 'Total', puntos: [{ x: 0, y: 2, texto: 'Inicio' }, { x: 1, y: 5 }, { x: 2, y: 8 }, { x: 3, y: 11 }, { x: 4, y: 14 }] }, ejemplo: { situacion: `Empiezas con 2 puntos y ganas 3 por ronda.`, pasos: ['Ronda 0: 2', 'Ronda 4: 3 × 4 + 2 = 14'], resultado: '14 puntos' }, cuidado: 'No olvides sumar el punto de inicio cuando x vale 0.', de_ti: 'Inicio más cambio constante.' }
       : {
         titulo: 'Cómo se alimenta una planta', subtema: 'Fotosíntesis', icono: 'hoja',
         idea: 'La planta usa la energía de la luz para fabricar azúcares a partir de agua y dióxido de carbono. Durante el proceso libera oxígeno.',
@@ -760,13 +780,13 @@ export function fichaInicioLocal({ tema = '', gustos = '', nivel = 'algo', reacc
         ejemplo: { situacion: 'Una planta recibe agua y CO₂, pero pasa todo un día en oscuridad.', pregunta: '¿Puede seguir realizando fotosíntesis durante ese tiempo?', pasos: ['El agua y el CO₂ aportan materiales.', 'Sin luz, faltaría la fuente de energía del proceso.'], resultado: 'La oscuridad impide la fotosíntesis.' },
         cuidado: 'La luz aporta energía. El agua y el dióxido de carbono aportan materiales.'
       };
-    return limpiarFichaInicio({ ...f, adaptacion: motivoLocal(reaccion, nivel, f.visual.tipo, nota, calibracion) });
+    return terminar(f);
   }
 
   return limpiarFichaInicio({
-    titulo: 'Prepara tu explicación', subtema: t,
-    adaptacion: 'El modo práctica no tiene una ficha de contenido para este tema.',
-    idea: nota ? `Anota qué quieres aclarar: «${txt(nota, 130)}».` : `Usa apuntes o una fuente de clase para preparar cómo explicarías ${t}.`,
+    titulo: 'Prepara tu explicación', subtema: anterior?.subtema || objetivo || t,
+    adaptacion: 'El modo práctica no tiene una ficha de contenido para este tema o subtema.',
+    idea: nota ? `Anota qué quieres aclarar: «${txt(nota, 130)}».` : `Usa apuntes o una fuente de clase para preparar cómo explicarías ${anterior?.subtema || objetivo || t}.`,
     visual: { tipo: 'pasos', titulo: 'Antes de enseñarle', items: [
       { texto: 'Encuentra la idea central', detalle: 'Comprueba qué significa en tus apuntes.', icono: 'libro' },
       { texto: 'Busca un caso concreto', detalle: `¿Dónde aparece esta idea en ${objMundo}?`, icono: 'meta' },

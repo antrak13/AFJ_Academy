@@ -355,3 +355,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .calidad label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: .95rem; }
 .calidad small { color: var(--tinta-2); font-weight: 600; }
 .calidad input { accent-color: var(--indigo); width: 18px; height: 18px; }
+
+/* Mi aula (plataforma) */
+.mi-aula { display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; margin-top: 10px; padding: 10px 12px; background: #E6EEF8; border: 1px solid #C9D8EE; border-radius: var(--r-m); font-size: .92rem; }
+.mi-aula-ic { font-size: 1.3rem; line-height: 1; }
+.mi-aula .btn-txt { padding: 0 4px; }
+.mi-aula-panel { font-weight: 800; color: var(--indigo-2); }
+.mi-aula-form { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.mi-aula-form label { font-weight: 800; }
+.mi-aula-form input { font: 700 .95rem var(--texto); text-transform: uppercase; letter-spacing: .08em; border: 1.5px solid var(--linea); border-radius: var(--r-s); padding: 6px 10px; width: 9em; background: #fff; }
+.mi-aula-form .nota { margin: 0; width: 100%; }

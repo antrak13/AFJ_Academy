@@ -1,12 +1,13 @@
 # Genera una ficha adaptativa de inicio o práctica
 
-Un estudiante quiere entender o repasar un tema mediante **fichas visuales animadas**. Cada ficha explica una sola idea clara, conectada con los gustos o el mundo del estudiante, usando **el visual que mejor la muestra** entre los 13 tipos disponibles (solo cuando aplica; el código lo dibuja y lo anima).
+Un estudiante quiere entender o repasar un tema mediante **fichas visuales animadas**. Cada ficha enseña una sola idea mediante un caso concreto y el visual que mejor lo explica. El código dibuja y anima el visual elegido entre 13 tipos.
 
 Recibes:
 - **Tema**, **gustos/mundo** y **nivel inicial** (`cero`, `algo`, `bastante`).
 - **Objetivo del paso** (opcional): si el estudiante está en medio de la clase intentando entender un paso concreto para luego explicárselo a su aprendín, enfoca la ficha en ese concepto exacto.
-- **Aprendín** (opcional): si ya creó uno, usa su mundo, nombre y tono cercano.
+- **Aprendín** (opcional): su mundo sirve como inspiración para el caso. La definición y las etiquetas del gráfico usan los términos del tema.
 - **Historial**: el subtema, la idea y el caso de las fichas anteriores, qué visual usaron y cómo reaccionó el estudiante.
+- **Ficha de partida**: cuando está presente, es la ficha sobre la que el estudiante pulsó una acción. Si difiere de la última del historial, usa la ficha de partida.
 - **Pista de la explicación reciente** (opcional): la dificultad que apareció al intentar enseñarle al aprendín. Una duda que el estudiante escribe ahora tiene prioridad.
 - **Calibración del estudiante** (opcional): formatos visuales con mayor aceptación o eficacia comprobada (`preferidos`), formatos que generaron dudas (`evitar`), formatos poco probados (`explorar`), estrategia actual (`aprovechar`, `explorar`, `fijo`) y formato fijado manualmente (`pinTipo`). Úsala para adaptar el visual **sin romper nunca** la regla de que el visual debe aplicar de verdad al concepto.
 
@@ -18,11 +19,11 @@ Devuelves un JSON con el esquema indicado.
    - `cero`: empieza por la idea más básica e intuitiva, sin jerga ni fórmulas pesadas. Usa un visual muy concreto (`iconos`, `fraccion`, `pasos`, `partes` o `ciclo`).
    - `algo`: ve directo a la regla central y cómo se aplica, con un visual comparativo o dinámico (`comparar`, `fraccion`, `recta`, `barras`, `torta`, `ecuacion`).
    - `bastante`: propón un caso de aplicación o problema con matices (`ecuacion`, `grafico`, `recta`, `tabla`, `linea_tiempo`).
-2. **entendio** («Lo entendí»): avanza al **siguiente subtema lógico** dentro del tema, sube un poco la profundidad y **varía el tipo de visual** respecto a la ficha anterior si otro formato aporta más.
-3. **duda** («No entendí / más simple»): **quédate en el mismo subtema** (no avances). Simplifica la explicación, usa una analogía más cotidiana de sus gustos y cambia a un visual más claro (por ejemplo `comparar` lo que confunde vs lo correcto, `pasos` cortos, `iconos` o `fraccion` con números chicos). Si escribió una duda concreta, respóndela directo en `idea` y `ejemplo`.
-4. **ejemplo** («Otro ejemplo de mi mundo»): quédate en el mismo subtema, cambia el escenario a una situación fresca de sus gustos y elige otro visual distinto si ayuda a verlo desde otro ángulo.
-5. **reto** («Dame un reto»): mantén el subtema actual o combina lo visto en un problema con datos nuevos. Escribe la pregunta en `ejemplo.pregunta` y prepara la solución paso a paso. El gráfico, la idea y el resultado se revelan juntos cuando el estudiante abre la solución. No adelantes la respuesta en el título, el enunciado ni en `adaptacion`.
-6. **enfoque** («Cambiar enfoque»): quédate en el mismo subtema, **cambia por completo el ángulo pedagógico y el formato visual** (por ejemplo si antes hubo definición o tabla, muéstralo ahora con una animación paso a paso de cómo se resuelve o funciona: `pasos`, `ecuacion`, `fraccion`, `recta`, `ciclo` o `grafico`). Respeta cualquier `pinTipo` o comentario que escribió el estudiante.
+2. **entendio** («Lo entendí»): si hay un objetivo de clase, profundiza en ese paso y conserva el rótulo `subtema` de la ficha de partida. En una sesión libre, avanza a un solo subtema lógico con un rótulo distinto.
+3. **duda** («Más simple»): conserva literalmente `subtema` y explica la misma regla. Responde la duda directamente en `idea`. Aísla el punto difícil con datos pequeños o un caso más directo cuando ayude.
+4. **ejemplo** («Otro ejemplo de mi mundo»): conserva literalmente `subtema` y aplica la misma regla a una situación con objetos o datos distintos. Usa el mismo tipo de visual si sigue siendo el más claro.
+5. **reto** («Dame un reto»): conserva literalmente `subtema` y pide aplicar esa idea con datos nuevos. Pon los datos en `ejemplo.situacion` y la pregunta en `ejemplo.pregunta` una sola vez. El gráfico, la idea y el resultado se revelan al abrir la solución. El título, el enunciado y `ejemplo.puente` contienen solo información necesaria para intentar el reto.
+6. **enfoque** («Cambiar enfoque»): copia literalmente `subtema`, `ejemplo.situacion` y, si existe, `ejemplo.pregunta` de la ficha de partida. Explica la misma idea con otro razonamiento o formato visual. Respeta el comentario o `pinTipo` cuando aplique.
 7. **Calibración por aceptación**: prioriza el formato fijado si encaja. En `aprovechar`, favorece los formatos preferidos. En `explorar`, prueba uno poco usado si ayuda a ver la idea. La corrección del contenido y la utilidad del visual tienen prioridad.
 
 ## Cómo se animan tus visuales (cómo se hace paso a paso)
@@ -38,15 +39,15 @@ Devuelves un JSON con el esquema indicado.
 
 - **El visual solo si aplica de verdad**: no inventes números falsos para forzar un gráfico de barras o torta. Si el concepto es cualitativo o de proceso, usa `pasos`, `ciclo`, `partes`, `comparar`, `linea_tiempo` o `tabla`.
 - **Cuentas exactas y condiciones**: el gráfico, el procedimiento y el resultado deben describir la misma operación con los mismos datos. Explica cuándo vale la regla (por ejemplo, que las porciones se comparan con el mismo entero, o que restar un número positivo mueve a la izquierda). Si das porcentajes de una torta, que sumen 100.
-- **Personalización concreta**: cambia los objetos, las cantidades, la decisión o el dibujo según ese mundo. Por ejemplo, usa cilindros o barras como tanques para hablar de combustible y pizzas circulares para hablar de porciones. Un cambio de color, de nombre o de icono por sí solo no cuenta.
-- **Analogías**: indica qué objeto representa cada elemento real y conserva esa correspondencia durante todo el ejemplo. Si hay un original que después se divide en dos, no comiences con dos copias ya separadas.
-- Antes de responder, lee `idea`, `visual`, `ejemplo` y `cuidado` juntos. Comprueba que ninguna frase enseñe como regla general un caso particular, y que `duda` responda el punto de confusión en vez de repetir la ficha anterior con el mismo ejemplo.
+- **Personalización**: úsala en el ejemplo si ayuda a resolverlo. Dos depósitos de igual capacidad sirven para comparar fracciones. En fútbol, usa los dos tiempos de un partido, penales de un mismo total o una sesión de entrenamiento con intervalos fijos. Si necesitas cuartos de tiempo, usa cuatro bloques de entrenamiento iguales. Si el mundo exige inventar equivalencias o reglas, usa un caso directo.
+- **Fenómenos naturales**: muestra un caso real con las causas y los objetos del propio tema. Evita el escenario de juego cuando explica un mecanismo natural. Si comparas dos casos, modifica solo la condición que quieres enseñar. Por ejemplo, para la fotosíntesis compara dos plantas iguales con agua y CO₂, una con luz solar y la otra en la oscuridad.
+- **Puente al gráfico**: úsalo solo si vincula un elemento que ya aparece en el caso con su representación visual (por ejemplo, «Cada número de la recta indica la altura en pisos con respecto a la entrada»). No introduzcas una analogía nueva ni repitas la definición. Omítelo cuando el ejemplo y el gráfico ya usan los mismos nombres y unidades.
+- **Una sola idea**: quita cualquier segundo tema y cualquier frase que ya leíste en otra sección. Antes de responder, comprueba que el título, `idea`, `visual` y `ejemplo` apunten a la misma pregunta y compartan sus datos. Una afirmación general debe incluir la condición que la hace válida.
 - **titulo**: máximo 6 palabras. **subtema**: qué parte específica del tema cubre (máximo 5 palabras). **icono**: clave corta sin emojis (elige de: `libro`, `balanza`, `energia`, `hoja`, `pelota`, `cocina`, `reloj`, `meta`, `agua`, `grafico`, `chispa`, `mapa`, `escudo`, `lupa`, `diamante`, `idea`). Nunca devuelvas emojis Unicode.
-- **adaptacion**: una oración corta y transparente explicando por qué elegiste este enfoque o visual para el estudiante («Empezamos desde cero con porciones visuales de tu mundo», «Simplificamos la idea comparando el error típico paso a paso»).
-- **idea**: 1 o 2 oraciones claras y correctas (máximo 35 palabras).
-- **ejemplo**: problema concreto del mundo o gustos del estudiante, 1 a 4 pasos y resultado.
-- **cuidado**: el error más común en este subtema y cómo evitarlo.
-- **de_ti**: una frase corta memorable para recordar la regla («El de abajo dice el tamaño del pedazo»).
+- **adaptacion**: una oración breve sobre la decisión didáctica («Usamos cuartos iguales para poder comparar el tamaño de las partes»).
+- **idea**: escribe primero qué significa o qué hay que hacer, en términos del tema. Incluye la condición necesaria en 1 o 2 oraciones (máximo 35 palabras). Por ejemplo, para sumar solo numeradores, indica explícitamente que las fracciones deben tener el mismo denominador.
+- **ejemplo**: una situación mínima, hasta 4 pasos que hagan avanzar el razonamiento y un resultado. Reutiliza los datos del visual. Coloca una pregunta en `pregunta` cuando sea útil para delimitar el caso.
+- **cuidado**: es opcional. Inclúyelo si evita una confusión concreta que aún no resolviste en la idea o el gráfico. Omite las frases de recuerdo automáticas.
 
 ## Tipos de visual disponibles (13)
 

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel docente · Aprendines</title>
+<meta name="description" content="Mira cómo le enseña cada alumno a su aprendín y en qué paso del tema le cuesta más a tu aula.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Nunito:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="css/aprendin.css">
+<link rel="stylesheet" href="css/taller.css">
+<link rel="stylesheet" href="css/docente.css">
+</head>
+<body class="pag-docente">
+<header class="barra">
+  <a class="btn-inicio" href="../inicio.html" title="Volver al inicio de AFJ Academy"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Volver al inicio</span></a>
+  <a class="marca" href="taller.html" aria-label="Aprendines: ir al taller"><span class="marca-av" id="marcaAv"></span><span>Aprendines</span></a>
+  <nav class="nav" aria-label="Secciones"><a href="taller.html">Taller</a><a href="clase.html">Clase</a><a href="sala.html">Sala</a><a href="fichas.html">Fichas</a><a href="docente.html" aria-current="page">Docente</a></nav>
+  <p class="lema">Mira quién <b>entiende</b> y dónde le cuesta a tu aula.</p>
+  <div class="barra-acc">
+    <span class="doc-quien" id="quien"></span>
+    <button class="btn btn-chico" id="btnActualizar" type="button">Actualizar</button>
+  </div>
+</header>
+
+<main class="doc">
+  <section class="tarjeta doc-aviso" id="sinPlataforma" hidden>
+    <h1>El panel docente necesita la plataforma</h1>
+    <p>Ábrelo desde la app de AFJ Academy (<code>npm run dev</code> en <code>Aprendizaje_Grupal/Rua</code>, en <code>http://localhost:3000/Aprendizaje_Individual/docente.html</code>) con tu sesión iniciada. Así se guardan tus aulas y el avance de tus alumnos.</p>
+  </section>
+
+  <aside class="doc-lado" id="lado" hidden>
+    <section class="tarjeta">
+      <h2>Mis aulas</h2>
+      <div class="doc-aulas" id="listaAulas" aria-live="polite"></div>
+    </section>
+    <section class="tarjeta">
+      <h2>Nueva aula</h2>
+      <form class="doc-form" id="formAula" autocomplete="off">
+        <label for="aulaNombreNueva">Nombre</label>
+        <input id="aulaNombreNueva" maxlength="60" placeholder="Ej.: 6.º A · Matemática" required>
+        <label for="aulaCursoNueva">Curso</label>
+        <select id="aulaCursoNueva">
+          <optgroup label="Primaria">
+            <option>1.º de primaria</option><option>2.º de primaria</option><option>3.º de primaria</option>
+            <option>4.º de primaria</option><option>5.º de primaria</option><option selected>6.º de primaria</option>
+          </optgroup>
+          <optgroup label="Secundaria">
+            <option>1.º de secundaria</option><option>2.º de secundaria</option><option>3.º de secundaria</option>
+            <option>4.º de secundaria</option><option>5.º de secundaria</option><option>6.º de secundaria</option>
+          </optgroup>
+        </select>
+        <label for="aulaTemaNueva">Tema que les asignas <span class="doc-opc">opcional</span></label>
+        <input id="aulaTemaNueva" maxlength="80" placeholder="Ej.: fracciones">
+        <button class="btn btn-crear" type="submit">Crear aula</button>
+      </form>
+    </section>
+  </aside>
+
+  <section class="doc-principal" id="principal" hidden>
+    <div class="tarjeta doc-vacio" id="vacio">
+      <h1>Crea tu primera aula</h1>
+      <p>Después registras a tus alumnos (con usuario y PIN, sin correo) o les compartes el código del aula. Cada vez que le enseñan a su aprendín, aquí ves qué explicaron bien, en qué se equivocaron y en qué paso del tema le cuesta más al aula.</p>
+    </div>
+
+    <div class="doc-detalle" id="detalle" hidden>
+      <section class="tarjeta doc-cab">
+        <div>
+          <h1 id="aulaNombre"></h1>
+          <p class="nota" id="aulaCurso"></p>
+        </div>
+        <div class="doc-codigo">
+          <span>Código del aula</span>
+          <b id="aulaCodigo"></b>
+          <button class="btn btn-chico" id="btnCopiar" type="button">Copiar</button>
+        </div>
+        <form class="doc-tema" id="formTema" autocomplete="off">
+          <label for="aulaTema">Tema asignado</label>
+          <input id="aulaTema" maxlength="80" placeholder="Ej.: fracciones">
+          <button class="btn btn-fuerte btn-chico" type="submit">Guardar</button>
+          <span class="nota" id="temaEstado" role="status"></span>
+        </form>
+      </section>
+
+      <section class="tarjeta">
+        <div class="tarjeta-tit"><h2>Debilidades del aula</h2><span class="nota">Paso por paso, del más difícil al más fácil</span></div>
+        <div class="doc-debil" id="debilidades"></div>
+        <h3 class="doc-sub">Necesitan ayuda</h3>
+        <ul class="doc-ayuda" id="ayuda"></ul>
+      </section>
+
+      <section class="tarjeta">
+        <div class="tarjeta-tit"><h2>Avance de cada alumno</h2><span class="doc-leyenda" aria-hidden="true"><i class="est est-vago"></i>vaga <i class="est est-parcial"></i>va bien <i class="est est-error"></i>error <i class="est est-entendio"></i>entendió</span></div>
+        <div class="doc-tabla-caja">
+          <table class="doc-tabla">
+            <thead><tr><th scope="col">Alumno</th><th scope="col">Aprendín</th><th scope="col">Paso 1</th><th scope="col">Paso 2</th><th scope="col">Paso 3</th><th scope="col">Paso 4</th><th scope="col">Prueba</th><th scope="col">Última vez</th></tr></thead>
+            <tbody id="tablaAlumnos"></tbody>
+          </table>
+        </div>
+        <p class="nota">Toca a un alumno para ver qué anotó la IA en cada paso.</p>
+      </section>
+
+      <section class="tarjeta">
+        <h2>Registrar alumnos</h2>
+        <p class="nota">Escribe un nombre por línea. A cada uno se le crea una cuenta con <b>usuario y PIN</b>, sin correo. Quien ya tiene cuenta puede unirse desde el taller con el código del aula.</p>
+        <form class="doc-alumnos" id="formAlumnos">
+          <textarea id="nombres" rows="5" maxlength="2500" placeholder="María Quispe&#10;Juan Mamani&#10;Ñusta Condori"></textarea>
+          <button class="btn btn-crear" type="submit">Crear cuentas</button>
+        </form>
+        <div class="doc-cred" id="credenciales" hidden></div>
+      </section>
+    </div>
+  </section>
+  <p class="doc-error" id="error" role="alert" hidden></p>
+</main>
+<script type="module" src="js/docente.js"></script>
+</body>
+</html>

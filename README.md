@@ -9,6 +9,7 @@ La plataforma completa se levanta desde la app de Next (`Aprendizaje_Grupal/Rua`
 | `/prueba/estudio-grupal.html` | Estudio grupal: salas, voz, preguntas, fantasmas | Rua |
 | `/Aprendizaje_Grupal/Andre/Oficial/futuro-yo-aprende.html` | Clases grupales y social | Andre |
 | `/Aprendizaje_Individual/taller.html` | Aprendines (estudio individual) | Freddy |
+| `/Aprendizaje_Individual/docente.html` | Panel docente de Aprendines: aulas, alumnos con usuario y PIN, tema asignado, avance y debilidades del aula | Freddy |
 
 ## Cómo levantarlo
 

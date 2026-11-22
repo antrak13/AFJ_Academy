@@ -7,7 +7,7 @@ import { svgAprendin } from './aprendin.js';
 import { MUNDOS } from './mundos.js';
 import { tonos } from './color.js';
 import { cargarAprendin, cargarClase, enlaceClase } from './guardado.js';
-import { cargarEstudio, guardarEstudio, solicitarFichaInicio, renderizarFichaEstudio, enlazarAccionesFicha, historialDe, registrarEventoVisual, calcularCalibracion, renderizarPanelCalibracion } from './fichas-apoyo.js';
+import { cargarEstudio, guardarEstudio, solicitarFichaInicio, renderizarFichaEstudio, enlazarAccionesFicha, historialDe, registrarEventoVisual, renderizarPanelCalibracion } from './fichas-apoyo.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -75,15 +75,13 @@ async function pedirFichaAdaptativa(reaccion, nota = '', pinTipo = '') {
   cargando = true;
   pintarEstadoCarga(true);
   const historial = historialDe(S.fichas);
-  const calBase = calcularCalibracion(historial);
-  const calibracion = pinTipo ? { ...calBase, pinTipo, estrategia: 'fijo' } : calBase;
   let nivel = S.nivel;
   if (reaccion === 'entendio') nivel = nivel === 'cero' ? 'algo' : 'bastante';
   if (reaccion === 'duda') nivel = nivel === 'bastante' ? 'algo' : 'cero';
   try {
     const { datos, fuente } = await solicitarFichaInicio({
       ia, tema: S.tema, gustos: S.gustos, nivel, reaccion, nota,
-      aprendin: personajeDeLaSesion(), historial, calibracion
+      aprendin: personajeDeLaSesion(), historial, pinTipo, fichaBase: S.fichas.at(-1)?.datos
     });
     S.nivel = nivel;
     S.fichas.push({ datos, fuente, reaccionOrigen: reaccion, reaccion: null, nota });

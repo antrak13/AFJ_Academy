@@ -326,7 +326,21 @@
       transition: all 0.2s ease;
     }
 
-    input:focus {
+    select {
+      width: 100%;
+      padding: 11px 14px;
+      font-family: inherit;
+      font-size: 0.94rem;
+      color: var(--ink-navy);
+      background: #FAF8F2;
+      border: 1.5px solid var(--border-warm);
+      border-radius: 12px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    input:focus,
+    select:focus {
       background: #FFFFFF;
       border-color: var(--terracotta);
       box-shadow: 0 0 0 3.5px rgba(232, 131, 92, 0.15);
@@ -342,7 +356,7 @@
 
     .role-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
       gap: 10px;
     }
 
@@ -549,7 +563,7 @@
       <!-- FORMULARIO 1: INICIAR SESIÓN -->
       <form id="formLogin" class="auth-form active" onsubmit="handleLoginSubmit(event)">
         <div class="form-group">
-          <label for="loginEmail">Correo Electrónico</label>
+          <label for="loginEmail">Correo o usuario</label>
           <div class="input-wrapper">
             <span class="input-icon">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -557,7 +571,7 @@
                 <polyline points="22,6 12,13 2,6"/>
               </svg>
             </span>
-            <input type="email" id="loginEmail" placeholder="tu.correo@ejemplo.com" required autocomplete="username">
+            <input type="text" id="loginEmail" placeholder="tu.correo@ejemplo.com o tu usuario" required autocomplete="username" autocapitalize="none" spellcheck="false">
           </div>
         </div>
 
@@ -647,7 +661,11 @@
             </div>
             <div class="role-option" id="optColegio" onclick="selectRole('estudiante')">
               <span>🎒</span>
-              <span>Estudiante (Colegio)</span>
+              <span>Colegio (Primaria o Secundaria)</span>
+            </div>
+            <div class="role-option" id="optDocente" onclick="selectRole('docente')">
+              <span>🍎</span>
+              <span>Docente</span>
             </div>
           </div>
         </div>
@@ -665,9 +683,38 @@
         </div>
 
         <!-- Campo condicional para Estudiante de Colegio -->
-        <div id="fieldsColegio" class="form-group" style="display: none;">
-          <label for="regColegio">Colegio / Instituto <span class="optional-tag">Opcional</span></label>
-          <input type="text" id="regColegio" placeholder="Ej. Colegio Alemán, San Agustín...">
+        <div id="fieldsColegio" class="form-row" style="display: none;">
+          <div class="form-group">
+            <label for="regCurso">Curso</label>
+            <select id="regCurso">
+              <optgroup label="Primaria">
+                <option value="1.º de primaria">1.º de primaria</option>
+                <option value="2.º de primaria">2.º de primaria</option>
+                <option value="3.º de primaria">3.º de primaria</option>
+                <option value="4.º de primaria">4.º de primaria</option>
+                <option value="5.º de primaria">5.º de primaria</option>
+                <option value="6.º de primaria" selected>6.º de primaria</option>
+              </optgroup>
+              <optgroup label="Secundaria">
+                <option value="1.º de secundaria">1.º de secundaria</option>
+                <option value="2.º de secundaria">2.º de secundaria</option>
+                <option value="3.º de secundaria">3.º de secundaria</option>
+                <option value="4.º de secundaria">4.º de secundaria</option>
+                <option value="5.º de secundaria">5.º de secundaria</option>
+                <option value="6.º de secundaria">6.º de secundaria</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="regColegio">Unidad educativa <span class="optional-tag">Opcional</span></label>
+            <input type="text" id="regColegio" placeholder="Ej. U.E. Simón Bolívar...">
+          </div>
+        </div>
+
+        <!-- Campo condicional para Docente -->
+        <div id="fieldsDocente" class="form-group" style="display: none;">
+          <label for="regDocenteColegio">Unidad educativa donde enseñas <span class="optional-tag">Opcional</span></label>
+          <input type="text" id="regDocenteColegio" placeholder="Ej. U.E. Simón Bolívar...">
         </div>
 
         <!-- País y Ciudad (Opcionales) -->
@@ -722,17 +769,11 @@
       currentRole = role;
       document.getElementById('optUni').classList.toggle('selected', role === 'universitario');
       document.getElementById('optColegio').classList.toggle('selected', role === 'estudiante');
+      document.getElementById('optDocente').classList.toggle('selected', role === 'docente');
 
-      const uniFields = document.getElementById('fieldsUniversitario');
-      const colFields = document.getElementById('fieldsColegio');
-
-      if (role === 'universitario') {
-        uniFields.style.display = 'grid';
-        colFields.style.display = 'none';
-      } else {
-        uniFields.style.display = 'none';
-        colFields.style.display = 'flex';
-      }
+      document.getElementById('fieldsUniversitario').style.display = role === 'universitario' ? 'grid' : 'none';
+      document.getElementById('fieldsColegio').style.display = role === 'estudiante' ? 'grid' : 'none';
+      document.getElementById('fieldsDocente').style.display = role === 'docente' ? 'flex' : 'none';
     }
 
     function showAlert(msg, isError = true) {
@@ -754,8 +795,10 @@
     const sesion = () => import('/comun/sesion.js');
 
     async function irADestino() {
-      const { destinoTrasLogin } = await sesion();
-      window.location.href = destinoTrasLogin();
+      const { destinoTrasLogin, CLAVE_USUARIO } = await sesion();
+      let rol = '';
+      try { rol = JSON.parse(localStorage.getItem(CLAVE_USUARIO) || 'null')?.role || ''; } catch { /* sin copia local */ }
+      window.location.href = destinoTrasLogin(rol === 'docente' ? '/Aprendizaje_Individual/docente.html' : '/inicio.html');
     }
 
     function ocupado(form, si) {
@@ -786,9 +829,12 @@
       if (currentRole === 'universitario') {
         institucion = document.getElementById('regUniversidad').value.trim();
         carrera = document.getElementById('regCarrera').value.trim();
+      } else if (currentRole === 'docente') {
+        institucion = document.getElementById('regDocenteColegio').value.trim();
+        carrera = 'Docente';
       } else {
         institucion = document.getElementById('regColegio').value.trim();
-        carrera = 'Secundaria';
+        carrera = document.getElementById('regCurso').value;
       }
 
       if (!email || !username || !password) {
@@ -820,11 +866,13 @@
       hideAlert();
       const form = e.target;
 
-      const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+      let email = document.getElementById('loginEmail').value.trim().toLowerCase();
       const password = document.getElementById('loginPassword').value;
+      // Las cuentas que crea el docente no tienen correo: el alumno entra con su usuario y su PIN.
+      if (email && !email.includes('@')) email = email.replace(/\s+/g, '') + '@alumnos.afj.local';
 
       if (!email || !password) {
-        showAlert('Ingresa tu correo y contraseña.');
+        showAlert('Ingresa tu correo (o usuario) y tu contraseña (o PIN).');
         return;
       }
 

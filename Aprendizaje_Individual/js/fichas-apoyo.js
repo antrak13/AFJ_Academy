@@ -15,7 +15,7 @@ export const ETIQUETAS_REACCION = {
 export const ENFOQUES_RAPIDOS = [
   { id: 'pasos', titulo: 'Paso a paso animado', pin: 'pasos', nota: 'Explica cómo se hace paso a paso con animación' },
   { id: 'comparar', titulo: 'Error vs acierto', pin: 'comparar', nota: 'Compara el error común frente a la forma correcta' },
-  { id: 'partes', titulo: 'Mapa o analogía', pin: 'partes', nota: 'Muéstralo como mapa de partes con una analogía clara' },
+  { id: 'partes', titulo: 'Mapa de partes', pin: 'partes', nota: 'Muéstralo como mapa con los nombres reales de sus partes' },
   { id: 'recta', titulo: 'Con recta o gráfico', pin: 'recta', nota: 'Explícalo visualmente con recta o gráfico' }
 ];
 const EVENTO_CAMPO = {
@@ -120,16 +120,19 @@ export function calcularCalibracion(historial = [], ef = cargarEficacia()) {
   };
 }
 
-export async function solicitarFichaInicio({ ia, tema, gustos, nivel = 'algo', reaccion = 'inicio', nota = '', objetivo = '', dificultad = '', aprendin = null, historial = [], calibracion = null }) {
-  const cal = calibracion || calcularCalibracion(historial);
+export async function solicitarFichaInicio({ ia, tema, gustos, nivel = 'algo', reaccion = 'inicio', nota = '', objetivo = '', dificultad = '', aprendin = null, historial = [], calibracion = null, fichaBase = null, pinTipo = '' }) {
+  let cal = calibracion || calcularCalibracion(historial);
+  if (pinTipo) cal = { ...cal, pinTipo, estrategia: 'fijo' };
+  else if (reaccion === 'enfoque' && cal.pinTipo) cal = { ...cal, pinTipo: '', estrategia: 'explorar' };
   const aprendinResumen = aprendin?.nombre ? resumenAprendin(aprendin) : null;
+  const referencia = fichaBase ? resumenFichaEstudio(fichaBase) : undefined;
   let datos = null, fuente = 'ia';
   try {
     if (!ia) throw new Error('sin IA');
     const r = await fetch('/api/ficha-inicio', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tema, gustos, nivel, reaccion, nota, objetivo, dificultad, aprendin: aprendinResumen, historial: historial.slice(-6), calibracion: cal })
+      body: JSON.stringify({ tema, gustos, nivel, reaccion, nota, objetivo, dificultad, aprendin: aprendinResumen, historial: historial.slice(-6), referencia, calibracion: cal })
     });
     const j = await r.json();
     if (!j.ok || !j.ficha) throw new Error(j.error || r.status);
@@ -137,7 +140,7 @@ export async function solicitarFichaInicio({ ia, tema, gustos, nivel = 'algo', r
   } catch {
     fuente = 'local';
     await new Promise(ok => setTimeout(ok, 250));
-    datos = fichaInicioLocal({ tema, gustos, nivel, reaccion, nota, objetivo, historial, calibracion: cal });
+    datos = fichaInicioLocal({ tema, gustos, nivel, reaccion, nota, objetivo, historial, calibracion: cal, fichaBase });
   }
   if (datos?.visual?.tipo && datos.ejemplo.resultado) registrarEventoVisual(datos.visual.tipo, 'vista');
   return { datos, fuente, calibracion: cal };
@@ -146,7 +149,7 @@ export async function solicitarFichaInicio({ ia, tema, gustos, nivel = 'algo', r
 function htmlBarraEnfoque(idx, tipoActual = 'pasos') {
   const opts = Object.entries(TIPOS).map(([k, desc]) => {
     const corto = desc.split('(')[0].trim();
-    return `<option value="${esc(k)}"${k === tipoActual ? ' selected' : ''}>${esc(NOMBRES_VISUAL[k])} — ${esc(corto)}</option>`;
+    return `<option value="${esc(k)}">${esc(NOMBRES_VISUAL[k])}${k === tipoActual ? ' (actual)' : ''} — ${esc(corto)}</option>`;
   }).join('');
   return `<div class="fi-enfoque-bar" hidden>
     <p class="fi-enfoque-ayuda">Elige otro enfoque visual (la nueva ficha aparecerá justo debajo):</p>
@@ -155,7 +158,7 @@ function htmlBarraEnfoque(idx, tipoActual = 'pasos') {
     </div>
     <div class="fi-enfoque-row">
       <label class="solo-lector" for="selEnfoque-${idx}">Formato visual</label>
-      <select class="otra fi-enfoque-sel" id="selEnfoque-${idx}">${opts}</select>
+      <select class="otra fi-enfoque-sel" id="selEnfoque-${idx}"><option value="">Elegir otro formato automáticamente</option>${opts}</select>
       <button type="button" class="btn btn-fuerte btn-chico fi-enfoque-send">Generar debajo</button>
     </div>
   </div>`;
@@ -205,7 +208,7 @@ export function renderizarFichaEstudio(item, idx, { esUltima, permitirEnfoque = 
     mundo: gustos,
     avatar,
     tono,
-    reto: item.reaccionOrigen === 'reto',
+    reto: item.reaccionOrigen === 'reto' && !item.datos.aviso,
     citaDe: 'Para recordar',
     pieHtml
   });
@@ -253,11 +256,13 @@ export function enlazarAccionesFicha(raiz, { alReaccionar, alEnfoque, alOtra, oc
   });
 }
 
+const resumenFichaEstudio = f => ({
+  titulo: f.titulo, subtema: f.subtema, tipo: f.visual.tipo, idea: f.idea,
+  situacion: f.ejemplo?.situacion, pregunta: f.ejemplo?.pregunta
+});
+
 export function historialDe(fichas = []) {
-  return fichas.map(f => ({
-    titulo: f.datos.titulo, subtema: f.datos.subtema, tipo: f.datos.visual.tipo, reaccion: f.reaccion || 'vista',
-    idea: f.datos.idea, situacion: f.datos.ejemplo?.situacion, nota: f.reaccion ? f.nota : ''
-  }));
+  return fichas.map(f => ({ ...resumenFichaEstudio(f.datos), reaccion: f.reaccion || 'vista', nota: f.reaccion ? f.nota : '' }));
 }
 
 const SVG_AJUSTE = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 7h8M16 7h4M12 4.5v5M4 17h4M12 17h8M8 14.5v5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>';

@@ -34,6 +34,14 @@ Al terminar los 4 pasos llega la prueba de su misión, que el estudiante y el ap
 - **Calibración por aceptación**: usa las reacciones a las fichas y registra qué formatos marcaste como entendidos antes de que la IA validara tu explicación del paso. En automático, alterna tres fichas basadas en tus preferencias con una de exploración cuando ya tienes formatos favoritos. Puedes fijar un formato o cambiar a `Favoritos` o `Explorar` desde `fichas.html` y `clase.html`.
 - **Fichas de la clase y galería de los 13 tipos**: cada paso aprendido en `clase.html` deja una **ficha**: la idea clave, un **visual animado** que la IA elige entre 13 tipos y llena con datos de su mundo, un ejemplo resuelto, el «¡Ojo!» con el error en que cayó y la mejor frase que dijiste. Los tipos: pasos, ciclo, partes (mapa de conceptos), comparar, barras, torta, fracciones (pizzas o barras, con suma, resta o equivalencia; la cuenta la verifica el código), recta numérica con saltos, línea de tiempo, ecuación paso a paso, tabla, gráfico x-y e íconos. El código los dibuja y anima; el botón ↻ repite la animación.
 
+**5. Panel docente** (`docente.html`)
+
+- **Aulas y alumnos.** El docente se registra con el rol «Docente» y crea un aula (nombre, curso y, si quiere, un tema). Registra a sus alumnos con una lista de nombres: a cada uno se le crea una cuenta con **usuario y PIN**, sin correo (muchos niños no tienen). El PIN solo se muestra una vez. Quien ya tiene cuenta puede unirse desde el taller con el **código del aula**.
+- **Tema asignado.** El alumno ve en el taller su aula y el tema que le asignaron, ya cargado para crear su aprendín.
+- **Avance de cada alumno.** Cada vez que la clase guarda su estado, manda a la plataforma un resumen: lo que midió la IA en cada explicación (vaga, va bien, error, entendió, con su nota) y el resultado de la prueba en equipo. En el panel se ve por alumno y por paso, con el detalle de las notas.
+- **Debilidades del aula.** Paso por paso, del más difícil al más fácil: fuerza promedio (la misma medida que decide en qué preguntas cae el aprendín en la prueba), cuántos cayeron en un error, intentos, fallos en la prueba y las notas de la IA que se repiten. Debajo, quién necesita ayuda (sigue trabado en un paso, no aprobó la prueba o lleva 3 días sin avanzar).
+- Funciona dentro de la plataforma (la app de Next, con sesión). Las tablas están en `Aprendizaje_Grupal/Rua/supabase/migrations/20261122000006_aulas.sql` y la API en `app/api/aulas` y `app/api/avance`. Con `node servidor.mjs` solo, la clase funciona igual que antes y no sincroniza nada.
+
 ## Cómo verlo
 
 Con IA (necesita Node 20+ y `agy2` con sesión iniciada):
@@ -76,3 +84,5 @@ Desde la clase individual, **Compartir aprendín** descarga un archivo `.aprendi
 | `servidor.mjs`, `ia/*.md` | El servidor que conecta con `agy2` y las instrucciones para la IA (preguntas y huevo, creación por dibujo o por piezas, turnos de la clase y fichas) |
 | `js/mundos.js`, `js/fichas-ejemplo.js`, `js/demo-aprendin.js`, `js/demo-clase.js` | Ejemplos: mundos listos, fichas de muestra, un aprendín y una clase terminada para probar |
 | `js/color.js`, `js/trazos.js`, `js/guardado.js` | Colores, utilidades de dibujo y guardado en el navegador |
+| `docente.html`, `js/docente.js`, `js/docente-datos.js`, `css/docente.css` | El panel docente y sus cálculos (debilidades del aula, quién necesita ayuda) |
+| `js/avance-nube.js` | Conecta con la plataforma: guarda el avance de la clase y lee el aula del alumno |
